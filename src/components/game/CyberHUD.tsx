@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { CircuitBoard } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import { getTotalIdleDps } from '../../plugins/ComponentPlugin';
@@ -8,7 +7,6 @@ import type { AuthPlugin } from '../../plugins/AuthPlugin';
 interface CyberHUDProps {
   engine: GameEngine;
   playerHandle: string;
-  onOpenMotherboard: () => void;
 }
 
 function formatNumber(n: number): string {
@@ -18,12 +16,11 @@ function formatNumber(n: number): string {
   return Math.floor(n).toString();
 }
 
-export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpenMotherboard }) => {
+export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
   const stage = useGameState(engine, s => s.stage);
   const gold = useGameState(engine, s => s.gold);
   const overclocks = useGameState(engine, s => s.overclockCount);
   const components = useGameState(engine, s => s.components);
-  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
   const idleDps = getTotalIdleDps(components) * engine.getModifier('idle_dps');
   const [confirming, setConfirming] = useState(false);
 
@@ -69,38 +66,6 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpen
           {overclocks}
         </div>
       </div>
-
-      {/* Motherboard button */}
-      <button
-        onClick={onOpenMotherboard}
-        className="flex items-center gap-1 font-pixel"
-        style={{
-          background: inventoryCount > 0 ? '#051505' : 'transparent',
-          border: `1px solid ${inventoryCount > 0 ? '#39ff1444' : '#1a2a3a'}`,
-          color: inventoryCount > 0 ? '#39ff14' : '#2a3a4a',
-          padding: '3px 6px',
-          fontSize: '7px',
-          cursor: 'pointer',
-          transition: 'border-color 0.15s, color 0.15s',
-          flexShrink: 0,
-        }}
-        onMouseEnter={e => {
-          const b = e.currentTarget;
-          b.style.borderColor = '#39ff14';
-          b.style.color = '#39ff14';
-        }}
-        onMouseLeave={e => {
-          const b = e.currentTarget;
-          b.style.borderColor = inventoryCount > 0 ? '#39ff1444' : '#1a2a3a';
-          b.style.color = inventoryCount > 0 ? '#39ff14' : '#2a3a4a';
-        }}
-        title="Open Motherboard"
-      >
-        <CircuitBoard size={12} />
-        {inventoryCount > 0 && (
-          <span style={{ fontSize: '7px' }}>{inventoryCount}</span>
-        )}
-      </button>
 
       {/* Player + Logout */}
       <div className="flex items-center gap-2">

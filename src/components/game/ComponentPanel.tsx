@@ -1,12 +1,16 @@
 import React from 'react';
+import { CircuitBoard, Zap } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import { getComponentCost, getComponentDps } from '../../plugins/ComponentPlugin';
 import type { ComponentPlugin } from '../../plugins/ComponentPlugin';
 import type { ComponentDef } from '../../engine/types';
+import type { OverclockPlugin } from '../../plugins/OverclockPlugin';
 
 interface ComponentPanelProps {
   engine: GameEngine;
+  onOpenMotherboard?: () => void;
+  onOpenOverclock?: () => void;
 }
 
 const COLOR_MAP = {
@@ -86,9 +90,18 @@ const ComponentCard: React.FC<{
   );
 };
 
-export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
+export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine, onOpenMotherboard, onOpenOverclock }) => {
   const components = useGameState(engine, s => s.components);
   const gold = useGameState(engine, s => s.gold);
+  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  const equippedItems = useGameState(engine, s => s.equippedItems);
+  const overclockCount = useGameState(engine, s => s.overclockCount);
+
+  const equippedCount = Object.values(equippedItems ?? {})
+    .flatMap(v => Array.isArray(v) ? v : [v])
+    .filter(Boolean).length;
+
+  const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
 
   const handleBuy = (id: string) => {
     const plugin = engine.getPlugin<ComponentPlugin>('component');
@@ -97,28 +110,120 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
 
   const unlockedComponents = Object.values(components).filter(c => c.unlocked);
 
+  const hasBoardActivity = equippedCount > 0 || inventoryCount > 0;
+  const hasOCT = availableOCT > 0;
+
   return (
-    <div
-      style={{ height: '100%', overflowY: 'auto', padding: '8px', background: '#0a0a0f' }}
-    >
-      <div className="font-pixel mb-3" style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px', paddingBottom: 8, borderBottom: '1px solid #1a2a3a' }}>
-        {'> HARDWARE MODULES'}
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}>
+
+      {/* Shortcut buttons */}
+      <div style={{ flexShrink: 0, padding: '8px 8px 0' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginBottom: 8 }}>
+
+          {/* Motherboard / Hardware button */}
+          <button
+            onClick={onOpenMotherboard}
+            className="font-pixel flex items-center justify-center gap-1"
+            style={{
+              background: hasBoardActivity ? '#031a10' : '#080810',
+              border: `1px solid ${hasBoardActivity ? '#39ff1455' : '#1a2a2a'}`,
+              color: hasBoardActivity ? '#39ff14' : '#2a3a4a',
+              padding: '7px 6px',
+              fontSize: '6px',
+              letterSpacing: '1px',
+              cursor: 'pointer',
+              transition: 'border-color 0.15s, color 0.15s, box-shadow 0.15s',
+              boxShadow: hasBoardActivity ? '0 0 8px rgba(57,255,20,0.12)' : 'none',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#39ff14';
+              e.currentTarget.style.color = '#39ff14';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(57,255,20,0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = hasBoardActivity ? '#39ff1455' : '#1a2a2a';
+              e.currentTarget.style.color = hasBoardActivity ? '#39ff14' : '#2a3a4a';
+              e.currentTarget.style.boxShadow = hasBoardActivity ? '0 0 8px rgba(57,255,20,0.12)' : 'none';
+            }}
+          >
+            <CircuitBoard size={10} />
+            HARDWARE
+            {inventoryCount > 0 && (
+              <span style={{
+                background: '#39ff14', color: '#000',
+                padding: '0 3px', fontSize: '6px', lineHeight: '11px',
+                minWidth: 11, textAlign: 'center', fontFamily: 'var(--font-mono)',
+              }}>
+                {inventoryCount}
+              </span>
+            )}
+          </button>
+
+          {/* Overclock button */}
+          <button
+            onClick={onOpenOverclock}
+            className="font-pixel flex items-center justify-center gap-1"
+            style={{
+              background: hasOCT ? '#130010' : '#080808',
+              border: `1px solid ${hasOCT ? '#ff008055' : '#1a1a2a'}`,
+              color: hasOCT ? '#ff0080' : '#2a2a3a',
+              padding: '7px 6px',
+              fontSize: '6px',
+              letterSpacing: '1px',
+              cursor: 'pointer',
+              transition: 'border-color 0.15s, color 0.15s, box-shadow 0.15s',
+              boxShadow: hasOCT ? '0 0 8px rgba(255,0,128,0.12)' : 'none',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#ff0080';
+              e.currentTarget.style.color = '#ff0080';
+              e.currentTarget.style.boxShadow = '0 0 12px rgba(255,0,128,0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = hasOCT ? '#ff008055' : '#1a1a2a';
+              e.currentTarget.style.color = hasOCT ? '#ff0080' : '#2a2a3a';
+              e.currentTarget.style.boxShadow = hasOCT ? '0 0 8px rgba(255,0,128,0.12)' : 'none';
+            }}
+          >
+            <Zap size={10} />
+            OVERCLOCK
+            {hasOCT && (
+              <span style={{
+                background: '#ff0080', color: '#000',
+                padding: '0 3px', fontSize: '6px', lineHeight: '11px',
+                minWidth: 11, textAlign: 'center', fontFamily: 'var(--font-mono)',
+              }}>
+                {availableOCT}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div
+          className="font-pixel mb-2"
+          style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px', paddingBottom: 8, borderBottom: '1px solid #1a2a3a' }}
+        >
+          {'> HARDWARE MODULES'}
+        </div>
       </div>
 
-      {unlockedComponents.length === 0 && (
-        <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '11px', textAlign: 'center', padding: '20px 0' }}>
-          Kill enemies to unlock components
-        </div>
-      )}
+      {/* Scrollable components list */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
+        {unlockedComponents.length === 0 && (
+          <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '11px', textAlign: 'center', padding: '20px 0' }}>
+            Kill enemies to unlock components
+          </div>
+        )}
 
-      {unlockedComponents.map(comp => (
-        <ComponentCard
-          key={comp.id}
-          comp={comp}
-          gold={gold}
-          onBuy={() => handleBuy(comp.id)}
-        />
-      ))}
+        {unlockedComponents.map(comp => (
+          <ComponentCard
+            key={comp.id}
+            comp={comp}
+            gold={gold}
+            onBuy={() => handleBuy(comp.id)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
