@@ -271,28 +271,93 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           <Battlefield engine={engine} />
         </div>
 
-        {/* Right sidebar: Overclock */}
+        {/* Right sidebar: Launcher buttons */}
         <div
           style={{
-            width: 280, flexShrink: 0,
+            width: 200, flexShrink: 0,
             background: '#0a0a0f',
             borderLeft: '1px solid #1a1a2a',
-            overflow: 'hidden',
             display: 'flex', flexDirection: 'column',
+            padding: 12, gap: 10,
           }}
         >
-          <div
-            className="font-pixel px-3 py-2"
+          <div className="font-pixel" style={{ color: '#2a3a4a', fontSize: '6px', letterSpacing: '3px', marginBottom: 2 }}>
+            SYSTEMS
+          </div>
+
+          {/* Motherboard / Hardware */}
+          <button
+            onClick={() => setShowMotherboard(true)}
             style={{
-              color: '#ff0080', fontSize: '7px', letterSpacing: '3px',
-              borderBottom: '1px solid #1a1a2a', background: '#050010', flexShrink: 0,
+              background: inventoryCount > 0 ? '#031a10' : '#080810',
+              border: `1px solid ${inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'}`,
+              color: inventoryCount > 0 ? '#39ff14' : '#2a3a4a',
+              padding: '14px 10px',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+              boxShadow: inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#39ff14';
+              e.currentTarget.style.color = '#39ff14';
+              e.currentTarget.style.boxShadow = '0 0 14px rgba(57,255,20,0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = inventoryCount > 0 ? '#39ff1455' : '#1a2a2a';
+              e.currentTarget.style.color = inventoryCount > 0 ? '#39ff14' : '#2a3a4a';
+              e.currentTarget.style.boxShadow = inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none';
             }}
           >
-            OVERCLOCK TREE
-          </div>
-          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 10 }}>
-            <OverclockPanel engine={engine} />
-          </div>
+            <CircuitBoard size={22} />
+            <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>HARDWARE</div>
+            {inventoryCount > 0 && (
+              <div style={{
+                background: '#39ff14', color: '#000',
+                padding: '1px 6px', fontSize: '7px', lineHeight: '14px',
+                fontFamily: 'var(--font-mono)', minWidth: 20, textAlign: 'center',
+              }}>
+                {inventoryCount} IN STORAGE
+              </div>
+            )}
+          </button>
+
+          {/* Overclock */}
+          <button
+            onClick={() => setShowOverclockPopup(true)}
+            style={{
+              background: availableOCT > 0 ? '#130010' : '#080808',
+              border: `1px solid ${availableOCT > 0 ? '#ff008055' : '#1a1a2a'}`,
+              color: availableOCT > 0 ? '#ff0080' : '#2a2a3a',
+              padding: '14px 10px',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
+              boxShadow: availableOCT > 0 ? '0 0 10px rgba(255,0,128,0.12)' : 'none',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#ff0080';
+              e.currentTarget.style.color = '#ff0080';
+              e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,128,0.25)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = availableOCT > 0 ? '#ff008055' : '#1a1a2a';
+              e.currentTarget.style.color = availableOCT > 0 ? '#ff0080' : '#2a2a3a';
+              e.currentTarget.style.boxShadow = availableOCT > 0 ? '0 0 10px rgba(255,0,128,0.12)' : 'none';
+            }}
+          >
+            <Zap size={22} />
+            <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>OVERCLOCK</div>
+            {availableOCT > 0 && (
+              <div style={{
+                background: '#ff0080', color: '#000',
+                padding: '1px 6px', fontSize: '7px', lineHeight: '14px',
+                fontFamily: 'var(--font-mono)', minWidth: 20, textAlign: 'center',
+              }}>
+                {availableOCT} OCT FREE
+              </div>
+            )}
+          </button>
         </div>
       </div>
     </div>
