@@ -1,22 +1,101 @@
 import React, { useEffect, useState } from 'react';
+import { CircuitBoard, Zap, ChevronDown } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
+import { OverclockPanel } from './OverclockPanel';
 import { MotherboardScreen } from './MotherboardScreen';
 import { OverclockScreen } from './OverclockScreen';
+import { useGameState } from '../../hooks/useGameState';
+import type { OverclockPlugin } from '../../plugins/OverclockPlugin';
 
 interface GameScreenProps {
   engine: GameEngine;
   player: Player;
 }
 
+type MobileDrawer = 'components' | 'overclock' | null;
+
+const MobileDrawerOverlay: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  accentColor: string;
+  children: React.ReactNode;
+}> = ({ open, onClose, title, accentColor, children }) => (
+  <>
+    {/* Backdrop */}
+    {open && (
+      <div
+        onClick={onClose}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 40,
+          background: 'rgba(0,0,0,0.55)',
+        }}
+      />
+    )}
+
+    {/* Drawer */}
+    <div
+      style={{
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
+        height: '85dvh',
+        background: '#0a0a0f',
+        border: `1px solid ${accentColor}33`,
+        borderBottom: 'none',
+        borderRadius: '0',
+        transform: open ? 'translateY(0)' : 'translateY(100%)',
+        transition: 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Drag handle + title */}
+      <div
+        style={{
+          flexShrink: 0,
+          background: '#050010',
+          borderBottom: `1px solid ${accentColor}22`,
+          padding: '8px 12px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}
+      >
+        <div className="font-pixel" style={{ color: accentColor, fontSize: '8px', letterSpacing: '3px' }}>
+          {title}
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            background: 'none', border: `1px solid ${accentColor}33`,
+            color: accentColor, width: 28, height: 28, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <ChevronDown size={14} />
+        </button>
+      </div>
+
+      {/* Content */}
+      <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        {children}
+      </div>
+    </div>
+  </>
+);
+
 export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [offlineMsg, setOfflineMsg] = useState<string | null>(null);
   const [showMotherboard, setShowMotherboard] = useState(false);
-  const [showOverclock, setShowOverclock] = useState(false);
+  const [showOverclockPopup, setShowOverclockPopup] = useState(false);
+  const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
+
+  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  const overclockCount = useGameState(engine, s => s.overclockCount);
+  const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
 
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
@@ -34,55 +113,135 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
     return unsub;
   }, [engine]);
 
+  const openDrawer = (d: MobileDrawer) => setMobileDrawer(prev => prev === d ? null : d);
+
   if (isMobile) {
     return (
-      <div className="flex flex-col" style={{ height: '100dvh', background: '#0a0a0f' }}>
+      <div style={{ height: '100dvh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        {/* Modals */}
         {showMotherboard && <MotherboardScreen engine={engine} onClose={() => setShowMotherboard(false)} />}
-        {showOverclock && <OverclockScreen engine={engine} onClose={() => setShowOverclock(false)} />}
 
         <CyberHUD engine={engine} playerHandle={player.handle} />
 
         {offlineMsg && (
           <div
-            className="font-pixel text-center py-2 glow-green"
-            style={{ background: '#0a1a02', color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #27b00e' }}
+            className="font-pixel text-center py-2"
+            style={{ background: '#0a1a02', color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #27b00e', flexShrink: 0 }}
           >
             {offlineMsg}
           </div>
         )}
 
+        {/* Battlefield fills all remaining space */}
         <div style={{ flex: 1, minHeight: 0 }}>
           <Battlefield engine={engine} />
         </div>
 
-        {/* Bottom panel: components with popup shortcuts */}
+        {/* Bottom tab bar */}
         <div
-          className="pixel-border"
-          style={{ background: '#0d0d1a', borderColor: '#1a2a3a', borderBottom: 'none', borderLeft: 'none', borderRight: 'none' }}
+          style={{
+            flexShrink: 0,
+            display: 'grid', gridTemplateColumns: '1fr 1fr',
+            background: '#050010',
+            borderTop: '1px solid #1a1a2a',
+          }}
         >
-          <div style={{ height: '38vh', overflow: 'hidden' }}>
-            <ComponentPanel
-              engine={engine}
-              onOpenMotherboard={() => setShowMotherboard(true)}
-              onOpenOverclock={() => setShowOverclock(true)}
-            />
-          </div>
+          {/* Components tab */}
+          <button
+            onClick={() => openDrawer('components')}
+            style={{
+              background: mobileDrawer === 'components' ? '#001520' : 'transparent',
+              border: 'none',
+              borderRight: '1px solid #1a1a2a',
+              borderTop: mobileDrawer === 'components' ? '2px solid #00f5ff' : '2px solid transparent',
+              color: mobileDrawer === 'components' ? '#00f5ff' : '#3a4a5a',
+              padding: '10px 8px',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all 0.15s',
+            }}
+          >
+            <CircuitBoard size={14} color={mobileDrawer === 'components' ? '#00f5ff' : '#3a4a5a'} />
+            <span className="font-pixel" style={{ fontSize: '7px', letterSpacing: '1px' }}>MODULES</span>
+            {inventoryCount > 0 && (
+              <span style={{
+                background: '#39ff14', color: '#000', borderRadius: 0,
+                padding: '0 4px', fontSize: '7px', lineHeight: '13px',
+                fontFamily: 'var(--font-mono)', minWidth: 13, textAlign: 'center',
+              }}>
+                {inventoryCount}
+              </span>
+            )}
+          </button>
+
+          {/* Overclock tab */}
+          <button
+            onClick={() => openDrawer('overclock')}
+            style={{
+              background: mobileDrawer === 'overclock' ? '#130010' : 'transparent',
+              border: 'none',
+              borderTop: mobileDrawer === 'overclock' ? '2px solid #ff0080' : '2px solid transparent',
+              color: mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a',
+              padding: '10px 8px',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              transition: 'all 0.15s',
+            }}
+          >
+            <Zap size={14} color={mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a'} />
+            <span className="font-pixel" style={{ fontSize: '7px', letterSpacing: '1px' }}>OVERCLOCK</span>
+            {availableOCT > 0 && (
+              <span style={{
+                background: '#ff0080', color: '#000', borderRadius: 0,
+                padding: '0 4px', fontSize: '7px', lineHeight: '13px',
+                fontFamily: 'var(--font-mono)', minWidth: 13, textAlign: 'center',
+              }}>
+                {availableOCT}
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Components drawer */}
+        <MobileDrawerOverlay
+          open={mobileDrawer === 'components'}
+          onClose={() => setMobileDrawer(null)}
+          title="HARDWARE MODULES"
+          accentColor="#00f5ff"
+        >
+          <ComponentPanel
+            engine={engine}
+            onOpenMotherboard={() => { setMobileDrawer(null); setTimeout(() => setShowMotherboard(true), 100); }}
+            onOpenOverclock={() => { setMobileDrawer(null); setTimeout(() => openDrawer('overclock'), 100); }}
+          />
+        </MobileDrawerOverlay>
+
+        {/* Overclock drawer */}
+        <MobileDrawerOverlay
+          open={mobileDrawer === 'overclock'}
+          onClose={() => setMobileDrawer(null)}
+          title="OVERCLOCK TREE"
+          accentColor="#ff0080"
+        >
+          <div style={{ height: '100%', overflowY: 'auto', padding: 12 }}>
+            <OverclockPanel engine={engine} />
+          </div>
+        </MobileDrawerOverlay>
       </div>
     );
   }
 
-  // Desktop layout
+  // Desktop layout: left components | center battlefield | right overclock
   return (
     <div className="flex flex-col" style={{ height: '100dvh', background: '#0a0a0f' }}>
       {showMotherboard && <MotherboardScreen engine={engine} onClose={() => setShowMotherboard(false)} />}
-      {showOverclock && <OverclockScreen engine={engine} onClose={() => setShowOverclock(false)} />}
+      {showOverclockPopup && <OverclockScreen engine={engine} onClose={() => setShowOverclockPopup(false)} />}
 
       <CyberHUD engine={engine} playerHandle={player.handle} />
 
       {offlineMsg && (
         <div
-          className="font-pixel text-center py-2 glow-green"
+          className="font-pixel text-center py-2"
           style={{ background: '#0a1a02', color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #27b00e' }}
         >
           {offlineMsg}
@@ -90,31 +249,50 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       )}
 
       <div className="flex" style={{ flex: 1, minHeight: 0 }}>
-        {/* Left sidebar: Components + shortcut buttons */}
+        {/* Left sidebar: Components */}
         <div
-          className="pixel-border"
           style={{
-            width: 260,
+            width: 260, flexShrink: 0,
             background: '#0a0a0f',
-            borderColor: '#1a2a3a',
-            borderTop: 'none',
-            borderBottom: 'none',
-            borderLeft: 'none',
+            borderRight: '1px solid #1a2a3a',
             overflow: 'hidden',
-            display: 'flex',
-            flexDirection: 'column',
+            display: 'flex', flexDirection: 'column',
           }}
         >
           <ComponentPanel
             engine={engine}
             onOpenMotherboard={() => setShowMotherboard(true)}
-            onOpenOverclock={() => setShowOverclock(true)}
+            onOpenOverclock={() => setShowOverclockPopup(true)}
           />
         </div>
 
         {/* Center: Battlefield */}
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <Battlefield engine={engine} />
+        </div>
+
+        {/* Right sidebar: Overclock */}
+        <div
+          style={{
+            width: 280, flexShrink: 0,
+            background: '#0a0a0f',
+            borderLeft: '1px solid #1a1a2a',
+            overflow: 'hidden',
+            display: 'flex', flexDirection: 'column',
+          }}
+        >
+          <div
+            className="font-pixel px-3 py-2"
+            style={{
+              color: '#ff0080', fontSize: '7px', letterSpacing: '3px',
+              borderBottom: '1px solid #1a1a2a', background: '#050010', flexShrink: 0,
+            }}
+          >
+            OVERCLOCK TREE
+          </div>
+          <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: 10 }}>
+            <OverclockPanel engine={engine} />
+          </div>
         </div>
       </div>
     </div>
