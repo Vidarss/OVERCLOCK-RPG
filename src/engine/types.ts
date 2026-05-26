@@ -33,8 +33,7 @@ export type GameEventType =
   | 'zone_changed'
   | 'item_drop'
   | 'item_equipped'
-  | 'item_unequipped'
-  | 'mobo_upgrade';
+  | 'item_unequipped';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
@@ -117,10 +116,7 @@ export interface GameState {
   components: Record<string, ComponentDef>;
   artifacts: Record<string, ArtifactDef>;
   inventory: HardwareItem[];
-  equippedItems: Record<ItemSlot, (HardwareItem | null)[]>;
-  motherboardTier: number;
-  ramSlots: number;
-  expansionSlots: number;
+  equippedItems: Record<ItemSlot, HardwareItem | null>;
   totalDamageDealt: number;
   bossTimeRemaining: number;
   isBossActive: boolean;

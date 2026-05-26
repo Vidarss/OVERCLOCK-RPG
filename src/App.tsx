@@ -14,7 +14,6 @@ import { OverclockPlugin } from './plugins/OverclockPlugin';
 import { SavePlugin } from './plugins/SavePlugin';
 import { ZonePlugin } from './plugins/ZonePlugin';
 import { ItemPlugin } from './plugins/ItemPlugin';
-import { MoboPlugin } from './plugins/MoboPlugin';
 
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegisterScreen } from './components/auth/RegisterScreen';
@@ -37,7 +36,6 @@ function buildEngine(): GameEngine {
   engine.register(new ComponentPlugin());
   engine.register(new OverclockPlugin());
   engine.register(new ItemPlugin());
-  engine.register(new MoboPlugin());
   engine.register(new SavePlugin());
   engine.register(new ZonePlugin());
 
