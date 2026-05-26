@@ -85,7 +85,6 @@ const SLOT_SECONDARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
 };
 
 function rollRarity(tier: number, isBoss: boolean): ItemRarity {
-  // Boss kills and higher tiers shift rarity up
   const bossBonus = isBoss ? 15 : 0;
   const tierBonus = tier * 3;
   const total = RARITY_WEIGHTS.reduce((s, [, w]) => s + w, 0);
@@ -124,7 +123,6 @@ function generateItem(tier: number, isBoss: boolean): HardwareItem {
     },
   ];
 
-  // Rare+ get a secondary stat
   if (rarity !== 'Common') {
     stats.push({
       type: secondaryType,
@@ -149,22 +147,27 @@ function generateItem(tier: number, isBoss: boolean): HardwareItem {
 
 const INVENTORY_MAX = 40;
 
+const EMPTY_EQUIPPED: GameState['equippedItems'] = {
+  RAM: [null],
+  GPU: [null],
+  CPU: [null],
+  EXPANSION: [null],
+};
+
 export class ItemPlugin implements IPlugin {
   id = 'items';
   dependencies = ['enemy'];
   stateKeys = ['inventory', 'equippedItems'] as (keyof GameState)[];
-  defaultState = { inventory: [], equippedItems: { RAM: null, GPU: null, CPU: null, EXPANSION: null } };
+  defaultState = { inventory: [], equippedItems: EMPTY_EQUIPPED };
 
   private engine!: IEngine;
   private unsub?: () => void;
   private unsubSync?: () => void;
-  private unsubOverclock?: () => void;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
 
     this.unsubSync = engine.on('state_sync', () => {
-      // State fields auto-restored by engine; re-apply equipped item modifiers
       this.applyEquippedModifiers();
     });
 
@@ -178,52 +181,62 @@ export class ItemPlugin implements IPlugin {
         engine.emit('item_drop', { item });
       }
     });
-
-    this.unsubOverclock = engine.on('overclock', () => {
-      // Keep equipped items and inventory across overclock — they are permanent
-    });
   }
 
-  equip(itemId: string): boolean {
+  getAllEquipped(): HardwareItem[] {
+    const equipped = this.engine.state.equippedItems ?? EMPTY_EQUIPPED;
+    return Object.values(equipped).flat().filter((i): i is HardwareItem => i !== null);
+  }
+
+  equip(itemId: string, slotIndex?: number): boolean {
     const state = this.engine.state;
     const item = state.inventory.find(i => i.id === itemId);
     if (!item) return false;
 
-    const previouslyEquipped = state.equippedItems[item.slot];
-    const newEquipped = { ...state.equippedItems, [item.slot]: item };
+    const slotArray = [...(state.equippedItems[item.slot] ?? [null])];
 
-    // Move displaced item back to inventory
+    let targetIndex = slotIndex ?? slotArray.findIndex(s => s === null);
+    if (targetIndex < 0) targetIndex = 0;
+    if (targetIndex >= slotArray.length) targetIndex = slotArray.length - 1;
+
+    const displaced = slotArray[targetIndex];
+    slotArray[targetIndex] = item;
+
+    const newEquipped = { ...state.equippedItems, [item.slot]: slotArray };
     let newInventory = state.inventory.filter(i => i.id !== itemId);
-    if (previouslyEquipped) {
-      newInventory = [...newInventory, previouslyEquipped];
-    }
+    if (displaced) newInventory = [...newInventory, displaced];
 
     this.engine.updateState({ equippedItems: newEquipped, inventory: newInventory });
     this.applyEquippedModifiers();
-    this.engine.emit('item_equipped', { item, slot: item.slot });
+    this.engine.emit('item_equipped', { item, slot: item.slot, slotIndex: targetIndex });
     return true;
   }
 
-  unequip(slot: ItemSlot): boolean {
+  unequip(slot: ItemSlot, slotIndex = 0): boolean {
     const state = this.engine.state;
-    const item = state.equippedItems[slot];
+    const slotArray = [...(state.equippedItems[slot] ?? [null])];
+    const item = slotArray[slotIndex] ?? null;
     if (!item) return false;
 
-    const newEquipped = { ...state.equippedItems, [slot]: null };
+    slotArray[slotIndex] = null;
+    const newEquipped = { ...state.equippedItems, [slot]: slotArray };
     const newInventory = [...state.inventory, item];
+
     this.engine.updateState({ equippedItems: newEquipped, inventory: newInventory });
     this.applyEquippedModifiers();
-    this.engine.emit('item_unequipped', { item, slot });
+    this.engine.emit('item_unequipped', { item, slot, slotIndex });
     return true;
   }
 
   private applyEquippedModifiers(): void {
     this.engine.removeModifiers('items');
-    const equipped = this.engine.state.equippedItems;
-    for (const item of Object.values(equipped)) {
-      if (!item) continue;
-      for (const stat of item.stats) {
-        this.engine.addModifier('items', stat);
+    const equipped = this.engine.state.equippedItems ?? EMPTY_EQUIPPED;
+    for (const slotArray of Object.values(equipped)) {
+      for (const item of slotArray) {
+        if (!item) continue;
+        for (const stat of item.stats) {
+          this.engine.addModifier('items', stat);
+        }
       }
     }
   }
@@ -231,7 +244,6 @@ export class ItemPlugin implements IPlugin {
   cleanup(): void {
     this.unsub?.();
     this.unsubSync?.();
-    this.unsubOverclock?.();
     this.engine?.removeModifiers('items');
   }
 }

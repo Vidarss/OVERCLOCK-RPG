@@ -24,6 +24,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpen
   const overclocks = useGameState(engine, s => s.overclockCount);
   const components = useGameState(engine, s => s.components);
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  const equippedCount = useGameState(engine, s => Object.values(s.equippedItems ?? {}).flat().filter(Boolean).length);
   const idleDps = getTotalIdleDps(components) * engine.getModifier('idle_dps');
   const [confirming, setConfirming] = useState(false);
 
@@ -75,9 +76,9 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpen
         onClick={onOpenMotherboard}
         className="flex items-center gap-1 font-pixel"
         style={{
-          background: inventoryCount > 0 ? '#051505' : 'transparent',
-          border: `1px solid ${inventoryCount > 0 ? '#39ff1444' : '#1a2a3a'}`,
-          color: inventoryCount > 0 ? '#39ff14' : '#2a3a4a',
+          background: inventoryCount > 0 || equippedCount > 0 ? '#051505' : 'transparent',
+          border: `1px solid ${inventoryCount > 0 || equippedCount > 0 ? '#39ff1444' : '#1a2a3a'}`,
+          color: inventoryCount > 0 || equippedCount > 0 ? '#39ff14' : '#2a3a4a',
           padding: '3px 6px',
           fontSize: '7px',
           cursor: 'pointer',
@@ -91,14 +92,14 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpen
         }}
         onMouseLeave={e => {
           const b = e.currentTarget;
-          b.style.borderColor = inventoryCount > 0 ? '#39ff1444' : '#1a2a3a';
-          b.style.color = inventoryCount > 0 ? '#39ff14' : '#2a3a4a';
+          b.style.borderColor = inventoryCount > 0 || equippedCount > 0 ? '#39ff1444' : '#1a2a3a';
+          b.style.color = inventoryCount > 0 || equippedCount > 0 ? '#39ff14' : '#2a3a4a';
         }}
         title="Open Motherboard"
       >
         <CircuitBoard size={12} />
-        {inventoryCount > 0 && (
-          <span style={{ fontSize: '7px' }}>{inventoryCount}</span>
+        {(inventoryCount > 0 || equippedCount > 0) && (
+          <span style={{ fontSize: '7px' }}>{inventoryCount > 0 ? inventoryCount : equippedCount}</span>
         )}
       </button>
 
