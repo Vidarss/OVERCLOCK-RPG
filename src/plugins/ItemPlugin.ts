@@ -154,6 +154,23 @@ const EMPTY_EQUIPPED: GameState['equippedItems'] = {
   EXPANSION: [null],
 };
 
+// Coerce a slot value from the old format (single item or null) to the new array format
+export function normalizeEquippedSlot(value: unknown): (import('../engine/types').HardwareItem | null)[] {
+  if (Array.isArray(value)) return value as (import('../engine/types').HardwareItem | null)[];
+  // Old save: null or a single HardwareItem
+  return [value as (import('../engine/types').HardwareItem | null)];
+}
+
+export function normalizeEquipped(raw: unknown): GameState['equippedItems'] {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    RAM: normalizeEquippedSlot(r.RAM),
+    GPU: normalizeEquippedSlot(r.GPU),
+    CPU: normalizeEquippedSlot(r.CPU),
+    EXPANSION: normalizeEquippedSlot(r.EXPANSION),
+  };
+}
+
 export class ItemPlugin implements IPlugin {
   id = 'items';
   dependencies = ['enemy'];
@@ -168,6 +185,12 @@ export class ItemPlugin implements IPlugin {
     this.engine = engine;
 
     this.unsubSync = engine.on('state_sync', () => {
+      // Migrate old save format: coerce equippedItems from single-values to arrays
+      const equipped = engine.state.equippedItems;
+      const needsMigration = equipped && !Array.isArray(equipped.RAM);
+      if (needsMigration) {
+        engine.updateState({ equippedItems: normalizeEquipped(equipped) });
+      }
       this.applyEquippedModifiers();
     });
 

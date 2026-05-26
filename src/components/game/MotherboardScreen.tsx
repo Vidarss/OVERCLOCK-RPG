@@ -4,6 +4,7 @@ import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import type { HardwareItem, ItemSlot, ItemRarity, ModifierDef, GameState } from '../../engine/types';
 import type { ItemPlugin } from '../../plugins/ItemPlugin';
+import { normalizeEquipped } from '../../plugins/ItemPlugin';
 import type { MoboPlugin } from '../../plugins/MoboPlugin';
 import { MOBO_TIERS } from '../../plugins/MoboPlugin';
 
@@ -483,7 +484,7 @@ const SlotTab: React.FC<SlotTabProps> = ({ slot, equipped, inventory, slotCount,
 
 export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, onClose }) => {
   const inventory = useGameState(engine, s => s.inventory ?? []);
-  const equipped = useGameState(engine, s => s.equippedItems ?? { RAM: [null], GPU: [null], CPU: [null], EXPANSION: [null] });
+  const equipped = useGameState(engine, s => normalizeEquipped(s.equippedItems));
   const motherboardTier = useGameState(engine, s => s.motherboardTier ?? 0);
   const ramSlots = useGameState(engine, s => s.ramSlots ?? 1);
   const expansionSlots = useGameState(engine, s => s.expansionSlots ?? 1);

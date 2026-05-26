@@ -24,7 +24,13 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onOpen
   const overclocks = useGameState(engine, s => s.overclockCount);
   const components = useGameState(engine, s => s.components);
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
-  const equippedCount = useGameState(engine, s => Object.values(s.equippedItems ?? {}).flat().filter(Boolean).length);
+  const equippedCount = useGameState(engine, s => {
+    const eq = s.equippedItems ?? {};
+    return Object.values(eq).reduce((sum, v) => {
+      const arr = Array.isArray(v) ? v : [v];
+      return sum + arr.filter(Boolean).length;
+    }, 0);
+  });
   const idleDps = getTotalIdleDps(components) * engine.getModifier('idle_dps');
   const [confirming, setConfirming] = useState(false);
 
