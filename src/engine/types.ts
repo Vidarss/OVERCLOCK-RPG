@@ -110,6 +110,8 @@ export interface GameState {
   enemy: Enemy | null;
   gold: number;
   overclockCount: number;
+  overclockTier: number;
+  totalOverclocks: number;
   overclockUpgrades: Record<string, OverclockUpgrade>;
   components: Record<string, ComponentDef>;
   artifacts: Record<string, ArtifactDef>;

@@ -6,6 +6,8 @@ export const DEFAULT_STATE: GameState = {
   enemy: null,
   gold: 0,
   overclockCount: 0,
+  overclockTier: 0,
+  totalOverclocks: 0,
   overclockUpgrades: {},
   components: {},
   artifacts: {},
