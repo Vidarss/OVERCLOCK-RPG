@@ -177,7 +177,7 @@ export const TIER_NAMES: string[] = [
 // Each overclock tier multiplies future gain by +25%.
 export function calculateOverclockGain(highestStage: number, tier: number): number {
   if (highestStage < 10) return 0;
-  const base = Math.floor((highestStage - 10) / 5) + 1;
+  const base = Math.floor(Math.max(0, highestStage - 9) / 5) + 1;
   const milestoneBonus =
     (highestStage >= 200 ? 20 : 0) +
     (highestStage >= 100 ? 10 : 0) +

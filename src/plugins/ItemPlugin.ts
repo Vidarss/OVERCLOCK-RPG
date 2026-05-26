@@ -23,16 +23,16 @@ const ITEM_FLAVORS: Record<string, string> = {
   DDR5_GHOST: 'Addresses that should not exist hold your arsenal.',
   PHANTOM_RAM: 'It shows up in no process table. Runs in everything.',
   VENOM_DIMM: 'Leaked from a black site. Runs hot. Runs mean.',
-  SHADOW_CACHE: 'Prefetches tomorrow\'s attacks.',
+  SHADOW_CACHE: "Prefetches tomorrow's attacks.",
   HYPERTHREAD_STICK: 'Twice the threads, twice the carnage.',
   OVERCLOCKED_DDR: 'Voided warranty. Doubled damage.',
-  VOLATILE_BANK: 'Contents survive power loss. Revenants don\'t reset.',
+  VOLATILE_BANK: "Contents survive power loss. Revenants don't reset.",
   NULL_PTR_MODULE: 'References nothing. Destroys everything.',
-  VOID_SHADER: 'Renders pain in resolutions enemies can\'t perceive.',
+  VOID_SHADER: "Renders pain in resolutions enemies can't perceive.",
   FRACTURE_GPU: 'Stress-tested past the point of sanity.',
   DARK_RENDERER: 'Draws frames of destruction before they happen.',
   QUANTUM_CORE_GPU: 'Superposition: hit and miss, simultaneously.',
-  ROGUE_PIXEL: 'One bad actor in 4K. That\'s enough.',
+  ROGUE_PIXEL: "One bad actor in 4K. That's enough.",
   SHADER_DAEMON: 'Compiles malice into every draw call.',
   ENTROPY_CARD: 'Randomness as a weapon. Chaos is the strategy.',
   PARALLEL_GHOST: 'Multiple threads, zero traces.',
@@ -50,7 +50,7 @@ const ITEM_FLAVORS: Record<string, string> = {
   BACKDOOR_CARD: 'Manufacturer left a key. You found it.',
   INJECTION_BUS: 'Everything on the bus is yours now.',
   EXPLOIT_BRIDGE: 'Bridges two networks neither should touch.',
-  DARK_PCIE: 'PCIe lane to somewhere the spec forgot.',
+  DARK_PCIE: "PCIe lane to somewhere the spec forgot.",
   SHADOW_EXPANSION: 'Expands into address space that does not exist.',
 };
 
@@ -61,87 +61,61 @@ const RARITY_WEIGHTS: [ItemRarity, number][] = [
   ['Legendary', 2],
 ];
 
-const RARITY_STAT_MULTIPLIERS: Record<ItemRarity, number> = {
-  Common: 1,
-  Rare: 1.8,
-  Epic: 3.2,
-  Legendary: 6,
-};
+const RARITY_STAT_MULT: Record<ItemRarity, number> = { Common: 1, Rare: 1.8, Epic: 3.2, Legendary: 6 };
 
 const SLOTS: ItemSlot[] = ['RAM', 'GPU', 'CPU', 'EXPANSION'];
 
-const SLOT_PRIMARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
-  RAM: 'idle_dps',
-  GPU: 'tap_damage',
-  CPU: 'crit_chance',
-  EXPANSION: 'gold_rate',
+const PRIMARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
+  RAM: 'idle_dps', GPU: 'tap_damage', CPU: 'crit_chance', EXPANSION: 'gold_rate',
 };
-
-const SLOT_SECONDARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
-  RAM: 'tap_damage',
-  GPU: 'idle_dps',
-  CPU: 'crit_multiplier',
-  EXPANSION: 'tap_damage',
+const SECONDARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
+  RAM: 'tap_damage', GPU: 'idle_dps', CPU: 'crit_multiplier', EXPANSION: 'tap_damage',
 };
 
 function rollRarity(tier: number, isBoss: boolean): ItemRarity {
-  // Boss kills and higher tiers shift rarity up
-  const bossBonus = isBoss ? 15 : 0;
-  const tierBonus = tier * 3;
   const total = RARITY_WEIGHTS.reduce((s, [, w]) => s + w, 0);
-  let roll = Math.random() * total - bossBonus - tierBonus;
-
+  let roll = Math.random() * total - (isBoss ? 15 : 0) - tier * 3;
   for (const [rarity, weight] of RARITY_WEIGHTS) {
     roll -= weight;
     if (roll <= 0) return rarity;
   }
-  return isBoss && tier >= 3 ? 'Epic' : 'Common';
+  return 'Common';
 }
 
 function rollDropChance(tier: number, isBoss: boolean): boolean {
   const base = 0.15 + tier * 0.05;
-  const chance = isBoss ? Math.min(0.95, base * 3) : Math.min(0.60, base);
-  return Math.random() < chance;
+  return Math.random() < (isBoss ? Math.min(0.95, base * 3) : Math.min(0.60, base));
 }
 
 function generateItem(tier: number, isBoss: boolean): HardwareItem {
   const slot = SLOTS[Math.floor(Math.random() * SLOTS.length)];
   const rarity = rollRarity(tier, isBoss);
-  const names = SLOT_ITEMS[slot];
-  const name = names[Math.floor(Math.random() * names.length)];
-  const mult = RARITY_STAT_MULTIPLIERS[rarity];
+  const name = SLOT_ITEMS[slot][Math.floor(Math.random() * SLOT_ITEMS[slot].length)];
+  const mult = RARITY_STAT_MULT[rarity];
+  const pType = PRIMARY_STAT[slot];
+  const sType = SECONDARY_STAT[slot];
 
-  const primaryType = SLOT_PRIMARY_STAT[slot];
-  const secondaryType = SLOT_SECONDARY_STAT[slot];
+  const stats: ModifierDef[] = [{
+    type: pType,
+    value: pType === 'crit_chance'
+      ? parseFloat((0.03 * (tier + 1) * mult).toFixed(3))
+      : parseFloat((1 + 0.15 * (tier + 1) * mult).toFixed(3)),
+    isMultiplier: pType !== 'crit_chance',
+  }];
 
-  const stats: ModifierDef[] = [
-    {
-      type: primaryType,
-      value: primaryType === 'crit_chance'
-        ? parseFloat((0.03 * (tier + 1) * mult).toFixed(3))
-        : parseFloat((1 + 0.15 * (tier + 1) * mult).toFixed(3)),
-      isMultiplier: primaryType !== 'crit_chance',
-    },
-  ];
-
-  // Rare+ get a secondary stat
   if (rarity !== 'Common') {
     stats.push({
-      type: secondaryType,
-      value: secondaryType === 'crit_multiplier'
+      type: sType,
+      value: sType === 'crit_multiplier'
         ? parseFloat((0.2 * mult).toFixed(3))
         : parseFloat((1 + 0.08 * (tier + 1) * mult).toFixed(3)),
-      isMultiplier: secondaryType !== 'crit_multiplier',
+      isMultiplier: sType !== 'crit_multiplier',
     });
   }
 
   return {
     id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-    name,
-    slot,
-    rarity,
-    tier,
-    stats,
+    name, slot, rarity, tier, stats,
     flavorText: ITEM_FLAVORS[name] ?? 'Unknown provenance.',
     droppedAt: Date.now(),
   };
@@ -149,22 +123,48 @@ function generateItem(tier: number, isBoss: boolean): HardwareItem {
 
 const INVENTORY_MAX = 40;
 
+// ── Migration helper ───────────────────────────────────────────────────────
+// Old saves store equippedItems as { RAM: HardwareItem|null, ... }
+// New format is { RAM: (HardwareItem|null)[], ... }
+
+export function normalizeEquippedSlot(value: unknown): (HardwareItem | null)[] {
+  if (Array.isArray(value)) return value as (HardwareItem | null)[];
+  return [value as HardwareItem | null];
+}
+
+export function normalizeEquipped(raw: unknown): GameState['equippedItems'] {
+  const r = (raw ?? {}) as Record<string, unknown>;
+  return {
+    RAM: normalizeEquippedSlot(r.RAM),
+    GPU: normalizeEquippedSlot(r.GPU),
+    CPU: normalizeEquippedSlot(r.CPU),
+    EXPANSION: normalizeEquippedSlot(r.EXPANSION),
+  };
+}
+
+const DEFAULT_EQUIPPED: GameState['equippedItems'] = {
+  RAM: [null], GPU: [null], CPU: [null], EXPANSION: [null],
+};
+
 export class ItemPlugin implements IPlugin {
   id = 'items';
   dependencies = ['enemy'];
   stateKeys = ['inventory', 'equippedItems'] as (keyof GameState)[];
-  defaultState = { inventory: [], equippedItems: { RAM: null, GPU: null, CPU: null, EXPANSION: null } };
+  defaultState = { inventory: [], equippedItems: DEFAULT_EQUIPPED };
 
   private engine!: IEngine;
   private unsub?: () => void;
   private unsubSync?: () => void;
-  private unsubOverclock?: () => void;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
 
     this.unsubSync = engine.on('state_sync', () => {
-      // State fields auto-restored by engine; re-apply equipped item modifiers
+      // Migrate old single-value saves to array format
+      const equipped = engine.state.equippedItems;
+      if (equipped && !Array.isArray(equipped.RAM)) {
+        engine.updateState({ equippedItems: normalizeEquipped(equipped) });
+      }
       this.applyEquippedModifiers();
     });
 
@@ -173,57 +173,67 @@ export class ItemPlugin implements IPlugin {
       if (rollDropChance(enemy.tier, enemy.isBoss)) {
         const item = generateItem(enemy.tier, enemy.isBoss);
         const current = engine.state.inventory ?? [];
-        const trimmed = current.length >= INVENTORY_MAX ? current.slice(current.length - INVENTORY_MAX + 1) : current;
+        const trimmed = current.length >= INVENTORY_MAX
+          ? current.slice(current.length - INVENTORY_MAX + 1)
+          : current;
         engine.updateState({ inventory: [...trimmed, item] });
         engine.emit('item_drop', { item });
       }
     });
-
-    this.unsubOverclock = engine.on('overclock', () => {
-      // Keep equipped items and inventory across overclock — they are permanent
-    });
   }
 
-  equip(itemId: string): boolean {
+  equip(itemId: string, slotIndex?: number): boolean {
     const state = this.engine.state;
     const item = state.inventory.find(i => i.id === itemId);
     if (!item) return false;
 
-    const previouslyEquipped = state.equippedItems[item.slot];
-    const newEquipped = { ...state.equippedItems, [item.slot]: item };
+    const rawSlot = state.equippedItems[item.slot];
+    const slotArray = Array.isArray(rawSlot) ? [...rawSlot] : [rawSlot as HardwareItem | null];
 
-    // Move displaced item back to inventory
+    let idx = slotIndex ?? slotArray.findIndex(s => s === null);
+    if (idx < 0) idx = 0;
+    if (idx >= slotArray.length) idx = slotArray.length - 1;
+
+    const displaced = slotArray[idx];
+    slotArray[idx] = item;
+
+    const newEquipped = { ...state.equippedItems, [item.slot]: slotArray };
     let newInventory = state.inventory.filter(i => i.id !== itemId);
-    if (previouslyEquipped) {
-      newInventory = [...newInventory, previouslyEquipped];
-    }
+    if (displaced) newInventory = [...newInventory, displaced];
 
     this.engine.updateState({ equippedItems: newEquipped, inventory: newInventory });
     this.applyEquippedModifiers();
-    this.engine.emit('item_equipped', { item, slot: item.slot });
+    this.engine.emit('item_equipped', { item, slot: item.slot, slotIndex: idx });
     return true;
   }
 
-  unequip(slot: ItemSlot): boolean {
+  unequip(slot: ItemSlot, slotIndex = 0): boolean {
     const state = this.engine.state;
-    const item = state.equippedItems[slot];
+    const rawSlot = state.equippedItems[slot];
+    const slotArray = Array.isArray(rawSlot) ? [...rawSlot] : [rawSlot as HardwareItem | null];
+    const item = slotArray[slotIndex] ?? null;
     if (!item) return false;
 
-    const newEquipped = { ...state.equippedItems, [slot]: null };
+    slotArray[slotIndex] = null;
+    const newEquipped = { ...state.equippedItems, [slot]: slotArray };
     const newInventory = [...state.inventory, item];
+
     this.engine.updateState({ equippedItems: newEquipped, inventory: newInventory });
     this.applyEquippedModifiers();
-    this.engine.emit('item_unequipped', { item, slot });
+    this.engine.emit('item_unequipped', { item, slot, slotIndex });
     return true;
   }
 
   private applyEquippedModifiers(): void {
     this.engine.removeModifiers('items');
     const equipped = this.engine.state.equippedItems;
-    for (const item of Object.values(equipped)) {
-      if (!item) continue;
-      for (const stat of item.stats) {
-        this.engine.addModifier('items', stat);
+    for (const rawSlot of Object.values(equipped)) {
+      const arr = Array.isArray(rawSlot) ? rawSlot : [rawSlot as HardwareItem | null];
+      for (const item of arr) {
+        if (!item) continue;
+        for (const stat of item.stats) {
+          this.engine.addModifier('items', stat);
+        }
       }
     }
   }
@@ -231,7 +241,6 @@ export class ItemPlugin implements IPlugin {
   cleanup(): void {
     this.unsub?.();
     this.unsubSync?.();
-    this.unsubOverclock?.();
     this.engine?.removeModifiers('items');
   }
 }
