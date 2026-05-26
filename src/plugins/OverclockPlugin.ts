@@ -154,6 +154,7 @@ export class OverclockPlugin implements IPlugin {
 
     this.applyAllModifiers();
     this.engine.emit('overclock', { gain, totalOverclocks: newCount });
+    this.engine.emit('save_requested', {});
   }
 
   private applyAllModifiers(): void {
