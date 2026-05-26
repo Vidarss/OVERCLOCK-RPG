@@ -64,6 +64,14 @@ export function getComponentCost(comp: ComponentDef): number {
   return Math.floor(comp.baseCost * Math.pow(comp.costMultiplier, comp.level));
 }
 
+export function getComponentBulkCost(comp: ComponentDef, quantity: number): number {
+  let total = 0;
+  for (let i = 0; i < quantity; i++) {
+    total += Math.floor(comp.baseCost * Math.pow(comp.costMultiplier, comp.level + i));
+  }
+  return total;
+}
+
 export function getComponentDps(comp: ComponentDef): number {
   if (comp.level === 0) return 0;
   return comp.baseDps * comp.level;
@@ -112,18 +120,38 @@ export class ComponentPlugin implements IPlugin {
     });
   }
 
+  getMaxAffordable(componentId: string): number {
+    const comp = this.engine.state.components[componentId];
+    if (!comp) return 0;
+    const gold = this.engine.state.gold;
+    let qty = 0;
+    let spent = 0;
+    while (true) {
+      const next = Math.floor(comp.baseCost * Math.pow(comp.costMultiplier, comp.level + qty));
+      if (spent + next > gold) break;
+      spent += next;
+      qty++;
+    }
+    return qty;
+  }
+
   purchase(componentId: string): boolean {
+    return this.purchaseBulk(componentId, 1);
+  }
+
+  purchaseBulk(componentId: string, quantity: number): boolean {
+    if (quantity <= 0) return false;
     const state = this.engine.state;
     const comp = state.components[componentId];
     if (!comp) return false;
 
-    const cost = getComponentCost(comp);
+    const totalCost = getComponentBulkCost(comp, quantity);
     const goldPlugin = this.engine.getPlugin<GoldPlugin>('gold');
-    if (!goldPlugin?.spend(cost)) return false;
+    if (!goldPlugin?.spend(totalCost)) return false;
 
-    const updatedComp = { ...comp, level: comp.level + 1 };
+    const newLevel = comp.level + quantity;
+    const updatedComp = { ...comp, level: newLevel };
 
-    // Unlock next component
     const idx = INITIAL_COMPONENTS.findIndex(c => c.id === componentId);
     const nextComp = INITIAL_COMPONENTS[idx + 1];
 
@@ -133,7 +161,7 @@ export class ComponentPlugin implements IPlugin {
     }
 
     this.engine.updateState({ components: updatedComponents });
-    this.engine.emit('component_levelup', { componentId, level: updatedComp.level, cost });
+    this.engine.emit('component_levelup', { componentId, level: newLevel, cost: totalCost });
     return true;
   }
 

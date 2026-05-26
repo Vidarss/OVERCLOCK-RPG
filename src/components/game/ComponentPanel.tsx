@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CircuitBoard, Zap } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
-import { getComponentCost, getComponentDps } from '../../plugins/ComponentPlugin';
+import { getComponentBulkCost, getComponentDps } from '../../plugins/ComponentPlugin';
 import type { ComponentPlugin } from '../../plugins/ComponentPlugin';
 import type { ComponentDef } from '../../engine/types';
 import type { OverclockPlugin } from '../../plugins/OverclockPlugin';
+
+type PurchaseMode = 1 | 10 | 100 | 'max';
 
 interface ComponentPanelProps {
   engine: GameEngine;
@@ -30,14 +32,23 @@ function formatNumber(n: number): string {
 const ComponentCard: React.FC<{
   comp: ComponentDef;
   gold: number;
-  onBuy: () => void;
-}> = ({ comp, gold, onBuy }) => {
+  purchaseMode: PurchaseMode;
+  maxQty: number;
+  onBuy: (qty: number) => void;
+}> = ({ comp, gold, purchaseMode, maxQty, onBuy }) => {
   const colors = COLOR_MAP[comp.color];
-  const cost = getComponentCost(comp);
   const dps = getComponentDps(comp);
-  const canAfford = gold >= cost;
+
+  const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
+  const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
+  const canAfford = qty > 0 && gold >= cost;
 
   if (!comp.unlocked) return null;
+
+  const label =
+    purchaseMode === 'max'
+      ? maxQty > 0 ? `MAX x${maxQty} ◆${formatNumber(cost)}` : 'MAX ◆--'
+      : `x${qty} ◆${formatNumber(cost)}`;
 
   return (
     <div
@@ -70,20 +81,21 @@ const ComponentCard: React.FC<{
         </div>
 
         <button
-          onClick={onBuy}
+          onClick={() => onBuy(qty)}
           disabled={!canAfford}
           className="font-pixel pixel-border"
           style={{
             background: canAfford ? colors.bg : '#0a0a0f',
             borderColor: canAfford ? colors.text : '#1a2a3a',
             color: canAfford ? colors.text : '#2a3a4a',
-            padding: '5px 10px',
+            padding: '5px 8px',
             fontSize: '7px',
             cursor: canAfford ? 'pointer' : 'not-allowed',
             boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+            whiteSpace: 'nowrap',
           }}
         >
-          ◆{formatNumber(cost)}
+          {label}
         </button>
       </div>
     </div>
@@ -96,22 +108,30 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine, onOpenMo
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
   const equippedItems = useGameState(engine, s => s.equippedItems);
   const overclockCount = useGameState(engine, s => s.overclockCount);
+  const [purchaseMode, setPurchaseMode] = useState<PurchaseMode>(1);
 
   const equippedCount = Object.values(equippedItems ?? {})
     .flatMap(v => Array.isArray(v) ? v : [v])
     .filter(Boolean).length;
 
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
+  const plugin = engine.getPlugin<ComponentPlugin>('component');
 
-  const handleBuy = (id: string) => {
-    const plugin = engine.getPlugin<ComponentPlugin>('component');
-    plugin?.purchase(id);
+  const handleBuy = (id: string, qty: number) => {
+    if (qty <= 0) return;
+    plugin?.purchaseBulk(id, qty);
   };
 
   const unlockedComponents = Object.values(components).filter(c => c.unlocked);
 
   const hasBoardActivity = equippedCount > 0 || inventoryCount > 0;
   const hasOCT = availableOCT > 0;
+
+  const MODES: { label: string; value: PurchaseMode }[] = [
+    { label: 'x1', value: 1 },
+    { label: 'x10', value: 10 },
+    { label: 'x100', value: 100 },
+  ];
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column', background: '#0a0a0f' }}>
@@ -199,30 +219,83 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine, onOpenMo
           </button>
         </div>
 
-        <div
-          className="font-pixel mb-2"
-          style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px', paddingBottom: 8, borderBottom: '1px solid #1a2a3a' }}
-        >
-          {'> HARDWARE MODULES'}
+        {/* Header + purchase mode selector */}
+        <div style={{ borderBottom: '1px solid #1a2a3a', paddingBottom: 8, marginBottom: 0 }}>
+          <div
+            className="font-pixel mb-2"
+            style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px' }}
+          >
+            {'> HARDWARE MODULES'}
+          </div>
+
+          {/* x1 / x10 / x100 row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, marginBottom: 4 }}>
+            {MODES.map(m => {
+              const active = purchaseMode === m.value;
+              return (
+                <button
+                  key={m.value}
+                  onClick={() => setPurchaseMode(m.value)}
+                  className="font-pixel"
+                  style={{
+                    background: active ? '#001a20' : '#080810',
+                    border: `1px solid ${active ? '#00f5ff' : '#1a2a3a'}`,
+                    color: active ? '#00f5ff' : '#3a4a5a',
+                    padding: '5px 0',
+                    fontSize: '7px',
+                    cursor: 'pointer',
+                    boxShadow: active ? '0 0 8px rgba(0,245,255,0.2)' : 'none',
+                    transition: 'all 0.1s',
+                  }}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* BUY MAX button */}
+          <button
+            onClick={() => setPurchaseMode('max')}
+            className="font-pixel w-full"
+            style={{
+              background: purchaseMode === 'max' ? '#130800' : '#080808',
+              border: `1px solid ${purchaseMode === 'max' ? '#ffaa00' : '#1a1a2a'}`,
+              color: purchaseMode === 'max' ? '#ffaa00' : '#3a3a4a',
+              padding: '5px 0',
+              fontSize: '7px',
+              letterSpacing: '2px',
+              cursor: 'pointer',
+              boxShadow: purchaseMode === 'max' ? '0 0 8px rgba(255,170,0,0.2)' : 'none',
+              transition: 'all 0.1s',
+            }}
+          >
+            BUY MAX
+          </button>
         </div>
       </div>
 
       {/* Scrollable components list */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '0 8px 8px' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 8px 8px' }}>
         {unlockedComponents.length === 0 && (
           <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '11px', textAlign: 'center', padding: '20px 0' }}>
             Kill enemies to unlock components
           </div>
         )}
 
-        {unlockedComponents.map(comp => (
-          <ComponentCard
-            key={comp.id}
-            comp={comp}
-            gold={gold}
-            onBuy={() => handleBuy(comp.id)}
-          />
-        ))}
+        {unlockedComponents.map(comp => {
+          const maxQty = plugin?.getMaxAffordable(comp.id) ?? 0;
+          return (
+            <ComponentCard
+              key={comp.id}
+              comp={comp}
+              gold={gold}
+              purchaseMode={purchaseMode}
+              maxQty={maxQty}
+              onBuy={qty => handleBuy(comp.id, qty)}
+            />
+          );
+        })}
       </div>
     </div>
   );
