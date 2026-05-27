@@ -109,7 +109,7 @@ export class EnemyPlugin implements IPlugin {
       const clearedStage = event.payload.stage;
       const nextStage = clearedStage + 1;
       // If player beat the pending boss stage, clear the return flag
-      if (this.engine.state.pendingBossReturn && clearedStage >= (this.engine.state.pendingBossStage ?? 0)) {
+      if (this.engine.state.pendingBossReturn && nextStage >= (this.engine.state.pendingBossStage ?? 0)) {
         this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
       }
       this.spawnForStage(nextStage);
