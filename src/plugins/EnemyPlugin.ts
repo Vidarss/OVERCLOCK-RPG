@@ -108,11 +108,17 @@ export class EnemyPlugin implements IPlugin {
     engine.on('stage_clear', (event: GameEvent<{ stage: number }>) => {
       const clearedStage = event.payload.stage;
       const nextStage = clearedStage + 1;
-      // If player beat the pending boss stage, clear the return flag
-      if (this.engine.state.pendingBossReturn && nextStage >= (this.engine.state.pendingBossStage ?? 0)) {
+      const pendingBoss = this.engine.state.pendingBossStage;
+      if (this.engine.state.pendingBossReturn && clearedStage >= (pendingBoss ?? 0)) {
+        // Player progressed past the pending boss stage legitimately — clear flag and advance
         this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
+        this.spawnForStage(nextStage);
+      } else if (this.engine.state.pendingBossReturn && nextStage === pendingBoss) {
+        // Next stage is the pending boss — skip it, respawn same stage to keep farming
+        this.spawnForStage(clearedStage);
+      } else {
+        this.spawnForStage(nextStage);
       }
-      this.spawnForStage(nextStage);
     });
 
     engine.on('overclock', () => {
