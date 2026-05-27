@@ -35,10 +35,13 @@ const ComponentCard: React.FC<{
   gold: number;
   purchaseMode: PurchaseMode;
   maxQty: number;
-  onBuy: (qty: number) => void;
+  onBuy: (qty: number) => boolean;
 }> = ({ comp, gold, purchaseMode, maxQty, onBuy }) => {
   const colors = COLOR_MAP[comp.color];
   const dps = getComponentDps(comp);
+  const [levelUpKey, setLevelUpKey] = useState(0);
+  const [levelUpQty, setLevelUpQty] = useState(0);
+  const [showLevelUpText, setShowLevelUpText] = useState(false);
 
   const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
   const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
@@ -51,16 +54,53 @@ const ComponentCard: React.FC<{
       ? maxQty > 0 ? `MAX x${maxQty} ◆${formatNumber(cost)}` : 'MAX ◆--'
       : `x${qty} ◆${formatNumber(cost)}`;
 
+  const handleBuyClick = () => {
+    if (!canAfford) return;
+    const purchased = qty > 0 ? qty : 0;
+    const success = onBuy(qty);
+    if (success && purchased > 0) {
+      setLevelUpQty(purchased);
+      setLevelUpKey(k => k + 1);
+      setShowLevelUpText(true);
+      setTimeout(() => setShowLevelUpText(false), 650);
+    }
+  };
+
   return (
     <div
-      className="pixel-border mb-2"
+      key={levelUpKey > 0 ? `flash-${levelUpKey}` : comp.id}
+      className={`pixel-border mb-2${levelUpKey > 0 ? ' animate-level-up-flash' : ''}`}
       style={{
         background: colors.bg,
         borderColor: colors.border,
         padding: '10px',
         boxShadow: `0 0 8px ${colors.glow}`,
+        position: 'relative',
+        // Pass color to CSS custom property for the keyframe animation
+        ['--luf-color' as string]: colors.text,
+        transition: 'box-shadow 0.1s',
       }}
     >
+      {/* Level-up floating text */}
+      {showLevelUpText && (
+        <div
+          className="animate-level-up-text font-pixel"
+          style={{
+            position: 'absolute',
+            top: 4,
+            right: 8,
+            color: colors.text,
+            fontSize: '7px',
+            textShadow: `0 0 8px ${colors.text}`,
+            pointerEvents: 'none',
+            zIndex: 10,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          +{levelUpQty} LVL
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-1">
         <Tooltip
           position="right"
@@ -95,7 +135,7 @@ const ComponentCard: React.FC<{
         </div>
 
         <button
-          onClick={() => onBuy(qty)}
+          onClick={handleBuyClick}
           disabled={!canAfford}
           className="font-pixel pixel-border"
           style={{
@@ -107,7 +147,11 @@ const ComponentCard: React.FC<{
             cursor: canAfford ? 'pointer' : 'not-allowed',
             boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
             whiteSpace: 'nowrap',
+            transition: 'transform 0.08s, box-shadow 0.08s',
           }}
+          onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
+          onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         >
           {label}
         </button>
@@ -131,9 +175,9 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine, onOpenMo
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
   const plugin = engine.getPlugin<ComponentPlugin>('component');
 
-  const handleBuy = (id: string, qty: number) => {
-    if (qty <= 0) return;
-    plugin?.purchaseBulk(id, qty);
+  const handleBuy = (id: string, qty: number): boolean => {
+    if (qty <= 0) return false;
+    return plugin?.purchaseBulk(id, qty) ?? false;
   };
 
   const unlockedComponents = Object.values(components).filter(c => c.unlocked);
@@ -308,6 +352,7 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine, onOpenMo
               maxQty={maxQty}
               onBuy={qty => handleBuy(comp.id, qty)}
             />
+
           );
         })}
       </div>

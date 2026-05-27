@@ -126,11 +126,15 @@ html, body, #root {
 }
 
 @keyframes enemy-hit {
-  0% { transform: translateX(0); }
-  25% { transform: translateX(-4px); }
-  50% { transform: translateX(4px); }
-  75% { transform: translateX(-2px); }
-  100% { transform: translateX(0); }
+  0%   { transform: translateX(0);    filter: brightness(1); }
+  12%  { transform: translateX(-5px); filter: brightness(1.6); }
+  25%  { transform: translateX(4px);  filter: brightness(1.4); }
+  38%  { transform: translateX(-3px); filter: brightness(1.2); }
+  50%  { transform: translateX(3px);  filter: brightness(1.1); }
+  63%  { transform: translateX(-2px); filter: brightness(1); }
+  75%  { transform: translateX(2px);  filter: brightness(1); }
+  88%  { transform: translateX(-1px); filter: brightness(1); }
+  100% { transform: translateX(0);    filter: brightness(1); }
 }
 
 @keyframes enemy-death {
@@ -158,14 +162,50 @@ html, body, #root {
   97% { opacity: 1; }
 }
 
+@keyframes tap-ripple {
+  0%   { transform: scale(0);   opacity: 0.7; }
+  60%  { transform: scale(1.4); opacity: 0.35; }
+  100% { transform: scale(2);   opacity: 0; }
+}
+
+@keyframes level-up-flash {
+  0%   { box-shadow: 0 0 0px transparent; }
+  20%  { box-shadow: 0 0 18px var(--luf-color, #00f5ff), inset 0 0 12px rgba(0,245,255,0.15); }
+  50%  { box-shadow: 0 0 8px var(--luf-color, #00f5ff); }
+  80%  { box-shadow: 0 0 14px var(--luf-color, #00f5ff); }
+  100% { box-shadow: 0 0 0px transparent; }
+}
+
+@keyframes level-up-text {
+  0%   { transform: translateY(0) scale(1);       opacity: 1; }
+  50%  { transform: translateY(-20px) scale(1.2); opacity: 1; }
+  100% { transform: translateY(-40px) scale(0.9); opacity: 0; }
+}
+
+@keyframes boss-return-pulse {
+  0%, 100% { box-shadow: 0 0 6px rgba(255,34,34,0.5);  opacity: 1; }
+  50%       { box-shadow: 0 0 18px rgba(255,34,34,0.9); opacity: 0.85; }
+}
+
+@keyframes screen-flash {
+  0%   { opacity: 0.05; }
+  40%  { opacity: 0.03; }
+  100% { opacity: 0; }
+}
+
 .animate-blink { animation: blink 1s step-end infinite; }
 .animate-float-up { animation: float-up 1s steps(8) forwards; }
 .animate-tap-flash { animation: tap-flash 0.15s steps(3) forwards; }
-.animate-enemy-hit { animation: enemy-hit 0.2s steps(4) forwards; }
+.animate-enemy-hit { animation: enemy-hit 0.18s linear forwards; }
 .animate-enemy-death { animation: enemy-death 0.4s steps(8) forwards; }
 .animate-boss-pulse { animation: boss-pulse 2s steps(4) infinite; }
 .animate-boot-line { animation: boot-line 0.1s steps(2) forwards; }
 .animate-crt-flicker { animation: crt-flicker 4s steps(4) infinite; }
+.animate-tap-ripple { animation: tap-ripple 0.35s ease-out forwards; }
+.animate-level-up-flash { animation: level-up-flash 0.55s ease-out forwards; }
+.animate-level-up-text { animation: level-up-text 0.6s ease-out forwards; }
+.animate-boss-return-pulse { animation: boss-return-pulse 1.2s ease-in-out infinite; }
+.animate-screen-flash { animation: screen-flash 0.12s ease-out forwards; }
 
 /* Zone scene animations */
 @keyframes particle-rise {

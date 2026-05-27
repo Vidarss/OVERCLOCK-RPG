@@ -30,6 +30,8 @@ export const DEFAULT_STATE: GameState = {
   totalDamageDealt: 0,
   bossTimeRemaining: 30,
   isBossActive: false,
+  pendingBossReturn: false,
+  pendingBossStage: null,
   lastSaveTime: Date.now(),
   lastTickTime: Date.now(),
   schemaVersion: 1,

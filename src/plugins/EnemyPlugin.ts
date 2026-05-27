@@ -91,7 +91,7 @@ export function spawnEnemy(stage: number): Enemy {
 export class EnemyPlugin implements IPlugin {
   id = 'enemy';
   dependencies = ['stage'];
-  stateKeys = ['enemy', 'isBossActive', 'bossTimeRemaining'] as (keyof GameState)[];
+  stateKeys = ['enemy', 'isBossActive', 'bossTimeRemaining', 'pendingBossReturn', 'pendingBossStage'] as (keyof GameState)[];
 
   private engine!: IEngine;
   private bossTimer = 0;
@@ -106,10 +106,17 @@ export class EnemyPlugin implements IPlugin {
     });
 
     engine.on('stage_clear', (event: GameEvent<{ stage: number }>) => {
-      this.spawnForStage(event.payload.stage + 1);
+      const clearedStage = event.payload.stage;
+      const nextStage = clearedStage + 1;
+      // If player beat the pending boss stage, clear the return flag
+      if (this.engine.state.pendingBossReturn && clearedStage >= (this.engine.state.pendingBossStage ?? 0)) {
+        this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
+      }
+      this.spawnForStage(nextStage);
     });
 
     engine.on('overclock', () => {
+      this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
       this.spawnForStage(1);
     });
   }
@@ -127,6 +134,13 @@ export class EnemyPlugin implements IPlugin {
       this.engine.updateState({ isBossActive: false, bossTimeRemaining: 0 });
       this.engine.emit('enemy_spawn', { enemy });
     }
+  }
+
+  returnToBoss(): void {
+    const bossStage = this.engine.state.pendingBossStage;
+    if (!bossStage) return;
+    this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
+    this.spawnForStage(bossStage);
   }
 
   applyDamage(amount: number): void {
@@ -189,8 +203,13 @@ export class EnemyPlugin implements IPlugin {
     }
 
     if (remaining <= 0) {
-      this.engine.updateState({ isBossActive: false });
+      this.engine.updateState({
+        isBossActive: false,
+        pendingBossReturn: true,
+        pendingBossStage: state.stage,
+      });
       this.engine.emit('boss_timeout', { stage: state.stage });
+      // Drop back one stage to farm normal enemies
       this.spawnForStage(Math.max(1, state.stage - 1));
     }
   }

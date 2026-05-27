@@ -9,9 +9,17 @@ import { SkillBar } from './SkillBar';
 import { ZoneScene, getZone } from './ZoneScene';
 import type { ZoneConfig } from './ZoneScene';
 import type { TapPlugin } from '../../plugins/TapPlugin';
+import type { EnemyPlugin } from '../../plugins/EnemyPlugin';
 
 interface BattlefieldProps {
   engine: GameEngine;
+}
+
+interface Ripple {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
 }
 
 function formatNumber(n: number): string {
@@ -24,6 +32,9 @@ function formatNumber(n: number): string {
 export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const enemy = useGameState(engine, s => s.enemy);
   const stage = useGameState(engine, s => s.stage);
+  const pendingBossReturn = useGameState(engine, s => s.pendingBossReturn);
+  const pendingBossStage = useGameState(engine, s => s.pendingBossStage);
+
   const [damageNumbers, setDamageNumbers] = useState<DamageNumberEvent[]>([]);
   const [isHit, setIsHit] = useState(false);
   const [isDying, setIsDying] = useState(false);
@@ -31,6 +42,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const [stageClearText, setStageClearText] = useState('');
   const [showZoneTransition, setShowZoneTransition] = useState(false);
   const [zoneTransitionLabel, setZoneTransitionLabel] = useState('');
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [screenFlash, setScreenFlash] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const zone: ZoneConfig = getZone(stage ?? 1);
@@ -43,7 +56,9 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
 
     const unsub2 = engine.on('enemy_hit', () => {
       setIsHit(true);
-      setTimeout(() => setIsHit(false), 200);
+      setScreenFlash(true);
+      setTimeout(() => setIsHit(false), 180);
+      setTimeout(() => setScreenFlash(false), 120);
     });
 
     const unsub3 = engine.on<{ stage: number }>('stage_clear', event => {
@@ -78,8 +93,19 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       y = e.clientY - (rect?.top ?? 0);
     }
 
+    // Spawn ripple at tap position
+    const rippleId = `r_${Date.now()}_${Math.random()}`;
+    const currentZone = getZone(engine.state.stage ?? 1);
+    setRipples(prev => [...prev.slice(-6), { id: rippleId, x, y, color: currentZone.accentColor }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== rippleId)), 380);
+
     const tapPlugin = engine.getPlugin<TapPlugin>('tap');
     tapPlugin?.tap(x, y);
+  }, [engine]);
+
+  const handleReturnToBoss = useCallback(() => {
+    const enemyPlugin = engine.getPlugin<EnemyPlugin>('enemy');
+    enemyPlugin?.returnToBoss();
   }, [engine]);
 
   const removeDamageNumber = useCallback((id: string) => {
@@ -105,8 +131,22 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         showBossWarning={isBossStage && isBoss}
       />
 
+      {/* Screen hit flash overlay */}
+      {screenFlash && (
+        <div
+          className="animate-screen-flash"
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: zone.accentColor,
+            pointerEvents: 'none',
+            zIndex: 2,
+          }}
+        />
+      )}
+
       {/* Content above background */}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: 320 }}>
+      <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: 320 }}>
         <BossTimer engine={engine} />
       </div>
 
@@ -114,7 +154,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       <div
         style={{
           position: 'relative',
-          zIndex: 1,
+          zIndex: 3,
           fontFamily: 'var(--font-mono)',
           fontSize: 10,
           color: zone.accentColor,
@@ -128,10 +168,10 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       {/* Enemy name */}
       {enemy && (
         <div
-          className={`font-pixel text-center`}
+          className="font-pixel text-center"
           style={{
             position: 'relative',
-            zIndex: 1,
+            zIndex: 3,
             color: isBoss ? '#ff0080' : zone.accentColor,
             fontSize: isBoss ? '9px' : '8px',
             letterSpacing: '2px',
@@ -155,7 +195,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       <div
         ref={containerRef}
         className="relative flex items-center justify-center"
-        style={{ flex: 1, width: '100%', cursor: 'pointer', minHeight: 120, position: 'relative', zIndex: 1 }}
+        style={{ flex: 1, width: '100%', cursor: 'crosshair', minHeight: 120, position: 'relative', zIndex: 3, userSelect: 'none' }}
         onClick={handleTap}
         onTouchStart={handleTap}
       >
@@ -171,15 +211,60 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
           </div>
         )}
 
+        {/* Tap ripples */}
+        {ripples.map(r => (
+          <div
+            key={r.id}
+            className="animate-tap-ripple"
+            style={{
+              position: 'absolute',
+              left: r.x,
+              top: r.y,
+              width: 48,
+              height: 48,
+              marginLeft: -24,
+              marginTop: -24,
+              borderRadius: '50%',
+              border: `2px solid ${r.color}`,
+              boxShadow: `0 0 8px ${r.color}88`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+
         {/* Damage numbers */}
         {damageNumbers.map(d => (
           <DamageNumber key={d.id} event={d} onDone={removeDamageNumber} />
         ))}
       </div>
 
+      {/* Boss Return Button */}
+      {pendingBossReturn && pendingBossStage && (
+        <div style={{ width: '100%', maxWidth: 320, position: 'relative', zIndex: 3, marginBottom: 4 }}>
+          <button
+            onClick={handleReturnToBoss}
+            className="font-pixel animate-boss-return-pulse"
+            style={{
+              width: '100%',
+              background: '#1a0000',
+              border: '1px solid #ff2222',
+              color: '#ff2222',
+              padding: '8px 12px',
+              fontSize: '7px',
+              letterSpacing: '2px',
+              cursor: 'pointer',
+              textShadow: '0 0 8px #ff2222',
+              boxShadow: '0 0 12px rgba(255,34,34,0.4)',
+            }}
+          >
+            {'[!] RETURN TO BOSS — STG '}{pendingBossStage}{' [!]'}
+          </button>
+        </div>
+      )}
+
       {/* HP Bar */}
       {enemy && (
-        <div style={{ width: '100%', maxWidth: 320, position: 'relative', zIndex: 1 }}>
+        <div style={{ width: '100%', maxWidth: 320, position: 'relative', zIndex: 3 }}>
           <div className="flex justify-between mb-1" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
             <span style={{ color: '#5a6a7a' }}>HP</span>
             <span style={{ color: isBoss ? '#ff0080' : zone.accentColor }}>
@@ -204,7 +289,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       )}
 
       {/* Skill Bar */}
-      <div style={{ position: 'relative', zIndex: 1, width: '100%' }}>
+      <div style={{ position: 'relative', zIndex: 3, width: '100%' }}>
         <SkillBar engine={engine} />
       </div>
     </div>

@@ -152,6 +152,8 @@ export interface GameState {
   totalDamageDealt: number;
   bossTimeRemaining: number;
   isBossActive: boolean;
+  pendingBossReturn: boolean;
+  pendingBossStage: number | null;
   lastSaveTime: number;
   lastTickTime: number;
   schemaVersion: number;
