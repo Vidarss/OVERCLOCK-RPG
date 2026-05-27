@@ -163,6 +163,9 @@ export const SkillBar: React.FC<SkillBarProps> = ({ engine }) => {
         padding: '6px 8px',
         background: '#05050a',
         borderTop: '1px solid #0a1a2a',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+        scrollbarWidth: 'none',
       }}
     >
       {visibleSkills.map(skill => (

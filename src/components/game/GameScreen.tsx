@@ -164,22 +164,22 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             style={{
               background: mobileDrawer === 'components' ? '#001520' : 'transparent',
               border: 'none',
-              borderRight: '1px solid #1a1a2a',
               borderTop: mobileDrawer === 'components' ? '2px solid #00f5ff' : '2px solid transparent',
               color: mobileDrawer === 'components' ? '#00f5ff' : '#3a4a5a',
-              padding: '10px 8px',
+              padding: '8px 2px',
               cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
               transition: 'all 0.15s',
+              minHeight: 52,
             }}
           >
-            <CircuitBoard size={14} color={mobileDrawer === 'components' ? '#00f5ff' : '#3a4a5a'} />
-            <span className="font-pixel" style={{ fontSize: '7px', letterSpacing: '1px' }}>MODULES</span>
+            <CircuitBoard size={15} color={mobileDrawer === 'components' ? '#00f5ff' : '#3a4a5a'} />
+            <span className="font-pixel" style={{ fontSize: '6px', letterSpacing: '0.5px' }}>MODULES</span>
             {inventoryCount > 0 && (
               <span style={{
-                background: '#39ff14', color: '#000', borderRadius: 0,
-                padding: '0 4px', fontSize: '7px', lineHeight: '13px',
-                fontFamily: 'var(--font-mono)', minWidth: 13, textAlign: 'center',
+                background: '#39ff14', color: '#000',
+                padding: '0 3px', fontSize: '6px', lineHeight: '12px',
+                fontFamily: 'var(--font-mono)', minWidth: 12, textAlign: 'center',
               }}>
                 {inventoryCount}
               </span>
@@ -194,23 +194,43 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               border: 'none',
               borderTop: mobileDrawer === 'overclock' ? '2px solid #ff0080' : '2px solid transparent',
               color: mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a',
-              padding: '10px 8px',
+              padding: '8px 2px',
               cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
               transition: 'all 0.15s',
+              minHeight: 52,
             }}
           >
-            <Zap size={14} color={mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a'} />
-            <span className="font-pixel" style={{ fontSize: '7px', letterSpacing: '1px' }}>OVERCLOCK</span>
+            <Zap size={15} color={mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a'} />
+            <span className="font-pixel" style={{ fontSize: '6px', letterSpacing: '0.5px' }}>OVERCLOCK</span>
             {availableOCT > 0 && (
               <span style={{
-                background: '#ff0080', color: '#000', borderRadius: 0,
-                padding: '0 4px', fontSize: '7px', lineHeight: '13px',
-                fontFamily: 'var(--font-mono)', minWidth: 13, textAlign: 'center',
+                background: '#ff0080', color: '#000',
+                padding: '0 3px', fontSize: '6px', lineHeight: '12px',
+                fontFamily: 'var(--font-mono)', minWidth: 12, textAlign: 'center',
               }}>
                 {availableOCT}
               </span>
             )}
+          </button>
+
+          {/* Leaderboard tab */}
+          <button
+            onClick={() => setShowLeaderboard(true)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              borderTop: '2px solid transparent',
+              color: '#3a4a5a',
+              padding: '8px 2px',
+              cursor: 'pointer',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
+              transition: 'all 0.15s',
+              minHeight: 52,
+            }}
+          >
+            <Trophy size={15} color="#3a4a5a" />
+            <span className="font-pixel" style={{ fontSize: '6px', letterSpacing: '0.5px' }}>RANKS</span>
           </button>
 
           {/* Dailies tab */}
@@ -221,13 +241,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               border: 'none',
               borderTop: '2px solid transparent',
               color: '#3a4a5a',
-              padding: '10px 4px',
+              padding: '8px 2px',
               cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
               transition: 'all 0.15s',
+              minHeight: 52,
             }}
           >
-            <Clock size={12} color="#3a4a5a" />
+            <Clock size={15} color="#3a4a5a" />
             <span className="font-pixel" style={{ fontSize: '6px', letterSpacing: '0.5px' }}>DAILY</span>
           </button>
 
@@ -239,13 +260,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               border: 'none',
               borderTop: '2px solid transparent',
               color: '#3a4a5a',
-              padding: '10px 4px',
+              padding: '8px 2px',
               cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3,
               transition: 'all 0.15s',
+              minHeight: 52,
             }}
           >
-            <Award size={12} color="#3a4a5a" />
+            <Award size={15} color="#3a4a5a" />
             <span className="font-pixel" style={{ fontSize: '6px', letterSpacing: '0.5px' }}>FEATS</span>
           </button>
         </div>

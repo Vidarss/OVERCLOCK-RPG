@@ -5,7 +5,6 @@ import { useGameState } from '../../hooks/useGameState';
 import { getTotalIdleDps } from '../../plugins/ComponentPlugin';
 import type { AuthPlugin } from '../../plugins/AuthPlugin';
 import type { LeaderboardPlugin } from '../../plugins/LeaderboardPlugin';
-import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
 
 interface CyberHUDProps {
   engine: GameEngine;
@@ -46,74 +45,64 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
 
   return (
     <div
-      className="flex items-center justify-between px-3 py-2 pixel-border"
-      style={{ background: '#0d0d1a', borderColor: '#1a2a3a', borderTop: 'none', borderLeft: 'none', borderRight: 'none', minHeight: 48, gap: 8 }}
+      style={{
+        background: '#0d0d1a',
+        borderBottom: '1px solid #1a2a3a',
+        padding: '5px 10px',
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '6px 12px',
+        minHeight: 38,
+      }}
     >
       {/* Stage */}
-      <Tooltip content={<><TooltipLabel label="STAGE" /><TooltipText>Current enemy stage. Every 10th is a boss.</TooltipText></>} position="bottom">
-        <div className="flex items-center gap-2">
-          <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>STG</div>
-          <div className="font-pixel glow-cyan" style={{ color: '#00f5ff', fontSize: '12px' }}>
-            {stage}
-          </div>
-        </div>
-      </Tooltip>
+      <div className="flex items-center gap-1">
+        <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>STG</span>
+        <span className="font-pixel glow-cyan" style={{ color: '#00f5ff', fontSize: '10px' }}>{stage}</span>
+      </div>
 
       {/* DPS */}
-      <Tooltip content={<><TooltipLabel label="IDLE DPS" color="#39ff14" /><TooltipText>Damage per second from hardware modules. Attacks automatically.</TooltipText></>} position="bottom">
-        <div className="flex items-center gap-2">
-          <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>DPS</div>
-          <div className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px' }}>
-            {formatNumber(idleDps)}
-          </div>
-        </div>
-      </Tooltip>
+      <div className="flex items-center gap-1">
+        <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>DPS</span>
+        <span className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px' }}>{formatNumber(idleDps)}</span>
+      </div>
 
       {/* Gold */}
-      <Tooltip content={<><TooltipLabel label="GOLD" color="#ffaa00" /><TooltipText>Currency earned from defeating enemies. Spend on hardware modules.</TooltipText></>} position="bottom">
-        <div className="flex items-center gap-2">
-          <div style={{ color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>◆</div>
-          <div className="font-pixel glow-amber" style={{ color: '#ffaa00', fontSize: '10px' }}>
-            {formatNumber(gold)}
-          </div>
-        </div>
-      </Tooltip>
+      <div className="flex items-center gap-1">
+        <span style={{ color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>◆</span>
+        <span className="font-pixel glow-amber" style={{ color: '#ffaa00', fontSize: '10px' }}>{formatNumber(gold)}</span>
+      </div>
 
       {/* Overclocks */}
-      <Tooltip content={<><TooltipLabel label="OVERCLOCK TOKENS" color="#ff0080" /><TooltipText>Prestige currency. Reset progress for permanent upgrades.</TooltipText></>} position="bottom">
-        <div className="flex items-center gap-2">
-          <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>OC</div>
-          <div className="font-pixel glow-pink" style={{ color: '#ff0080', fontSize: '10px' }}>
-            {overclocks}
-          </div>
-        </div>
-      </Tooltip>
+      <div className="flex items-center gap-1">
+        <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>OC</span>
+        <span className="font-pixel glow-pink" style={{ color: '#ff0080', fontSize: '10px' }}>{overclocks}</span>
+      </div>
 
       {/* Online */}
       {onlineCount > 0 && (
         <div className="flex items-center gap-1">
           <Wifi size={9} color="#39ff14" />
-          <div className="font-pixel" style={{ color: '#39ff14', fontSize: '8px' }}>
-            {onlineCount}
-          </div>
+          <span className="font-pixel" style={{ color: '#39ff14', fontSize: '8px' }}>{onlineCount}</span>
         </div>
       )}
 
-      {/* Player + Logout */}
-      <div className="flex items-center gap-2">
-        <div
+      {/* Player + Logout — pushed to the right */}
+      <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
+        <span
           style={{
             color: '#5a6a7a',
             fontFamily: 'var(--font-mono)',
-            fontSize: '10px',
-            maxWidth: 80,
+            fontSize: '9px',
+            maxWidth: 90,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}
         >
           {playerHandle}
-        </div>
+        </span>
 
         {confirming ? (
           <div className="flex items-center gap-1">

@@ -119,7 +119,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   return (
     <div
       className="flex flex-col items-center justify-between"
-      style={{ flex: 1, padding: '12px', position: 'relative', overflow: 'hidden', minHeight: 0 }}
+      style={{ flex: 1, padding: '6px 10px 8px', position: 'relative', overflow: 'hidden', minHeight: 0 }}
     >
       {/* Zone background scene */}
       <ZoneScene
