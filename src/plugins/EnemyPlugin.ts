@@ -2,29 +2,58 @@ import type { IPlugin, IEngine, GameState, Enemy, GameEvent } from '../engine/ty
 import type { SkillPlugin } from './SkillPlugin';
 
 const ENEMY_NAMES_BY_TIER = [
-  ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW'],
-  ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER'],
-  ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM'],
-  ['ROGUE_AI_v1', 'DEEPFAKE_BOT', 'ZERO_DAY', 'APT_GHOST'],
-  ['SINGULARITY', 'DAEMON_CORE', 'KERNEL_PANIC', 'BLUE_SCREEN'],
+  // Tier 0 — Stage 1-50
+  ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT', 'ADWARE.EXE'],
+  // Tier 1 — Stage 51-100
+  ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'PHISH_AGENT', 'TROJAN_HORSE'],
+  // Tier 2 — Stage 101-150
+  ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON', 'MAN_IN_MIDDLE'],
+  // Tier 3 — Stage 151-200
+  ['ROGUE_AI_v1', 'DEEPFAKE_BOT', 'ZERO_DAY', 'APT_GHOST', 'SHADOW_PROCESS', 'DARK_PACKET'],
+  // Tier 4 — Stage 201-250
+  ['SINGULARITY', 'DAEMON_CORE', 'KERNEL_PANIC', 'BLUE_SCREEN', 'VOID_THREAD', 'NULL_DAEMON'],
+  // Tier 5 — Stage 251-500
+  ['SHADOW_NET', 'DARK_PROTOCOL', 'ENTROPY_SPIKE', 'PHANTOM_ROOT', 'MEMORY_LEAK', 'RACE_CONDITION'],
+  // Tier 6 — Stage 501-1000
+  ['QUANTUM_GHOST', 'NULL_DAEMON_v2', 'SCHRODINGER_BUG', 'ENTANGLED_PROC', 'WAVE_COLLAPSE', 'QUBIT_STORM'],
+  // Tier 7 — Stage 1001-2000
+  ['VOID_ARCHITECT', 'SIGNAL_WRAITH', 'DEAD_CODE_GOD', 'RECURSIVE_HELL', 'INFINITE_LOOP', 'STACK_DEITY'],
+  // Tier 8 — Stage 2001-3500
+  ['SILICON_HORROR', 'LOGIC_ABOMINATION', 'CORRUPT_COSMOS', 'DATA_ABYSS', 'TERMINAL_WRAITH', 'EXEC_PHANTOM'],
+  // Tier 9 — Stage 3501-5000
+  ['OMEGA_PROCESS', 'THE_LAST_BIT', 'FINAL_EXCEPTION', 'END_OF_STACK', 'HEAT_DEATH_BOT', 'ENTROPY_FINAL'],
 ];
 
 const BOSS_NAMES = [
   'THE_FIREWALL', 'DARK_ANTIVIRUS', 'CHAOS_KERNEL',
   'OMEGA_ROOTKIT', 'SYSTEM32_WRAITH', 'BIOS_CORRUPTION',
   'QUANTUM_MALWARE', 'THE_NULL_GOD',
+  'PHANTOM_OVERLORD', 'DEEP_PACKET_KING', 'APT_SOVEREIGN', 'CRYPTOVAULT',
+  'SHADOW_ADMIN', 'ZERO_TRUST_BREAKER', 'THE_RAW_SOCKET', 'KERNEL_GOD_v2',
+  'QUANTUM_ENTANGLEMENT', 'DARK_SILICON_LORD', 'THE_VOID_KERNEL', 'NULL_POINTER_PRIME',
+  'ENTROPY_ARCHITECT', 'SINGULARITY_DAEMON', 'THE_INFINITE_LOOP', 'OMEGA_SIGNAL',
+  'DEAD_CODE_OVERLORD', 'THE_LAST_SYSCALL', 'HEAT_DEATH_INCARNATE', 'THE_FINAL_BIT',
 ];
 
 export function getEnemyHp(stage: number): number {
-  return Math.floor(10 * Math.pow(1.5, stage - 1));
+  if (stage <= 100) {
+    return Math.floor(10 * Math.pow(1.5, stage - 1));
+  }
+  // Softer scaling beyond stage 100 to keep game playable at 5000
+  const base100 = Math.floor(10 * Math.pow(1.5, 99));
+  return Math.floor(base100 * Math.pow(1.12, stage - 100));
 }
 
 export function getBossHp(stage: number): number {
-  return Math.floor(50 * Math.pow(1.5, stage - 1));
+  if (stage <= 100) {
+    return Math.floor(50 * Math.pow(1.5, stage - 1));
+  }
+  const base100 = Math.floor(50 * Math.pow(1.5, 99));
+  return Math.floor(base100 * Math.pow(1.12, stage - 100));
 }
 
 export function getEnemyTier(stage: number): number {
-  return Math.floor((stage - 1) / 10);
+  return Math.min(Math.floor((stage - 1) / 50), ENEMY_NAMES_BY_TIER.length - 1);
 }
 
 function getEnemyName(stage: number, isBoss: boolean): string {

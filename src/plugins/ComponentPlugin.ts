@@ -58,6 +58,61 @@ const INITIAL_COMPONENTS: ComponentDef[] = [
     unlocked: false,
     color: 'cyan',
   },
+  {
+    id: 'liquid_cool',
+    name: 'LIQUID_COOL',
+    description: 'Thermal dissipation overcharge',
+    baseDps: 1200,
+    baseCost: 1000000,
+    costMultiplier: 1.28,
+    level: 0,
+    unlocked: false,
+    color: 'green',
+  },
+  {
+    id: 'fpga',
+    name: 'FPGA_ARRAY',
+    description: 'Reconfigurable logic attack grid',
+    baseDps: 8000,
+    baseCost: 10000000,
+    costMultiplier: 1.30,
+    level: 0,
+    unlocked: false,
+    color: 'amber',
+  },
+  {
+    id: 'tensor',
+    name: 'TENSOR_CORE',
+    description: 'Neural matrix decimator',
+    baseDps: 60000,
+    baseCost: 100000000,
+    costMultiplier: 1.32,
+    level: 0,
+    unlocked: false,
+    color: 'pink',
+  },
+  {
+    id: 'quantum',
+    name: 'QUANTUM_BIT',
+    description: 'Superposition damage state',
+    baseDps: 500000,
+    baseCost: 1000000000,
+    costMultiplier: 1.35,
+    level: 0,
+    unlocked: false,
+    color: 'cyan',
+  },
+  {
+    id: 'singularity',
+    name: 'SINGULARITY_ENGINE',
+    description: 'The end of all computation',
+    baseDps: 5000000,
+    baseCost: 10000000000,
+    costMultiplier: 1.38,
+    level: 0,
+    unlocked: false,
+    color: 'green',
+  },
 ];
 
 export function getComponentCost(comp: ComponentDef): number {
@@ -112,9 +167,12 @@ export class ComponentPlugin implements IPlugin {
     });
 
     engine.on('overclock', () => {
+      const current = this.engine.state.components;
       const reset: Record<string, ComponentDef> = {};
       for (const c of INITIAL_COMPONENTS) {
-        reset[c.id] = { ...c };
+        // Preserve unlocked state for components beyond the 5th (endgame unlocks persist)
+        const wasUnlocked = current[c.id]?.unlocked ?? c.unlocked;
+        reset[c.id] = { ...c, unlocked: wasUnlocked };
       }
       engine.updateState({ components: reset });
     });

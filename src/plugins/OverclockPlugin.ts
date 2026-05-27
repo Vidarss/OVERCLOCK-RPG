@@ -1,6 +1,6 @@
 import type { IPlugin, IEngine, GameState, OverclockUpgrade } from '../engine/types';
 
-export type PerkBranch = 'VOLTAGE' | 'SIGNAL' | 'THERMAL';
+export type PerkBranch = 'VOLTAGE' | 'SIGNAL' | 'THERMAL' | 'ENTROPY' | 'QUANTUM';
 
 export interface OverclockPerkDef {
   id: string;
@@ -27,7 +27,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
     description: '+35% tap damage per level',
     branch: 'VOLTAGE',
     branchRank: 1,
-    maxLevel: 8,
+    maxLevel: 12,
     costPerLevel: 1,
     modifierType: 'tap_damage',
     valuePerLevel: 0.35,
@@ -72,7 +72,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
     description: '+25% gold rate per level',
     branch: 'SIGNAL',
     branchRank: 1,
-    maxLevel: 8,
+    maxLevel: 12,
     costPerLevel: 1,
     modifierType: 'gold_rate',
     valuePerLevel: 0.25,
@@ -118,7 +118,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
     description: '+30% idle DPS per level',
     branch: 'THERMAL',
     branchRank: 1,
-    maxLevel: 8,
+    maxLevel: 12,
     costPerLevel: 1,
     modifierType: 'idle_dps',
     valuePerLevel: 0.30,
@@ -147,7 +147,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
     description: '+60% idle DPS — peak thermal output',
     branch: 'THERMAL',
     branchRank: 3,
-    maxLevel: 4,
+    maxLevel: 8,
     costPerLevel: 4,
     modifierType: 'idle_dps',
     valuePerLevel: 0.60,
@@ -155,30 +155,148 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
     color: '#19bb00',
     requiresTier: 3,
   },
+  {
+    id: 'absolute_zero',
+    name: 'ABSOLUTE_ZERO',
+    flavor: 'Cool the silicon to the void. Nothing resists.',
+    description: '+80% idle DPS — deep endgame',
+    branch: 'THERMAL',
+    branchRank: 4,
+    maxLevel: 5,
+    costPerLevel: 6,
+    modifierType: 'idle_dps',
+    valuePerLevel: 0.80,
+    isMultiplier: true,
+    color: '#0d9900',
+    requiresTier: 6,
+  },
+
+  // ── ENTROPY — boss & elite power, late-game scaling ──────────────
+  {
+    id: 'exploit_entropy',
+    name: 'EXPLOIT_ENTROPY',
+    flavor: 'Disorder is your weapon. Chaos scales with chaos.',
+    description: '+40% tap damage per level',
+    branch: 'ENTROPY',
+    branchRank: 1,
+    maxLevel: 10,
+    costPerLevel: 2,
+    modifierType: 'tap_damage',
+    valuePerLevel: 0.40,
+    isMultiplier: true,
+    color: '#ff4444',
+    requiresTier: 2,
+  },
+  {
+    id: 'void_shell',
+    name: 'VOID_SHELL',
+    flavor: 'Rip gold from the void between clock cycles.',
+    description: '+55% gold rate per level',
+    branch: 'ENTROPY',
+    branchRank: 2,
+    maxLevel: 7,
+    costPerLevel: 3,
+    modifierType: 'gold_rate',
+    valuePerLevel: 0.55,
+    isMultiplier: true,
+    color: '#dd2222',
+    requiresTier: 4,
+  },
+  {
+    id: 'apex_protocol',
+    name: 'APEX_PROTOCOL',
+    flavor: 'Endpoint achieved. All limits dissolved.',
+    description: '+90% to all damage',
+    branch: 'ENTROPY',
+    branchRank: 3,
+    maxLevel: 4,
+    costPerLevel: 8,
+    modifierType: 'tap_damage',
+    valuePerLevel: 0.90,
+    isMultiplier: true,
+    color: '#bb0000',
+    requiresTier: 7,
+  },
+
+  // ── QUANTUM — unlocked at tier 3, high-cost synergy perks ────────
+  {
+    id: 'superposition',
+    name: 'SUPERPOSITION',
+    flavor: 'Strike from two states at once. Both deal damage.',
+    description: '+50% crit damage per level',
+    branch: 'QUANTUM',
+    branchRank: 1,
+    maxLevel: 8,
+    costPerLevel: 3,
+    modifierType: 'crit_multiplier',
+    valuePerLevel: 0.50,
+    isMultiplier: false,
+    color: '#cc44ff',
+    requiresTier: 3,
+  },
+  {
+    id: 'entanglement',
+    name: 'ENTANGLEMENT',
+    flavor: 'Linked states. What hits one hits all.',
+    description: '+8% crit chance per level',
+    branch: 'QUANTUM',
+    branchRank: 2,
+    maxLevel: 6,
+    costPerLevel: 4,
+    modifierType: 'crit_chance',
+    valuePerLevel: 0.08,
+    isMultiplier: false,
+    color: '#aa22dd',
+    requiresTier: 5,
+  },
+  {
+    id: 'wave_collapse',
+    name: 'WAVE_COLLAPSE',
+    flavor: 'Probability collapses in your favour. Always.',
+    description: '+70% tap damage — final quantum form',
+    branch: 'QUANTUM',
+    branchRank: 3,
+    maxLevel: 5,
+    costPerLevel: 7,
+    modifierType: 'tap_damage',
+    valuePerLevel: 0.70,
+    isMultiplier: true,
+    color: '#8800bb',
+    requiresTier: 8,
+  },
 ];
 
 export const BRANCH_COLORS: Record<PerkBranch, string> = {
   VOLTAGE: '#00f5ff',
   SIGNAL: '#ffaa00',
   THERMAL: '#39ff14',
+  ENTROPY: '#ff4444',
+  QUANTUM: '#cc44ff',
 };
 
 export const TIER_NAMES: string[] = [
-  'STOCK',
-  'OVERCLOCKED',
-  'MODDED',
-  'JAILBROKEN',
-  'KERNEL HACKED',
-  'SILICON GHOST',
+  'STOCK',          // 0  — first run
+  'OVERCLOCKED',    // 1  — 3 OC
+  'MODDED',         // 2  — 6 OC
+  'JAILBROKEN',     // 3  — 9 OC
+  'KERNEL HACKED',  // 4  — 12 OC
+  'SILICON GHOST',  // 5  — 15 OC
+  'QUANTUM FORK',   // 6  — 18 OC
+  'DARK SILICON',   // 7  — 21 OC
+  'PHANTOM LOOP',   // 8  — 24 OC
+  'THE SINGULARITY',// 9  — 27 OC
 ];
 
-// Every 5 stages beyond stage 10 earn increasing OCT chunks.
-// Milestone bonuses at stages 25, 50, 100, 200.
+// OCT gain scales with highest stage. Milestone bonuses every major threshold.
 // Each overclock tier multiplies future gain by +25%.
 export function calculateOverclockGain(highestStage: number, tier: number): number {
   if (highestStage < 10) return 0;
   const base = Math.floor(Math.max(0, highestStage - 9) / 5) + 1;
   const milestoneBonus =
+    (highestStage >= 5000 ? 500 : 0) +
+    (highestStage >= 2500 ? 250 : 0) +
+    (highestStage >= 1000 ? 100 : 0) +
+    (highestStage >= 500 ? 50 : 0) +
     (highestStage >= 200 ? 20 : 0) +
     (highestStage >= 100 ? 10 : 0) +
     (highestStage >= 50 ? 5 : 0) +

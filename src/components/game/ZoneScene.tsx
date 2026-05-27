@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-export type ZoneId = 0 | 1 | 2 | 3 | 4;
+export type ZoneId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
 export interface ZoneConfig {
   id: ZoneId;
@@ -11,9 +11,10 @@ export interface ZoneConfig {
   particleColor: string;
   groundColor: string;
   accentColor: string;
-  farLayerContent: 'hex' | 'bars' | 'traces' | 'racks' | 'void';
+  farLayerContent: 'hex' | 'bars' | 'traces' | 'racks' | 'void' | 'glitch' | 'fractal' | 'static' | 'overload' | 'stars';
 }
 
+// Each zone spans 500 stages (1-500, 501-1000, …, 4501-5000)
 export const ZONES: ZoneConfig[] = [
   {
     id: 0,
@@ -70,10 +71,66 @@ export const ZONES: ZoneConfig[] = [
     accentColor: '#ffffff',
     farLayerContent: 'void',
   },
+  {
+    id: 5,
+    name: 'ABYSS',
+    label: 'ZONE 5: ABYSS',
+    bgColor: '#0d0208',
+    gridColor: 'rgba(255,0,128,0.04)',
+    particleColor: '#ff0080',
+    groundColor: '#cc0066',
+    accentColor: '#ff0080',
+    farLayerContent: 'glitch',
+  },
+  {
+    id: 6,
+    name: 'FRACTAL',
+    label: 'ZONE 6: FRACTAL',
+    bgColor: '#060c10',
+    gridColor: 'rgba(0,200,255,0.03)',
+    particleColor: '#00ccff',
+    groundColor: '#ffaa00',
+    accentColor: '#00ccff',
+    farLayerContent: 'fractal',
+  },
+  {
+    id: 7,
+    name: 'ENTROPY',
+    label: 'ZONE 7: ENTROPY',
+    bgColor: '#060a06',
+    gridColor: 'rgba(80,180,80,0.03)',
+    particleColor: '#50b450',
+    groundColor: '#50b450',
+    accentColor: '#50b450',
+    farLayerContent: 'static',
+  },
+  {
+    id: 8,
+    name: 'SINGULARITY',
+    label: 'ZONE 8: SINGULARITY',
+    bgColor: '#0f0f0f',
+    gridColor: 'rgba(255,255,255,0.06)',
+    particleColor: '#ffffff',
+    groundColor: '#ffffff',
+    accentColor: '#ffff80',
+    farLayerContent: 'overload',
+  },
+  {
+    id: 9,
+    name: 'BEYOND',
+    label: 'ZONE 9: BEYOND',
+    bgColor: '#010104',
+    gridColor: 'rgba(180,180,255,0.01)',
+    particleColor: '#aaaaff',
+    groundColor: '#aaaaff',
+    accentColor: '#aaaaff',
+    farLayerContent: 'stars',
+  },
 ];
 
+// Zones span 500 stages each: zone 0 = stages 1-500, zone 1 = 501-1000, etc.
 export function getZone(stage: number): ZoneConfig {
-  const idx = Math.min(Math.floor((stage - 1) / 10), ZONES.length - 1);
+  const idx = Math.min(Math.floor((stage - 1) / 500), ZONES.length - 1);
   return ZONES[idx];
 }
 
@@ -251,28 +308,205 @@ const FarLayer: React.FC<FarLayerProps> = ({ zone }) => {
     );
   }
 
-  // Void: static noise bursts
+  if (content === 'void') {
+    // Void: static noise bursts
+    return (
+      <>
+        {Array.from({ length: 4 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${20 + i * 20}%`,
+              left: `${15 + i * 18}%`,
+              width: 24,
+              height: 24,
+              opacity: 0.05,
+              animation: `void-glitch 3s steps(2) ${i * 0.7}s infinite`,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 10,
+              color: '#ffffff',
+              pointerEvents: 'none',
+            }}
+          >
+            {'█░▓▒'}
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (content === 'glitch') {
+    // Abyss: horizontal glitch slices
+    return (
+      <>
+        {Array.from({ length: 5 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${10 + i * 18}%`,
+              left: 0,
+              right: 0,
+              height: 2,
+              background: zone.accentColor,
+              opacity: 0.06,
+              animation: `bar-flicker ${0.8 + i * 0.3}s steps(2) ${i * 0.15}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+        {Array.from({ length: 3 }, (_, i) => (
+          <div
+            key={`b${i}`}
+            style={{
+              position: 'absolute',
+              top: `${25 + i * 25}%`,
+              left: `${20 + i * 20}%`,
+              width: `${60 - i * 15}%`,
+              height: 1,
+              background: `linear-gradient(to right, transparent, ${zone.accentColor}, transparent)`,
+              opacity: 0.09,
+              animation: `trace-scan ${3 + i}s linear ${i * 0.5}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (content === 'fractal') {
+    // Fractal: nested diamond grid overlays
+    return (
+      <>
+        {Array.from({ length: 6 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${5 + i * 15}%`,
+              left: `${5 + i * 12}%`,
+              width: `${20 - i * 2}%`,
+              height: `${20 - i * 2}%`,
+              border: `1px solid ${zone.accentColor}`,
+              opacity: 0.04 + i * 0.01,
+              transform: `rotate(${45 + i * 15}deg)`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+        {Array.from({ length: 4 }, (_, i) => (
+          <div
+            key={`h${i}`}
+            style={{
+              position: 'absolute',
+              top: `${20 + i * 20}%`,
+              left: 0,
+              right: 0,
+              height: 1,
+              background: `linear-gradient(to right, transparent, ${zone.groundColor}, ${zone.accentColor}, transparent)`,
+              opacity: 0.07,
+              animation: `trace-scan ${5 + i * 2}s linear ${i * 0.8}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (content === 'static') {
+    // Entropy: TV-static noise dots
+    return (
+      <>
+        {Array.from({ length: 12 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              top: `${Math.floor(i / 4) * 30 + 10}%`,
+              left: `${(i % 4) * 25 + 5}%`,
+              width: 3,
+              height: 3,
+              background: zone.accentColor,
+              opacity: 0.06,
+              animation: `void-glitch ${0.5 + (i % 3) * 0.3}s steps(2) ${i * 0.1}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+        {Array.from({ length: 3 }, (_, i) => (
+          <div
+            key={`l${i}`}
+            style={{
+              position: 'absolute',
+              top: `${30 + i * 25}%`,
+              left: 0,
+              right: 0,
+              height: 1,
+              background: zone.accentColor,
+              opacity: 0.04,
+              animation: `trace-scan ${6 + i * 3}s linear ${i * 1.2}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+      </>
+    );
+  }
+
+  if (content === 'overload') {
+    // Singularity: intense bright vertical beams
+    return (
+      <>
+        {Array.from({ length: 5 }, (_, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              bottom: 0,
+              left: `${10 + i * 18}%`,
+              width: 1,
+              height: '100%',
+              background: `linear-gradient(to top, ${zone.accentColor}, transparent)`,
+              opacity: 0.1,
+              animation: `bar-flicker ${0.6 + i * 0.2}s steps(3) ${i * 0.12}s infinite`,
+              pointerEvents: 'none',
+            }}
+          />
+        ))}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `radial-gradient(ellipse at 50% 100%, ${zone.accentColor}08, transparent 70%)`,
+            pointerEvents: 'none',
+          }}
+        />
+      </>
+    );
+  }
+
+  // Stars (Beyond): faint pinpoints of light
   return (
     <>
-      {Array.from({ length: 4 }, (_, i) => (
+      {Array.from({ length: 20 }, (_, i) => (
         <div
           key={i}
           style={{
             position: 'absolute',
-            top: `${20 + i * 20}%`,
-            left: `${15 + i * 18}%`,
-            width: 24,
-            height: 24,
-            opacity: 0.05,
-            animation: `void-glitch 3s steps(2) ${i * 0.7}s infinite`,
-            fontFamily: 'var(--font-mono)',
-            fontSize: 10,
-            color: '#ffffff',
+            top: `${(i * 17 + 5) % 90}%`,
+            left: `${(i * 23 + 3) % 95}%`,
+            width: i % 5 === 0 ? 2 : 1,
+            height: i % 5 === 0 ? 2 : 1,
+            borderRadius: '50%',
+            background: zone.accentColor,
+            opacity: 0.03 + (i % 4) * 0.01,
+            animation: `particle-rise ${8 + i * 0.5}s linear ${i * 0.3}s infinite`,
             pointerEvents: 'none',
           }}
-        >
-          {'█░▓▒'}
-        </div>
+        />
       ))}
     </>
   );
