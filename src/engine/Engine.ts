@@ -22,6 +22,7 @@ export class GameEngine implements IEngine {
   private tickInterval: ReturnType<typeof setInterval> | null = null;
   private lastTickTime = Date.now();
   private bootLogBuffer: string[] = [];
+  isBooted = false;
 
   get storage(): IPluginStorage {
     return this._storage;
@@ -107,6 +108,7 @@ export class GameEngine implements IEngine {
     this.emit('boot_log', '> INITIALIZING ENGINE...');
     await this.registry.initAll(this);
     this.emit('boot_log', '> ALL SYSTEMS ONLINE');
+    this.isBooted = true;
     this.startTick();
   }
 

@@ -31,7 +31,9 @@ import { GameScreen } from './components/game/GameScreen';
 
 type AppScreen = 'login' | 'register' | 'reset' | 'booting' | 'game';
 
-function buildEngine(): GameEngine {
+// Engine is initialized once at module level and never destroyed on re-mount.
+// This prevents React StrictMode's double-invocation from wiping state mid-load.
+function createEngine(): GameEngine {
   resetEngine();
   const engine = getEngine();
 
@@ -58,13 +60,16 @@ function buildEngine(): GameEngine {
   return engine;
 }
 
+// Single stable instance — survives StrictMode unmount/remount cycles.
+const stableEngine: GameEngine = createEngine();
+
 export default function App() {
-  const engineRef = useRef<GameEngine | null>(null);
+  const engineRef = useRef<GameEngine>(stableEngine);
   const [screen, setScreen] = useState<AppScreen>('booting');
   const [player, setPlayer] = useState<Player | null>(null);
+
   useEffect(() => {
-    const engine = buildEngine();
-    engineRef.current = engine;
+    const engine = engineRef.current;
 
     const unsubAuth = engine.on<Player>('auth_success', event => {
       setPlayer(event.payload);
@@ -76,8 +81,23 @@ export default function App() {
       setScreen('login');
     });
 
-    engine.boot().then(() => {
-      // Auth session check is fire-and-forget, give it a moment to resolve
+    // Only boot once — guard against StrictMode second invocation
+    if (!engine.isBooted) {
+      engine.boot().then(() => {
+        // Auth session check is fire-and-forget, give it a moment to resolve
+        setTimeout(() => {
+          const authPlugin = engine.getPlugin<AuthPlugin>('auth');
+          const existingPlayer = authPlugin?.getPlayer();
+          if (existingPlayer) {
+            setPlayer(existingPlayer);
+            setScreen('game');
+          } else {
+            setScreen(s => s === 'booting' ? 'login' : s);
+          }
+        }, 300);
+      });
+    } else {
+      // Engine already booted (StrictMode remount) — just sync auth state
       setTimeout(() => {
         const authPlugin = engine.getPlugin<AuthPlugin>('auth');
         const existingPlayer = authPlugin?.getPlayer();
@@ -87,10 +107,11 @@ export default function App() {
         } else {
           setScreen(s => s === 'booting' ? 'login' : s);
         }
-      }, 300);
-    });
+      }, 0);
+    }
 
     return () => {
+      // Only unsubscribe listeners — never destroy the engine on cleanup
       unsubAuth();
       unsubSignout();
     };
