@@ -28,14 +28,21 @@ const CHALLENGE_TEMPLATES: ChallengeTemplate[] = [
   { type: 'tap_damage', label: 'Deal {n} tap damage', targetFn: s => 200 + s * 100, rewardFn: s => 60 + s * 25 },
 ];
 
-const DIAMOND_REWARDS: Record<string, number> = {
+// Difficulty weight per challenge type (multiplied against stage-scaled base)
+const DIAMOND_DIFFICULTY: Record<string, number> = {
   kill_enemies: 1,
   earn_gold: 1,
-  tap_damage: 1,
-  use_skills: 2,
+  tap_damage: 1.5,
+  use_skills: 1.5,
   defeat_bosses: 3,
   reach_stage: 2,
 };
+
+function getDiamondReward(challengeType: string, highestStage: number): number {
+  const base = Math.max(1, Math.floor(highestStage / 20));
+  const weight = DIAMOND_DIFFICULTY[challengeType] ?? 1;
+  return Math.min(6, Math.floor(base * weight));
+}
 
 const CHALLENGES_PER_DAY = 3;
 
@@ -188,7 +195,7 @@ export class DailyPlugin implements IPlugin {
         c.current_value = Math.min(c.current_value + amount, c.target_value);
         if (c.current_value >= c.target_value) {
           c.completed = true;
-          const diamonds = DIAMOND_REWARDS[c.challenge_type] ?? 1;
+          const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
           this.engine.emit('daily_completed', { challenge: c });
           this.engine.updateState({
             gold: this.engine.state.gold + c.reward_gold,
@@ -210,7 +217,7 @@ export class DailyPlugin implements IPlugin {
         c.current_value = Math.min(value, c.target_value);
         if (c.current_value >= c.target_value) {
           c.completed = true;
-          const diamonds = DIAMOND_REWARDS[c.challenge_type] ?? 1;
+          const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
           this.engine.emit('daily_completed', { challenge: c });
           this.engine.updateState({
             gold: this.engine.state.gold + c.reward_gold,

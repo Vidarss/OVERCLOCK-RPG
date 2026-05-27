@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Cpu, MemoryStick, Zap, PlusSquare, CircuitBoard, ArrowUpCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { X, Cpu, MemoryStick, Zap, PlusSquare, CircuitBoard, ArrowUpCircle, Layers } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import type { HardwareItem, ItemSlot, ItemRarity, ModifierDef, GameState } from '../../engine/types';
@@ -7,6 +7,8 @@ import type { ItemPlugin } from '../../plugins/ItemPlugin';
 import { normalizeEquipped } from '../../plugins/ItemPlugin';
 import type { MoboPlugin } from '../../plugins/MoboPlugin';
 import { MOBO_TIERS } from '../../plugins/MoboPlugin';
+import { SET_CATALOG } from '../../plugins/SetPlugin';
+import type { SetPlugin } from '../../plugins/SetPlugin';
 
 interface MotherboardScreenProps {
   engine: GameEngine;
@@ -20,6 +22,7 @@ const RARITY_COLOR: Record<ItemRarity, string> = {
   Rare: '#00f5ff',
   Epic: '#ffaa00',
   Legendary: '#ff0080',
+  Mythic: '#e8d48b',
 };
 
 const RARITY_GLOW: Record<ItemRarity, string> = {
@@ -27,6 +30,7 @@ const RARITY_GLOW: Record<ItemRarity, string> = {
   Rare: '0 0 8px rgba(0,245,255,0.45)',
   Epic: '0 0 10px rgba(255,170,0,0.5)',
   Legendary: '0 0 14px rgba(255,0,128,0.7)',
+  Mythic: '0 0 18px rgba(232,212,139,0.8)',
 };
 
 const SLOT_COLOR: Record<ItemSlot, string> = {
@@ -334,6 +338,126 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, selected, onClick }) => {
   );
 };
 
+// ── Sets Panel ────────────────────────────────────────────────────────────
+
+interface SetsPanelProps { engine: GameEngine; }
+
+const SetsPanel: React.FC<SetsPanelProps> = ({ engine }) => {
+  const setPlugin = engine.getPlugin<SetPlugin>('sets');
+  const setItems = useGameState(engine, s => s.setItems ?? []);
+  const collectedSets = useGameState(engine, s => s.collectedSets ?? {});
+  const [, setTick] = useState(0);
+  const refresh = useCallback(() => setTick(t => t + 1), []);
+  useEffect(() => setPlugin?.subscribe(refresh), [setPlugin, refresh]);
+
+  return (
+    <div style={{ height: '100%', overflowY: 'auto', padding: '10px 12px' }}>
+      <div className="font-pixel" style={{ color: '#3a3a2a', fontSize: '6px', letterSpacing: '2px', marginBottom: 10 }}>
+        {'> MYTHIC SET COLLECTION'}
+      </div>
+      <div style={{ color: '#2a3a3a', fontFamily: 'var(--font-mono)', fontSize: '8px', marginBottom: 12, lineHeight: 1.5 }}>
+        Mythic set pieces are awarded from tournaments. Collect a full set for a permanent bonus — even unequipped.
+      </div>
+
+      {SET_CATALOG.map(set => {
+        const progress = setPlugin?.getProgressForSet(set.id) ?? { owned: 0, total: set.pieces.length, ownedPieces: [] };
+        const isComplete = collectedSets[set.id] ?? false;
+        const completePct = progress.total > 0 ? (progress.owned / progress.total) * 100 : 0;
+
+        return (
+          <div key={set.id} style={{
+            background: isComplete ? `${set.color}0a` : '#080810',
+            border: `1px solid ${isComplete ? set.color + '55' : '#1a1a28'}`,
+            padding: '11px 13px', marginBottom: 8,
+            boxShadow: isComplete ? `0 0 14px ${set.color}22` : 'none',
+          }}>
+            {/* Set header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <div>
+                <div className="font-pixel" style={{ color: isComplete ? set.color : set.color + '88', fontSize: '9px', marginBottom: 2 }}>
+                  {set.name}
+                  {isComplete && <span style={{ marginLeft: 8, fontSize: '7px', color: '#e8d48b' }}>✦ COMPLETE</span>}
+                </div>
+                <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>{set.description}</div>
+              </div>
+              <div className="font-pixel" style={{ color: set.color, fontSize: '10px', flexShrink: 0, marginLeft: 8 }}>
+                {progress.owned}/{progress.total}
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            <div style={{ height: 3, background: '#1a1a2a', marginBottom: 8, position: 'relative' }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, bottom: 0,
+                width: `${completePct}%`,
+                background: isComplete ? set.color : set.color + '66',
+                boxShadow: isComplete ? `0 0 6px ${set.color}` : 'none',
+                transition: 'width 0.4s',
+              }} />
+            </div>
+
+            {/* Set bonus */}
+            <div style={{
+              background: isComplete ? '#0a0a00' : '#050508',
+              border: `1px solid ${isComplete ? set.color + '33' : '#151520'}`,
+              padding: '6px 8px', marginBottom: 8,
+            }}>
+              <div className="font-pixel" style={{ color: isComplete ? '#e8d48b' : '#2a2a3a', fontSize: '6px', letterSpacing: '1px', marginBottom: 2 }}>
+                SET BONUS
+              </div>
+              <div style={{ color: isComplete ? set.color : '#2a2a3a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+                {set.setBonusDescription}
+              </div>
+            </div>
+
+            {/* Pieces */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {set.pieces.map(piece => {
+                const owned = progress.ownedPieces.includes(piece.name);
+                const ownedItem = setItems.find(i => i.setId === set.id && i.name === piece.name);
+                return (
+                  <div key={piece.name} style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '4px 6px',
+                    background: owned ? `${set.color}0a` : 'transparent',
+                    border: `1px solid ${owned ? set.color + '33' : '#101018'}`,
+                  }}>
+                    <div style={{
+                      width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
+                      background: owned ? set.color : '#1a1a2a',
+                      boxShadow: owned ? `0 0 5px ${set.color}` : 'none',
+                    }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <span className="font-pixel" style={{ color: owned ? set.color : '#2a2a3a', fontSize: '6px' }}>
+                        {piece.name}
+                      </span>
+                      <span style={{ color: '#3a3a4a', fontFamily: 'var(--font-mono)', fontSize: '7px', marginLeft: 6 }}>
+                        [{piece.slot}]
+                      </span>
+                    </div>
+                    {owned && ownedItem && (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {ownedItem.stats.slice(0, 2).map((stat, i) => (
+                          <span key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '7px', color: set.color + 'aa' }}>
+                            {stat.isMultiplier ? `+${((stat.value - 1) * 100).toFixed(0)}%` : `+${(stat.value * 100).toFixed(0)}%`}
+                            {' '}{stat.type === 'tap_damage' ? 'TAP' : stat.type === 'idle_dps' ? 'DPS' : stat.type === 'gold_rate' ? 'G' : stat.type === 'crit_chance' ? 'CC' : 'CM'}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    {!owned && (
+                      <span style={{ color: '#1a2a2a', fontFamily: 'var(--font-mono)', fontSize: '7px' }}>MISSING</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 // ── Bottom Panel: Tabs + slot content ─────────────────────────────────────
 
 interface SlotPanelProps {
@@ -525,8 +649,10 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
   const motherboardTier = useGameState(engine, s => s.motherboardTier ?? 0);
   const ramSlots = useGameState(engine, s => s.ramSlots ?? 1);
   const expansionSlots = useGameState(engine, s => s.expansionSlots ?? 1);
+  const setItems = useGameState(engine, s => s.setItems ?? []);
 
   const [activeSlot, setActiveSlot] = useState<ItemSlot>('CPU');
+  const [bottomMode, setBottomMode] = useState<'slots' | 'sets'>('slots');
 
   const itemPlugin = engine.getPlugin<ItemPlugin>('items');
   const currentTierDef = MOBO_TIERS[motherboardTier] ?? MOBO_TIERS[0];
@@ -609,17 +735,62 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
           />
         </div>
 
-        {/* BOTTOM 65%: Slot tabs + item management */}
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <SlotPanel
-            activeSlot={activeSlot}
-            onSelectSlot={setActiveSlot}
-            equipped={equipped}
-            inventory={inventory}
-            ramSlots={ramSlots}
-            expansionSlots={expansionSlots}
-            itemPlugin={itemPlugin}
-          />
+        {/* BOTTOM 65%: Mode switcher + content */}
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          {/* Mode switcher bar */}
+          <div style={{ flexShrink: 0, display: 'flex', background: '#04000e', borderBottom: '1px solid #0f0820' }}>
+            <button
+              onClick={() => setBottomMode('slots')}
+              className="font-pixel flex items-center gap-1"
+              style={{
+                padding: '7px 14px', fontSize: '6px', letterSpacing: '1px', border: 'none',
+                background: bottomMode === 'slots' ? '#00f5ff0a' : 'none',
+                borderBottom: bottomMode === 'slots' ? '2px solid #00f5ff' : '2px solid transparent',
+                color: bottomMode === 'slots' ? '#00f5ff' : '#2a3a4a', cursor: 'pointer',
+              }}
+            >
+              <CircuitBoard size={9} color={bottomMode === 'slots' ? '#00f5ff' : '#2a3a4a'} />
+              HARDWARE
+            </button>
+            <button
+              onClick={() => setBottomMode('sets')}
+              className="font-pixel flex items-center gap-1"
+              style={{
+                padding: '7px 14px', fontSize: '6px', letterSpacing: '1px', border: 'none',
+                background: bottomMode === 'sets' ? '#e8d48b0a' : 'none',
+                borderBottom: bottomMode === 'sets' ? '2px solid #e8d48b' : '2px solid transparent',
+                color: bottomMode === 'sets' ? '#e8d48b' : '#2a3a4a', cursor: 'pointer',
+              }}
+            >
+              <Layers size={9} color={bottomMode === 'sets' ? '#e8d48b' : '#2a3a4a'} />
+              SETS
+              {setItems.length > 0 && (
+                <span style={{
+                  background: '#e8d48b', color: '#000',
+                  padding: '0 3px', fontSize: '6px', lineHeight: '11px',
+                  fontFamily: 'var(--font-mono)', minWidth: 11, textAlign: 'center',
+                }}>
+                  {setItems.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+            {bottomMode === 'slots' ? (
+              <SlotPanel
+                activeSlot={activeSlot}
+                onSelectSlot={setActiveSlot}
+                equipped={equipped}
+                inventory={inventory}
+                ramSlots={ramSlots}
+                expansionSlots={expansionSlots}
+                itemPlugin={itemPlugin}
+              />
+            ) : (
+              <SetsPanel engine={engine} />
+            )}
+          </div>
         </div>
       </div>
     </div>

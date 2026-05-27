@@ -21,6 +21,7 @@ import { DailyPlugin } from './plugins/DailyPlugin';
 import { AchievementPlugin } from './plugins/AchievementPlugin';
 import { ShopPlugin } from './plugins/ShopPlugin';
 import { TournamentPlugin } from './plugins/TournamentPlugin';
+import { SetPlugin } from './plugins/SetPlugin';
 
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegisterScreen } from './components/auth/RegisterScreen';
@@ -52,6 +53,7 @@ function buildEngine(): GameEngine {
   engine.register(new LeaderboardPlugin());
   engine.register(new ShopPlugin());
   engine.register(new TournamentPlugin());
+  engine.register(new SetPlugin());
 
   return engine;
 }

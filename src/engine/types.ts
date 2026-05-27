@@ -40,7 +40,9 @@ export type GameEventType =
   | 'diamonds_earned'
   | 'shop_purchase'
   | 'tournament_joined'
-  | 'tournament_score_update';
+  | 'tournament_score_update'
+  | 'set_completed'
+  | 'set_item_added';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
@@ -100,7 +102,7 @@ export interface ModifierDef {
 }
 
 export type ItemSlot = 'RAM' | 'GPU' | 'CPU' | 'EXPANSION';
-export type ItemRarity = 'Common' | 'Rare' | 'Epic' | 'Legendary';
+export type ItemRarity = 'Common' | 'Rare' | 'Epic' | 'Legendary' | 'Mythic';
 
 export interface HardwareItem {
   id: string;
@@ -111,6 +113,24 @@ export interface HardwareItem {
   stats: ModifierDef[];
   flavorText: string;
   droppedAt: number;
+  setId?: string;
+}
+
+export interface SetPieceDef {
+  name: string;
+  slot: ItemSlot;
+  stats: ModifierDef[];
+  flavorText: string;
+}
+
+export interface SetDef {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  pieces: SetPieceDef[];
+  setBonusDescription: string;
+  setBonus: ModifierDef[];
 }
 
 export interface OverclockUpgrade {
@@ -159,6 +179,8 @@ export interface GameState {
   pendingBossReturn: boolean;
   pendingBossStage: number | null;
   diamonds: number;
+  setItems: HardwareItem[];
+  collectedSets: Record<string, boolean>;
   lastSaveTime: number;
   lastTickTime: number;
   schemaVersion: number;

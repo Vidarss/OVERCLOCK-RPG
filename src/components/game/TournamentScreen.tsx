@@ -1,30 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Trophy, Users, Clock, RefreshCw, Swords } from 'lucide-react';
+import { X, Trophy, Users, Clock, RefreshCw, Swords, Lock, ChevronRight, Diamond } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
-import type { TournamentPlugin, TournamentEntry } from '../../plugins/TournamentPlugin';
+import type { TournamentPlugin, Tournament, TournamentEntry } from '../../plugins/TournamentPlugin';
 
 interface TournamentScreenProps {
   engine: GameEngine;
   onClose: () => void;
 }
 
-function formatTimeRemaining(endsAt: string): string {
-  const diff = new Date(endsAt).getTime() - Date.now();
+function formatTimeRemaining(isoDate: string): string {
+  const diff = new Date(isoDate).getTime() - Date.now();
   if (diff <= 0) return 'ENDED';
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
   if (d > 0) return `${d}d ${h}h`;
   if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+  if (m > 0) return `${m}m ${s}s`;
+  return `${s}s`;
 }
 
-function getRankSuffix(n: number): string {
-  if (n === 1) return 'st';
-  if (n === 2) return 'nd';
-  if (n === 3) return 'rd';
-  return 'th';
+function formatTimeUntil(isoDate: string): string {
+  const diff = new Date(isoDate).getTime() - Date.now();
+  if (diff <= 0) return 'NOW';
+  return formatTimeRemaining(isoDate);
 }
 
 function getRankColor(rank: number): string {
@@ -34,25 +35,100 @@ function getRankColor(rank: number): string {
   return '#5a6a7a';
 }
 
-function PrizeRow({ rank, diamonds }: { rank: number; diamonds: number }) {
-  const color = getRankColor(rank);
+function getRankSuffix(n: number): string {
+  if (n === 1) return 'st';
+  if (n === 2) return 'nd';
+  if (n === 3) return 'rd';
+  return 'th';
+}
+
+const STATUS_COLORS: Record<Tournament['status'], string> = {
+  active: '#39ff14',
+  upcoming: '#ffaa00',
+  ended: '#3a4a5a',
+};
+
+const STATUS_LABELS: Record<Tournament['status'], string> = {
+  active: 'LIVE',
+  upcoming: 'UPCOMING',
+  ended: 'ENDED',
+};
+
+function TournamentCard({
+  tournament,
+  participantCount,
+  myEntry,
+  myUserId,
+  diamonds,
+  onSelect,
+}: {
+  tournament: Tournament;
+  participantCount: number;
+  myEntry: TournamentEntry | null;
+  myUserId: string | null;
+  diamonds: number;
+  onSelect: () => void;
+}) {
+  const statusColor = STATUS_COLORS[tournament.status];
+  const isFull = participantCount >= tournament.player_cap;
+  const canAfford = diamonds >= tournament.entry_fee_diamonds;
+  const isJoined = !!myEntry;
+
   return (
-    <div
+    <button
+      onClick={onSelect}
       style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '4px 10px',
-        background: rank === 1 ? '#1a1200' : rank === 2 ? '#0f0f0f' : '#0a0a0a',
-        border: `1px solid ${color}33`,
-        marginBottom: 3,
+        width: '100%', background: '#080810', border: `1px solid #1a2a3a`,
+        padding: '11px 13px', marginBottom: 6, cursor: 'pointer', textAlign: 'left',
+        display: 'flex', alignItems: 'center', gap: 10,
+        transition: 'border-color 0.15s, background 0.15s',
+        boxShadow: isJoined ? '0 0 8px rgba(0,245,255,0.08)' : 'none',
       }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = statusColor + '66'; e.currentTarget.style.background = '#0c0c18'; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a2a3a'; e.currentTarget.style.background = '#080810'; }}
     >
-      <span className="font-pixel" style={{ color, fontSize: '8px' }}>
-        #{rank}{getRankSuffix(rank)}
-      </span>
-      <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '8px' }}>
-        {diamonds} ◈
-      </span>
-    </div>
+      {/* Status dot */}
+      <div style={{
+        width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+        background: statusColor,
+        boxShadow: tournament.status === 'active' ? `0 0 6px ${statusColor}` : 'none',
+      }} />
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+          <span className="font-pixel" style={{ color: '#e0e8f0', fontSize: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {tournament.name}
+          </span>
+          {isJoined && (
+            <span className="font-pixel" style={{ color: '#00f5ff', fontSize: '6px', background: '#001520', border: '1px solid #00f5ff33', padding: '1px 4px', flexShrink: 0 }}>IN</span>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <span style={{ color: statusColor, fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            {STATUS_LABELS[tournament.status]}
+            {tournament.status === 'active' && ` — ${formatTimeRemaining(tournament.ends_at)}`}
+            {tournament.status === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
+          </span>
+          <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            <Users size={8} style={{ display: 'inline', marginRight: 2 }} />
+            {participantCount}/{tournament.player_cap}
+            {isFull && !isJoined && <span style={{ color: '#ff4444', marginLeft: 4 }}>FULL</span>}
+          </span>
+        </div>
+      </div>
+
+      <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+        <span style={{ color: '#00e5ff', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+          {tournament.prize_diamonds} ◈
+        </span>
+        {tournament.entry_fee_diamonds > 0 && (
+          <span style={{ color: canAfford || isJoined ? '#ffaa00' : '#ff4444', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            {isJoined ? 'JOINED' : `${tournament.entry_fee_diamonds} ◈`}
+          </span>
+        )}
+        <ChevronRight size={10} color="#2a3a4a" />
+      </div>
+    </button>
   );
 }
 
@@ -60,332 +136,369 @@ function LeaderRow({ entry, position, myUserId }: { entry: TournamentEntry; posi
   const isMe = entry.user_id === myUserId;
   const color = getRankColor(position);
   return (
-    <div
-      style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '6px 10px',
-        background: isMe ? '#001520' : 'transparent',
-        border: isMe ? '1px solid #00f5ff33' : '1px solid transparent',
-        marginBottom: 2,
-      }}
-    >
-      <span className="font-pixel" style={{ color, fontSize: '8px', minWidth: 22 }}>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8, padding: '5px 10px',
+      background: isMe ? '#001520' : 'transparent',
+      border: isMe ? '1px solid #00f5ff22' : '1px solid transparent',
+      marginBottom: 2,
+    }}>
+      <span className="font-pixel" style={{ color, fontSize: '7px', minWidth: 22 }}>
         #{position}
       </span>
-      <span
-        style={{
-          flex: 1,
-          fontFamily: 'var(--font-mono)',
-          fontSize: '10px',
-          color: isMe ? '#00f5ff' : '#8a9aaa',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span style={{
+        flex: 1, fontFamily: 'var(--font-mono)', fontSize: '10px',
+        color: isMe ? '#00f5ff' : '#7a8a9a',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+      }}>
         {entry.handle}
-        {isMe && <span style={{ color: '#00f5ff55', fontSize: '8px', marginLeft: 4 }}>(you)</span>}
+        {isMe && <span style={{ color: '#00f5ff44', fontSize: '8px', marginLeft: 4 }}>(you)</span>}
       </span>
-      <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '8px' }}>
+      <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '7px' }}>
         STG {entry.score}
       </span>
     </div>
   );
 }
 
-export const TournamentScreen: React.FC<TournamentScreenProps> = ({ engine, onClose }) => {
-  const highestStage = useGameState(engine, s => s.highestStage);
-  const plugin = engine.getPlugin<TournamentPlugin>('tournament');
-
-  const [, setTick] = useState(0);
-  const refresh = useCallback(() => setTick(t => t + 1), []);
-  useEffect(() => {
-    if (!plugin) return;
-    return plugin.subscribe(refresh);
-  }, [plugin, refresh]);
-
-  // Timer for countdown
-  const [, setTimerTick] = useState(0);
-  useEffect(() => {
-    const id = setInterval(() => setTimerTick(t => t + 1), 30000);
-    return () => clearInterval(id);
-  }, []);
-
+function TournamentDetail({
+  tournament,
+  participantCount,
+  myEntry,
+  leaderboard,
+  myUserId,
+  diamonds,
+  highestStage,
+  onJoin,
+  onBack,
+  onRefresh,
+}: {
+  tournament: Tournament;
+  participantCount: number;
+  myEntry: TournamentEntry | null;
+  leaderboard: TournamentEntry[];
+  myUserId: string | null;
+  diamonds: number;
+  highestStage: number;
+  onJoin: () => Promise<void>;
+  onBack: () => void;
+  onRefresh: () => void;
+}) {
   const [joining, setJoining] = useState(false);
+  const [joinError, setJoinError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const isFull = participantCount >= tournament.player_cap;
+  const canAfford = diamonds >= tournament.entry_fee_diamonds;
+  const isJoined = !!myEntry;
+  const myPosition = myEntry ? leaderboard.findIndex(e => e.user_id === myUserId) + 1 : null;
+  const statusColor = STATUS_COLORS[tournament.status];
 
-  const tournament = plugin?.getActiveTournament() ?? null;
-  const myEntry = plugin?.getMyEntry() ?? null;
-  const leaderboard = plugin?.getLeaderboard() ?? [];
-  const isJoined = plugin?.isJoined() ?? false;
-
-  // Get user id from auth plugin
-  const authPlugin = engine.getPlugin<{ getPlayer: () => { id: string } | null }>('auth');
-  const myUserId = authPlugin?.getPlayer()?.id ?? null;
+  const prizeDistribution = [
+    { rank: 1, diamonds: Math.floor(tournament.prize_diamonds * 0.5) },
+    { rank: 2, diamonds: Math.floor(tournament.prize_diamonds * 0.3) },
+    { rank: 3, diamonds: Math.floor(tournament.prize_diamonds * 0.2) },
+  ];
 
   const handleJoin = async () => {
-    if (!plugin || joining) return;
     setJoining(true);
-    await plugin.joinTournament();
+    setJoinError(null);
+    await onJoin();
     setJoining(false);
   };
 
   const handleRefresh = () => {
-    if (refreshing) return;
     setRefreshing(true);
-    plugin?.refreshLeaderboard();
+    onRefresh();
     setTimeout(() => setRefreshing(false), 1000);
   };
 
-  const myPosition = myEntry
-    ? leaderboard.findIndex(e => e.user_id === myUserId) + 1
-    : null;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Back + title */}
+      <div style={{ flexShrink: 0, padding: '10px 13px', borderBottom: '1px solid #1a2a3a', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <button
+          onClick={onBack}
+          style={{ background: 'transparent', border: '1px solid #1a2a3a', color: '#3a4a5a', width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = '#00f5ff'; e.currentTarget.style.color = '#00f5ff'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a2a3a'; e.currentTarget.style.color = '#3a4a5a'; }}
+        >
+          ‹
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div className="font-pixel" style={{ color: '#e0e8f0', fontSize: '8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {tournament.name}
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
+            <span style={{ color: statusColor, fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+              {STATUS_LABELS[tournament.status]}
+              {tournament.status === 'active' && ` — ends in ${formatTimeRemaining(tournament.ends_at)}`}
+              {tournament.status === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
+            </span>
+          </div>
+        </div>
+      </div>
 
-  const prizeDistribution = tournament
-    ? [
-        { rank: 1, diamonds: Math.floor(tournament.prize_diamonds * 0.5) },
-        { rank: 2, diamonds: Math.floor(tournament.prize_diamonds * 0.3) },
-        { rank: 3, diamonds: Math.floor(tournament.prize_diamonds * 0.2) },
-      ]
-    : [];
+      <div style={{ flex: 1, overflowY: 'auto', padding: '10px 13px' }}>
+        {/* Stats row */}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 10 }}>
+          {[
+            { label: 'Prize Pool', value: `${tournament.prize_diamonds} ◈`, color: '#00e5ff' },
+            { label: 'Entry Fee', value: tournament.entry_fee_diamonds > 0 ? `${tournament.entry_fee_diamonds} ◈` : 'FREE', color: tournament.entry_fee_diamonds > 0 ? '#ffaa00' : '#39ff14' },
+            { label: 'Players', value: `${participantCount}/${tournament.player_cap}`, color: isFull && !isJoined ? '#ff4444' : '#e0e8f0' },
+          ].map(stat => (
+            <div key={stat.label} style={{ background: '#06060e', border: '1px solid #1a1a2a', padding: '6px 10px', flex: 1, minWidth: 80 }}>
+              <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px', marginBottom: 2 }}>{stat.label}</div>
+              <div className="font-pixel" style={{ color: stat.color, fontSize: '9px' }}>{stat.value}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Prizes */}
+        <div className="font-pixel" style={{ color: '#3a4a5a', fontSize: '6px', letterSpacing: '2px', marginBottom: 5 }}>{'> PRIZE DISTRIBUTION'}</div>
+        {prizeDistribution.map(p => (
+          <div key={p.rank} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '4px 10px', marginBottom: 3,
+            background: p.rank === 1 ? '#100d00' : '#08080e',
+            border: `1px solid ${getRankColor(p.rank)}28`,
+          }}>
+            <span className="font-pixel" style={{ color: getRankColor(p.rank), fontSize: '7px' }}>
+              #{p.rank}{getRankSuffix(p.rank)}
+            </span>
+            <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '7px' }}>{p.diamonds} ◈</span>
+          </div>
+        ))}
+
+        {/* My standing or join button */}
+        {isJoined && myEntry ? (
+          <div style={{ background: '#001520', border: '1px solid #00f5ff28', padding: '10px', margin: '10px 0' }}>
+            <div className="font-pixel" style={{ color: '#00f5ff', fontSize: '6px', letterSpacing: '1px', marginBottom: 6 }}>YOUR STANDING</div>
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div>
+                <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Rank </span>
+                <span className="font-pixel" style={{ color: myPosition && myPosition <= 3 ? getRankColor(myPosition) : '#00f5ff', fontSize: '9px' }}>
+                  {myPosition ? `#${myPosition}` : '--'}
+                </span>
+              </div>
+              <div>
+                <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Score </span>
+                <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '9px' }}>STG {myEntry.score}</span>
+              </div>
+              <div>
+                <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Best </span>
+                <span className="font-pixel" style={{ color: '#39ff14', fontSize: '9px' }}>STG {highestStage}</span>
+              </div>
+            </div>
+          </div>
+        ) : tournament.status !== 'upcoming' && (
+          <div style={{ margin: '10px 0' }}>
+            {isFull ? (
+              <div className="font-pixel" style={{ color: '#ff4444', fontSize: '8px', textAlign: 'center', padding: '10px', border: '1px solid #ff444422' }}>
+                BRACKET FULL
+              </div>
+            ) : (
+              <>
+                <button
+                  onClick={handleJoin}
+                  disabled={joining || !canAfford}
+                  className="font-pixel w-full"
+                  style={{
+                    background: canAfford ? '#130a00' : '#0a0808', border: `1px solid ${canAfford ? '#ffaa00' : '#2a1a00'}`,
+                    color: canAfford ? '#ffaa00' : '#3a2a00', padding: '11px', fontSize: '8px', letterSpacing: '2px',
+                    cursor: canAfford && !joining ? 'pointer' : 'not-allowed',
+                    boxShadow: canAfford ? '0 0 10px rgba(255,170,0,0.12)' : 'none',
+                  }}
+                >
+                  {joining ? 'JOINING...' : tournament.entry_fee_diamonds > 0 ? `JOIN — ${tournament.entry_fee_diamonds} ◈` : 'JOIN FREE'}
+                </button>
+                {!canAfford && (
+                  <div style={{ color: '#ff4444', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 5 }}>
+                    Need {tournament.entry_fee_diamonds} ◈ to enter
+                  </div>
+                )}
+                {joinError && (
+                  <div style={{ color: '#ff4444', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 5 }}>
+                    {joinError}
+                  </div>
+                )}
+                <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 5 }}>
+                  Starting score: STG {highestStage}
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {tournament.status === 'upcoming' && !isJoined && (
+          <div style={{ margin: '10px 0', padding: '10px', background: '#0a0800', border: '1px solid #ffaa0022', textAlign: 'center' }}>
+            <Clock size={14} color="#ffaa00" style={{ margin: '0 auto 6px' }} />
+            <div className="font-pixel" style={{ color: '#ffaa00', fontSize: '8px', marginBottom: 4 }}>
+              STARTS IN {formatTimeUntil(tournament.starts_at)}
+            </div>
+            <div style={{ color: '#3a3a2a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+              Registration opens when the tournament goes live.
+            </div>
+          </div>
+        )}
+
+        {/* Leaderboard */}
+        <div style={{ marginTop: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <div className="font-pixel" style={{ color: '#3a4a5a', fontSize: '6px', letterSpacing: '2px' }}>{'> LEADERBOARD'}</div>
+            <button
+              onClick={handleRefresh}
+              style={{ background: 'transparent', border: 'none', color: '#2a3a4a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, padding: 0 }}
+            >
+              <RefreshCw size={9} color="#2a3a4a" style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }} />
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '7px' }}>REFRESH</span>
+            </button>
+          </div>
+          {leaderboard.length === 0 ? (
+            <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center', padding: '14px 0' }}>
+              No entries yet.
+            </div>
+          ) : (
+            leaderboard.map((entry, i) => (
+              <LeaderRow key={entry.id} entry={entry} position={i + 1} myUserId={myUserId} />
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export const TournamentScreen: React.FC<TournamentScreenProps> = ({ engine, onClose }) => {
+  const highestStage = useGameState(engine, s => s.highestStage);
+  const diamonds = useGameState(engine, s => s.diamonds);
+  const plugin = engine.getPlugin<TournamentPlugin>('tournament');
+
+  const [, setTick] = useState(0);
+  const refresh = useCallback(() => setTick(t => t + 1), []);
+  useEffect(() => { if (!plugin) return; return plugin.subscribe(refresh); }, [plugin, refresh]);
+
+  // Countdown ticker
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 10000);
+    return () => clearInterval(id);
+  }, []);
+
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const authPlugin = engine.getPlugin<{ getPlayer: () => { id: string } | null }>('auth');
+  const myUserId = authPlugin?.getPlayer()?.id ?? null;
+
+  const allTournaments = plugin?.getAll() ?? [];
+  const active = allTournaments.filter(t => t.status === 'active');
+  const upcoming = allTournaments.filter(t => t.status === 'upcoming');
+
+  const selectedTournament = selectedId ? allTournaments.find(t => t.id === selectedId) ?? null : null;
+
+  const handleJoin = async (tournamentId: string) => {
+    const result = await plugin?.joinTournament(tournamentId);
+    if (result && !result.success && result.error) {
+      // Error shown inline in detail view
+    }
+  };
 
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(0,0,0,0.88)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.88)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div
-        style={{
-          width: '100%',
-          maxWidth: 480,
-          maxHeight: '92vh',
-          background: '#0a0a12',
-          border: '1px solid #1a2a3a',
-          display: 'flex',
-          flexDirection: 'column',
-          margin: '0 12px',
-          boxShadow: '0 0 40px rgba(255,170,0,0.06)',
-        }}
-      >
+      <div style={{
+        width: '100%', maxWidth: 480, maxHeight: '92vh', background: '#0a0a12',
+        border: '1px solid #1a2a3a', display: 'flex', flexDirection: 'column',
+        margin: '0 12px', boxShadow: '0 0 40px rgba(255,170,0,0.06)',
+      }}>
         {/* Header */}
-        <div
-          style={{
-            flexShrink: 0,
-            padding: '12px 14px',
-            borderBottom: '1px solid #1a2a3a',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: '#07070e',
-          }}
-        >
+        <div style={{
+          flexShrink: 0, padding: '11px 14px', borderBottom: '1px solid #1a2a3a',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#07070e',
+        }}>
           <div className="flex items-center gap-2">
-            <Swords size={14} color="#ffaa00" />
-            <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '10px', letterSpacing: '2px' }}>
-              TOURNAMENT
-            </span>
+            <Swords size={13} color="#ffaa00" />
+            <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '10px', letterSpacing: '2px' }}>TOURNAMENTS</span>
           </div>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'transparent',
-              border: '1px solid #1a2a3a',
-              color: '#3a4a5a',
-              width: 24, height: 24,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'color 0.1s, border-color 0.1s',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.borderColor = '#ff4444'; }}
-            onMouseLeave={e => { e.currentTarget.style.color = '#3a4a5a'; e.currentTarget.style.borderColor = '#1a2a3a'; }}
-          >
-            <X size={12} />
-          </button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1">
+              <span style={{ color: '#00e5ff', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>◈</span>
+              <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '10px' }}>{diamonds}</span>
+            </div>
+            <button
+              onClick={onClose}
+              style={{ background: 'transparent', border: '1px solid #1a2a3a', color: '#3a4a5a', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.borderColor = '#ff4444'; }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#3a4a5a'; e.currentTarget.style.borderColor = '#1a2a3a'; }}
+            >
+              <X size={12} />
+            </button>
+          </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: 'auto' }}>
-          {!tournament ? (
-            <div style={{ padding: 24, textAlign: 'center' }}>
-              <Trophy size={32} color="#2a3a4a" style={{ margin: '0 auto 12px' }} />
-              <div className="font-pixel" style={{ color: '#3a4a5a', fontSize: '9px', letterSpacing: '2px' }}>
-                NO ACTIVE TOURNAMENT
-              </div>
-              <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '9px', marginTop: 8 }}>
-                Check back soon for the next event.
-              </div>
-            </div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          {selectedTournament ? (
+            <TournamentDetail
+              tournament={selectedTournament}
+              participantCount={plugin?.getParticipantCount(selectedTournament.id) ?? 0}
+              myEntry={plugin?.getMyEntry(selectedTournament.id) ?? null}
+              leaderboard={plugin?.getLeaderboard(selectedTournament.id) ?? []}
+              myUserId={myUserId}
+              diamonds={diamonds}
+              highestStage={highestStage}
+              onJoin={() => handleJoin(selectedTournament.id)}
+              onBack={() => setSelectedId(null)}
+              onRefresh={() => plugin?.refreshLeaderboard(selectedTournament.id)}
+            />
           ) : (
-            <>
-              {/* Tournament info card */}
-              <div
-                style={{
-                  margin: '12px 12px 0',
-                  padding: '12px',
-                  background: '#07070e',
-                  border: '1px solid #2a1a00',
-                  boxShadow: '0 0 16px rgba(255,170,0,0.05)',
-                }}
-              >
-                <div className="font-pixel" style={{ color: '#ffaa00', fontSize: '9px', marginBottom: 8, letterSpacing: '1px' }}>
-                  {tournament.name}
-                </div>
-
-                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                  <div className="flex items-center gap-2">
-                    <Clock size={10} color="#5a6a7a" />
-                    <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                      {tournament.status === 'active' ? 'Ends in' : 'Status'}:
-                    </span>
-                    <span className="font-pixel" style={{ color: '#00f5ff', fontSize: '8px' }}>
-                      {formatTimeRemaining(tournament.ends_at)}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Trophy size={10} color="#ffd700" />
-                    <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Prize pool:</span>
-                    <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '8px' }}>
-                      {tournament.prize_diamonds} ◈
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users size={10} color="#5a6a7a" />
-                    <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                      Competitors:
-                    </span>
-                    <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '8px' }}>
-                      {leaderboard.length}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Scoring note */}
-                <div style={{ marginTop: 8, color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-                  Score = highest stage reached during the tournament window.
-                </div>
-              </div>
-
-              {/* Prize distribution */}
-              <div style={{ padding: '12px 12px 0' }}>
-                <div className="font-pixel" style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px', marginBottom: 6 }}>
-                  {'> PRIZE DISTRIBUTION'}
-                </div>
-                {prizeDistribution.map(p => (
-                  <PrizeRow key={p.rank} rank={p.rank} diamonds={p.diamonds} />
-                ))}
-              </div>
-
-              {/* My status */}
-              {isJoined && myEntry ? (
-                <div
-                  style={{
-                    margin: '12px 12px 0',
-                    padding: '10px',
-                    background: '#001520',
-                    border: '1px solid #00f5ff33',
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                      <div className="font-pixel" style={{ color: '#00f5ff', fontSize: '7px', letterSpacing: '1px', marginBottom: 3 }}>
-                        YOUR STANDING
-                      </div>
-                      <div style={{ display: 'flex', gap: 16 }}>
-                        <div>
-                          <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Rank: </span>
-                          <span className="font-pixel" style={{ color: myPosition && myPosition <= 3 ? getRankColor(myPosition) : '#00f5ff', fontSize: '9px' }}>
-                            {myPosition ? `#${myPosition}` : '--'}
-                          </span>
-                        </div>
-                        <div>
-                          <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Score: </span>
-                          <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '9px' }}>
-                            STG {myEntry.score}
-                          </span>
-                        </div>
-                        <div>
-                          <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Best: </span>
-                          <span className="font-pixel" style={{ color: '#39ff14', fontSize: '9px' }}>
-                            STG {highestStage}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+            <div style={{ height: '100%', overflowY: 'auto', padding: '10px 12px' }}>
+              {allTournaments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '32px 0' }}>
+                  <Trophy size={32} color="#2a3a4a" style={{ margin: '0 auto 12px' }} />
+                  <div className="font-pixel" style={{ color: '#2a3a4a', fontSize: '8px', letterSpacing: '2px' }}>NO TOURNAMENTS AVAILABLE</div>
+                  <div style={{ color: '#1a2a2a', fontFamily: 'var(--font-mono)', fontSize: '9px', marginTop: 8 }}>Check back soon.</div>
                 </div>
               ) : (
-                <div style={{ padding: '12px 12px 0' }}>
-                  <button
-                    onClick={handleJoin}
-                    disabled={joining}
-                    className="font-pixel w-full"
-                    style={{
-                      background: joining ? '#080808' : '#1a0d00',
-                      border: `1px solid ${joining ? '#2a2a2a' : '#ffaa00'}`,
-                      color: joining ? '#3a3a3a' : '#ffaa00',
-                      padding: '12px',
-                      fontSize: '9px',
-                      letterSpacing: '2px',
-                      cursor: joining ? 'not-allowed' : 'pointer',
-                      boxShadow: joining ? 'none' : '0 0 12px rgba(255,170,0,0.15)',
-                      transition: 'all 0.15s',
-                    }}
-                  >
-                    {joining ? 'JOINING...' : 'JOIN TOURNAMENT'}
-                  </button>
-                  <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 6 }}>
-                    Your current best (STG {highestStage}) will be your starting score.
-                  </div>
-                </div>
+                <>
+                  {active.length > 0 && (
+                    <>
+                      <div className="font-pixel" style={{ color: '#39ff14', fontSize: '6px', letterSpacing: '2px', marginBottom: 6 }}>
+                        {'> LIVE NOW'}
+                      </div>
+                      {active.map(t => (
+                        <TournamentCard
+                          key={t.id}
+                          tournament={t}
+                          participantCount={plugin?.getParticipantCount(t.id) ?? 0}
+                          myEntry={plugin?.getMyEntry(t.id) ?? null}
+                          myUserId={myUserId}
+                          diamonds={diamonds}
+                          onSelect={() => setSelectedId(t.id)}
+                        />
+                      ))}
+                    </>
+                  )}
+
+                  {upcoming.length > 0 && (
+                    <>
+                      <div className="font-pixel" style={{ color: '#ffaa00', fontSize: '6px', letterSpacing: '2px', margin: '12px 0 6px' }}>
+                        {'> UPCOMING'}
+                      </div>
+                      {upcoming.map(t => (
+                        <TournamentCard
+                          key={t.id}
+                          tournament={t}
+                          participantCount={plugin?.getParticipantCount(t.id) ?? 0}
+                          myEntry={plugin?.getMyEntry(t.id) ?? null}
+                          myUserId={myUserId}
+                          diamonds={diamonds}
+                          onSelect={() => setSelectedId(t.id)}
+                        />
+                      ))}
+                    </>
+                  )}
+                </>
               )}
-
-              {/* Leaderboard */}
-              <div style={{ padding: '12px 12px 12px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <div className="font-pixel" style={{ color: '#5a6a7a', fontSize: '7px', letterSpacing: '2px' }}>
-                    {'> LEADERBOARD'}
-                  </div>
-                  <button
-                    onClick={handleRefresh}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#3a4a5a',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      padding: 0,
-                    }}
-                  >
-                    <RefreshCw
-                      size={10}
-                      color="#3a4a5a"
-                      style={{ animation: refreshing ? 'spin 0.8s linear infinite' : 'none' }}
-                    />
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>REFRESH</span>
-                  </button>
-                </div>
-
-                {leaderboard.length === 0 ? (
-                  <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center', padding: '16px 0' }}>
-                    No entries yet. Be the first to join!
-                  </div>
-                ) : (
-                  leaderboard.map((entry, i) => (
-                    <LeaderRow
-                      key={entry.id}
-                      entry={entry}
-                      position={i + 1}
-                      myUserId={myUserId}
-                    />
-                  ))
-                )}
-              </div>
-            </>
+            </div>
           )}
         </div>
       </div>
