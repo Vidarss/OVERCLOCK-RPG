@@ -1,13 +1,7 @@
 import type { IPlugin, IEngine, GameState } from '../engine/types';
 import type { EnemyPlugin } from './EnemyPlugin';
 import type { DamageNumberEvent } from '../engine/types';
-
-const BASE_TAP_DAMAGE = 1;
-const CRIT_CHANCE = 0.1;
-const CRIT_MULTIPLIER = 5;
-const COMBO_WINDOW_MS = 800;
-const COMBO_THRESHOLD = 5;
-const COMBO_MULTIPLIER = 2;
+import { TAP_CONFIG } from '../config/game.config';
 
 export class TapPlugin implements IPlugin {
   id = 'tap';
@@ -26,19 +20,19 @@ export class TapPlugin implements IPlugin {
     if (!state.enemy || state.enemy.hp <= 0) return;
 
     const now = Date.now();
-    if (now - this.lastTapTime < COMBO_WINDOW_MS) {
+    if (now - this.lastTapTime < TAP_CONFIG.comboWindowMs) {
       this.comboCount++;
     } else {
       this.comboCount = 1;
     }
     this.lastTapTime = now;
 
-    const isCrit = Math.random() < (CRIT_CHANCE + this.engine.getModifier('crit_chance') - 1);
-    const comboBonus = this.comboCount >= COMBO_THRESHOLD ? COMBO_MULTIPLIER : 1;
-    const tapDamage = this.engine.getModifier('tap_damage') * BASE_TAP_DAMAGE;
+    const isCrit = Math.random() < (TAP_CONFIG.baseCritChance + this.engine.getModifier('crit_chance') - 1);
+    const comboBonus = this.comboCount >= TAP_CONFIG.comboThreshold ? TAP_CONFIG.comboMultiplier : 1;
+    const tapDamage = this.engine.getModifier('tap_damage') * TAP_CONFIG.baseDamage;
 
     let damage = tapDamage * comboBonus;
-    if (isCrit) damage *= (CRIT_MULTIPLIER * this.engine.getModifier('crit_multiplier'));
+    if (isCrit) damage *= (TAP_CONFIG.baseCritMultiplier * this.engine.getModifier('crit_multiplier'));
     damage = Math.ceil(damage);
 
     const dmgEvent: DamageNumberEvent = {

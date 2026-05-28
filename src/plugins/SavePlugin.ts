@@ -1,6 +1,5 @@
 import type { IPlugin, IEngine, GameState } from '../engine/types';
-
-const SAVE_INTERVAL_MS = 30_000;
+import { SAVE_CONFIG } from '../config/game.config';
 
 export class SavePlugin implements IPlugin {
   id = 'save';
@@ -31,7 +30,7 @@ export class SavePlugin implements IPlugin {
     this.stopAutoSave();
     this.saveTimer = setInterval(() => {
       this.engine.emit('save_requested', {});
-    }, SAVE_INTERVAL_MS);
+    }, SAVE_CONFIG.autoSaveIntervalMs);
   }
 
   private stopAutoSave(): void {

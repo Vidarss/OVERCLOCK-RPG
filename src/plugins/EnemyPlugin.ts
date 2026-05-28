@@ -1,77 +1,39 @@
 import type { IPlugin, IEngine, GameState, Enemy, GameEvent } from '../engine/types';
 import type { SkillPlugin } from './SkillPlugin';
-
-const ENEMY_NAMES_BY_TIER = [
-  // Tier 0 — Stage 1-50
-  ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT', 'ADWARE.EXE'],
-  // Tier 1 — Stage 51-100
-  ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'PHISH_AGENT', 'TROJAN_HORSE'],
-  // Tier 2 — Stage 101-150
-  ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON', 'MAN_IN_MIDDLE'],
-  // Tier 3 — Stage 151-200
-  ['ROGUE_AI_v1', 'DEEPFAKE_BOT', 'ZERO_DAY', 'APT_GHOST', 'SHADOW_PROCESS', 'DARK_PACKET'],
-  // Tier 4 — Stage 201-250
-  ['SINGULARITY', 'DAEMON_CORE', 'KERNEL_PANIC', 'BLUE_SCREEN', 'VOID_THREAD', 'NULL_DAEMON'],
-  // Tier 5 — Stage 251-500
-  ['SHADOW_NET', 'DARK_PROTOCOL', 'ENTROPY_SPIKE', 'PHANTOM_ROOT', 'MEMORY_LEAK', 'RACE_CONDITION'],
-  // Tier 6 — Stage 501-1000
-  ['QUANTUM_GHOST', 'NULL_DAEMON_v2', 'SCHRODINGER_BUG', 'ENTANGLED_PROC', 'WAVE_COLLAPSE', 'QUBIT_STORM'],
-  // Tier 7 — Stage 1001-2000
-  ['VOID_ARCHITECT', 'SIGNAL_WRAITH', 'DEAD_CODE_GOD', 'RECURSIVE_HELL', 'INFINITE_LOOP', 'STACK_DEITY'],
-  // Tier 8 — Stage 2001-3500
-  ['SILICON_HORROR', 'LOGIC_ABOMINATION', 'CORRUPT_COSMOS', 'DATA_ABYSS', 'TERMINAL_WRAITH', 'EXEC_PHANTOM'],
-  // Tier 9 — Stage 3501-5000
-  ['OMEGA_PROCESS', 'THE_LAST_BIT', 'FINAL_EXCEPTION', 'END_OF_STACK', 'HEAT_DEATH_BOT', 'ENTROPY_FINAL'],
-];
-
-const BOSS_NAMES = [
-  'THE_FIREWALL', 'DARK_ANTIVIRUS', 'CHAOS_KERNEL',
-  'OMEGA_ROOTKIT', 'SYSTEM32_WRAITH', 'BIOS_CORRUPTION',
-  'QUANTUM_MALWARE', 'THE_NULL_GOD',
-  'PHANTOM_OVERLORD', 'DEEP_PACKET_KING', 'APT_SOVEREIGN', 'CRYPTOVAULT',
-  'SHADOW_ADMIN', 'ZERO_TRUST_BREAKER', 'THE_RAW_SOCKET', 'KERNEL_GOD_v2',
-  'QUANTUM_ENTANGLEMENT', 'DARK_SILICON_LORD', 'THE_VOID_KERNEL', 'NULL_POINTER_PRIME',
-  'ENTROPY_ARCHITECT', 'SINGULARITY_DAEMON', 'THE_INFINITE_LOOP', 'OMEGA_SIGNAL',
-  'DEAD_CODE_OVERLORD', 'THE_LAST_SYSCALL', 'HEAT_DEATH_INCARNATE', 'THE_FINAL_BIT',
-];
+import { ENEMY_CONFIG } from '../config/game.config';
 
 export function getEnemyHp(stage: number): number {
-  if (stage <= 100) {
-    return Math.floor(10 * Math.pow(1.5, stage - 1));
-  }
-  // Softer scaling beyond stage 100 to keep game playable at 5000
-  const base100 = Math.floor(10 * Math.pow(1.5, 99));
-  return Math.floor(base100 * Math.pow(1.12, stage - 100));
+  const { normalHpBase: base, scalingExponentEarly: expE, scalingExponentLate: expL } = ENEMY_CONFIG;
+  if (stage <= 100) return Math.floor(base * Math.pow(expE, stage - 1));
+  const base100 = Math.floor(base * Math.pow(expE, 99));
+  return Math.floor(base100 * Math.pow(expL, stage - 100));
 }
 
 export function getBossHp(stage: number): number {
-  if (stage <= 100) {
-    return Math.floor(50 * Math.pow(1.5, stage - 1));
-  }
-  const base100 = Math.floor(50 * Math.pow(1.5, 99));
-  return Math.floor(base100 * Math.pow(1.12, stage - 100));
+  const { bossHpBase: base, scalingExponentEarly: expE, scalingExponentLate: expL } = ENEMY_CONFIG;
+  if (stage <= 100) return Math.floor(base * Math.pow(expE, stage - 1));
+  const base100 = Math.floor(base * Math.pow(expE, 99));
+  return Math.floor(base100 * Math.pow(expL, stage - 100));
 }
 
 export function getEnemyTier(stage: number): number {
-  return Math.min(Math.floor((stage - 1) / 50), ENEMY_NAMES_BY_TIER.length - 1);
+  return Math.min(Math.floor((stage - 1) / ENEMY_CONFIG.stagesPerTier), ENEMY_CONFIG.enemyNamesByTier.length - 1);
 }
 
 function getEnemyName(stage: number, isBoss: boolean): string {
   if (isBoss) {
-    const idx = Math.floor((stage / 10 - 1)) % BOSS_NAMES.length;
-    return BOSS_NAMES[idx];
+    const idx = Math.floor((stage / 10 - 1)) % ENEMY_CONFIG.bossNames.length;
+    return ENEMY_CONFIG.bossNames[idx];
   }
-  const tier = Math.min(getEnemyTier(stage), ENEMY_NAMES_BY_TIER.length - 1);
-  const names = ENEMY_NAMES_BY_TIER[tier];
+  const tier = Math.min(getEnemyTier(stage), ENEMY_CONFIG.enemyNamesByTier.length - 1);
+  const names = ENEMY_CONFIG.enemyNamesByTier[tier];
   return names[Math.floor(Math.random() * names.length)];
 }
 
-const ELITE_CHANCE = 0.15;
-
 export function spawnEnemy(stage: number): Enemy {
-  const isBoss = stage % 10 === 0;
-  const isElite = !isBoss && stage > 3 && Math.random() < ELITE_CHANCE;
-  const hpMultiplier = isElite ? 3 : 1;
+  const isBoss = stage % ENEMY_CONFIG.bossEveryNStages === 0;
+  const isElite = !isBoss && stage > ENEMY_CONFIG.eliteMinStage && Math.random() < ENEMY_CONFIG.eliteChance;
+  const hpMultiplier = isElite ? ENEMY_CONFIG.eliteHpMultiplier : 1;
   const baseHp = isBoss ? getBossHp(stage) : getEnemyHp(stage) * hpMultiplier;
 
   return {
@@ -95,7 +57,6 @@ export class EnemyPlugin implements IPlugin {
 
   private engine!: IEngine;
   private bossTimer = 0;
-  private readonly BOSS_TIMEOUT = 30;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -133,8 +94,8 @@ export class EnemyPlugin implements IPlugin {
     this.engine.updateState({ enemy, stage, highestStage });
 
     if (enemy.isBoss) {
-      this.bossTimer = this.BOSS_TIMEOUT;
-      this.engine.updateState({ isBossActive: true, bossTimeRemaining: this.BOSS_TIMEOUT });
+      this.bossTimer = ENEMY_CONFIG.bossTimeoutSeconds;
+      this.engine.updateState({ isBossActive: true, bossTimeRemaining: ENEMY_CONFIG.bossTimeoutSeconds });
       this.engine.emit('boss_spawn', { enemy });
     } else {
       this.engine.updateState({ isBossActive: false, bossTimeRemaining: 0 });
@@ -156,7 +117,7 @@ export class EnemyPlugin implements IPlugin {
     let effectiveDamage = amount;
 
     if (state.enemy.bossPhase === 'shield') {
-      effectiveDamage = Math.ceil(amount * 0.3);
+      effectiveDamage = Math.ceil(amount * ENEMY_CONFIG.bossShieldDamageMultiplier);
     }
 
     const newHp = Math.max(0, state.enemy.hp - effectiveDamage);
@@ -183,7 +144,7 @@ export class EnemyPlugin implements IPlugin {
     const state = this.engine.state;
     if (!state.enemy) return;
 
-    const goldMultiplier = state.enemy.isBoss ? 5 : state.enemy.isElite ? 3 : 1;
+    const goldMultiplier = state.enemy.isBoss ? ENEMY_CONFIG.bossGoldMultiplier : state.enemy.isElite ? ENEMY_CONFIG.eliteGoldMultiplier : ENEMY_CONFIG.normalGoldMultiplier;
     const goldReward = Math.floor(state.enemy.maxHp * goldMultiplier);
     this.engine.emit('enemy_death', { enemy: state.enemy, goldReward });
     this.engine.updateState({ isBossActive: false });
@@ -203,7 +164,7 @@ export class EnemyPlugin implements IPlugin {
     this.engine.updateState({ bossTimeRemaining: remaining });
 
     if (state.enemy?.bossPhase === 'regen' && state.enemy.hp < state.enemy.maxHp) {
-      const regenAmount = Math.ceil(state.enemy.maxHp * 0.02 * delta);
+      const regenAmount = Math.ceil(state.enemy.maxHp * ENEMY_CONFIG.bossRegenRatePerSecond * delta);
       const newHp = Math.min(state.enemy.maxHp, state.enemy.hp + regenAmount);
       this.engine.updateState({ enemy: { ...state.enemy, hp: newHp } });
     }

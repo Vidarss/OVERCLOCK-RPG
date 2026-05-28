@@ -1,81 +1,13 @@
-import type { IPlugin, IEngine, GameState, GameEvent, HardwareItem, ItemSlot, ItemRarity, ModifierDef } from '../engine/types';
-
-const SLOT_ITEMS: Record<ItemSlot, string[]> = {
-  RAM: [
-    'DDR5_GHOST', 'PHANTOM_RAM', 'VENOM_DIMM', 'SHADOW_CACHE',
-    'HYPERTHREAD_STICK', 'OVERCLOCKED_DDR', 'VOLATILE_BANK', 'NULL_PTR_MODULE',
-  ],
-  GPU: [
-    'VOID_SHADER', 'FRACTURE_GPU', 'DARK_RENDERER', 'QUANTUM_CORE_GPU',
-    'ROGUE_PIXEL', 'SHADER_DAEMON', 'ENTROPY_CARD', 'PARALLEL_GHOST',
-  ],
-  CPU: [
-    'EXPLOIT_PROC', 'SILICON_WRAITH', 'ZERO_DAY_CHIP', 'OVERCLOCK_CORE',
-    'PHANTOM_CPU', 'DAEMON_PROC', 'ROOTKIT_SILICON', 'NULL_CORE',
-  ],
-  EXPANSION: [
-    'CHAOS_NIC', 'GHOST_RAID', 'OVERFLOW_PCI', 'BACKDOOR_CARD',
-    'INJECTION_BUS', 'EXPLOIT_BRIDGE', 'DARK_PCIE', 'SHADOW_EXPANSION',
-  ],
-};
-
-const ITEM_FLAVORS: Record<string, string> = {
-  DDR5_GHOST: 'Addresses that should not exist hold your arsenal.',
-  PHANTOM_RAM: 'It shows up in no process table. Runs in everything.',
-  VENOM_DIMM: 'Leaked from a black site. Runs hot. Runs mean.',
-  SHADOW_CACHE: "Prefetches tomorrow's attacks.",
-  HYPERTHREAD_STICK: 'Twice the threads, twice the carnage.',
-  OVERCLOCKED_DDR: 'Voided warranty. Doubled damage.',
-  VOLATILE_BANK: "Contents survive power loss. Revenants don't reset.",
-  NULL_PTR_MODULE: 'References nothing. Destroys everything.',
-  VOID_SHADER: "Renders pain in resolutions enemies can't perceive.",
-  FRACTURE_GPU: 'Stress-tested past the point of sanity.',
-  DARK_RENDERER: 'Draws frames of destruction before they happen.',
-  QUANTUM_CORE_GPU: 'Superposition: hit and miss, simultaneously.',
-  ROGUE_PIXEL: "One bad actor in 4K. That's enough.",
-  SHADER_DAEMON: 'Compiles malice into every draw call.',
-  ENTROPY_CARD: 'Randomness as a weapon. Chaos is the strategy.',
-  PARALLEL_GHOST: 'Multiple threads, zero traces.',
-  EXPLOIT_PROC: 'Runs your code before you write it.',
-  SILICON_WRAITH: 'No heat signature. No mercy.',
-  ZERO_DAY_CHIP: 'Patched by no one. Feared by all.',
-  OVERCLOCK_CORE: 'Cooling not included. Sanity not included.',
-  PHANTOM_CPU: 'Listed as idle in all monitors. Never idle.',
-  DAEMON_PROC: 'init spawned it. Nothing can kill it.',
-  ROOTKIT_SILICON: 'Embedded in firmware. Deeper than the OS.',
-  NULL_CORE: 'Undefined behavior is a feature.',
-  CHAOS_NIC: 'Packets arrive before they are sent.',
-  GHOST_RAID: 'Storage array that only you can see.',
-  OVERFLOW_PCI: 'Buffer overflow weaponized as hardware.',
-  BACKDOOR_CARD: 'Manufacturer left a key. You found it.',
-  INJECTION_BUS: 'Everything on the bus is yours now.',
-  EXPLOIT_BRIDGE: 'Bridges two networks neither should touch.',
-  DARK_PCIE: "PCIe lane to somewhere the spec forgot.",
-  SHADOW_EXPANSION: 'Expands into address space that does not exist.',
-};
-
-const RARITY_WEIGHTS: [ItemRarity, number][] = [
-  ['Common', 60],
-  ['Rare', 28],
-  ['Epic', 10],
-  ['Legendary', 2],
-];
-
-const RARITY_STAT_MULT: Record<ItemRarity, number> = { Common: 1, Rare: 1.8, Epic: 3.2, Legendary: 6 };
+import type { IPlugin, IEngine, GameState, GameEvent, HardwareItem, ItemSlot, ItemRarity } from '../engine/types';
+import { ITEM_CONFIG } from '../config/game.config';
 
 const SLOTS: ItemSlot[] = ['RAM', 'GPU', 'CPU', 'EXPANSION'];
 
-const PRIMARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
-  RAM: 'idle_dps', GPU: 'tap_damage', CPU: 'crit_chance', EXPANSION: 'gold_rate',
-};
-const SECONDARY_STAT: Record<ItemSlot, ModifierDef['type']> = {
-  RAM: 'tap_damage', GPU: 'idle_dps', CPU: 'crit_multiplier', EXPANSION: 'tap_damage',
-};
-
 function rollRarity(tier: number, isBoss: boolean): ItemRarity {
-  const total = RARITY_WEIGHTS.reduce((s, [, w]) => s + w, 0);
-  let roll = Math.random() * total - (isBoss ? 15 : 0) - tier * 3;
-  for (const [rarity, weight] of RARITY_WEIGHTS) {
+  const weights = ITEM_CONFIG.rarityWeights;
+  const total = weights.reduce((s, [, w]) => s + w, 0);
+  let roll = Math.random() * total - (isBoss ? ITEM_CONFIG.bossRarityShift : 0) - tier * ITEM_CONFIG.tierRarityShiftPerTier;
+  for (const [rarity, weight] of weights) {
     roll -= weight;
     if (roll <= 0) return rarity;
   }
@@ -83,23 +15,27 @@ function rollRarity(tier: number, isBoss: boolean): ItemRarity {
 }
 
 function rollDropChance(tier: number, isBoss: boolean): boolean {
-  const base = 0.15 + tier * 0.05;
-  return Math.random() < (isBoss ? Math.min(0.95, base * 3) : Math.min(0.60, base));
+  const base = ITEM_CONFIG.baseDropChance + tier * ITEM_CONFIG.dropChancePerTier;
+  return Math.random() < (isBoss
+    ? Math.min(ITEM_CONFIG.bossDropCap, base * ITEM_CONFIG.bossDropMultiplier)
+    : Math.min(ITEM_CONFIG.normalDropCap, base));
 }
 
 function generateItem(tier: number, isBoss: boolean): HardwareItem {
   const slot = SLOTS[Math.floor(Math.random() * SLOTS.length)];
   const rarity = rollRarity(tier, isBoss);
-  const name = SLOT_ITEMS[slot][Math.floor(Math.random() * SLOT_ITEMS[slot].length)];
-  const mult = RARITY_STAT_MULT[rarity];
-  const pType = PRIMARY_STAT[slot];
-  const sType = SECONDARY_STAT[slot];
+  const names = ITEM_CONFIG.slotItems[slot];
+  const name = names[Math.floor(Math.random() * names.length)];
+  const mult = ITEM_CONFIG.rarityStatMultiplier[rarity];
+  const pType = ITEM_CONFIG.primaryStat[slot];
+  const sType = ITEM_CONFIG.secondaryStat[slot];
+  const { primaryStatBase, primaryCritChanceBase, secondaryCritMultBase, secondaryStatBase } = ITEM_CONFIG;
 
-  const stats: ModifierDef[] = [{
+  const stats = [{
     type: pType,
     value: pType === 'crit_chance'
-      ? parseFloat((0.03 * (tier + 1) * mult).toFixed(3))
-      : parseFloat((1 + 0.15 * (tier + 1) * mult).toFixed(3)),
+      ? parseFloat((primaryCritChanceBase * (tier + 1) * mult).toFixed(3))
+      : parseFloat((1 + primaryStatBase * (tier + 1) * mult).toFixed(3)),
     isMultiplier: pType !== 'crit_chance',
   }];
 
@@ -107,8 +43,8 @@ function generateItem(tier: number, isBoss: boolean): HardwareItem {
     stats.push({
       type: sType,
       value: sType === 'crit_multiplier'
-        ? parseFloat((0.2 * mult).toFixed(3))
-        : parseFloat((1 + 0.08 * (tier + 1) * mult).toFixed(3)),
+        ? parseFloat((secondaryCritMultBase * mult).toFixed(3))
+        : parseFloat((1 + secondaryStatBase * (tier + 1) * mult).toFixed(3)),
       isMultiplier: sType !== 'crit_multiplier',
     });
   }
@@ -116,12 +52,11 @@ function generateItem(tier: number, isBoss: boolean): HardwareItem {
   return {
     id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     name, slot, rarity, tier, stats,
-    flavorText: ITEM_FLAVORS[name] ?? 'Unknown provenance.',
+    flavorText: ITEM_CONFIG.itemFlavors[name] ?? 'Unknown provenance.',
     droppedAt: Date.now(),
   };
 }
 
-const INVENTORY_MAX = 40;
 
 // ── Migration helper ───────────────────────────────────────────────────────
 // Old saves store equippedItems as { RAM: HardwareItem|null, ... }
@@ -173,8 +108,8 @@ export class ItemPlugin implements IPlugin {
       if (rollDropChance(enemy.tier, enemy.isBoss)) {
         const item = generateItem(enemy.tier, enemy.isBoss);
         const current = engine.state.inventory ?? [];
-        const trimmed = current.length >= INVENTORY_MAX
-          ? current.slice(current.length - INVENTORY_MAX + 1)
+        const trimmed = current.length >= ITEM_CONFIG.inventoryMax
+          ? current.slice(current.length - ITEM_CONFIG.inventoryMax + 1)
           : current;
         engine.updateState({ inventory: [...trimmed, item] });
         engine.emit('item_drop', { item });

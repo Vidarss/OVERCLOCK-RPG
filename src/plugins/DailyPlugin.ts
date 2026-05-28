@@ -1,5 +1,6 @@
 import type { IPlugin, IEngine, GameState, GameEvent, Player } from '../engine/types';
 import type { AuthPlugin } from './AuthPlugin';
+import { CHALLENGE_TEMPLATES, DAILY_CONFIG } from '../config/game.config';
 
 export interface DailyChallenge {
   id: string;
@@ -12,39 +13,11 @@ export interface DailyChallenge {
   challenge_date: string;
 }
 
-interface ChallengeTemplate {
-  type: string;
-  label: string;
-  targetFn: (stage: number) => number;
-  rewardFn: (stage: number) => number;
-}
-
-const CHALLENGE_TEMPLATES: ChallengeTemplate[] = [
-  { type: 'kill_enemies', label: 'Eliminate {n} enemies', targetFn: s => 10 + s * 2, rewardFn: s => 50 + s * 20 },
-  { type: 'earn_gold', label: 'Earn {n} gold', targetFn: s => 100 + s * 50, rewardFn: s => 30 + s * 15 },
-  { type: 'reach_stage', label: 'Reach stage {n}', targetFn: s => Math.max(s + 3, 5), rewardFn: s => 80 + s * 30 },
-  { type: 'use_skills', label: 'Use {n} skills', targetFn: () => 5, rewardFn: s => 40 + s * 10 },
-  { type: 'defeat_bosses', label: 'Defeat {n} bosses', targetFn: () => 2, rewardFn: s => 100 + s * 40 },
-  { type: 'tap_damage', label: 'Deal {n} tap damage', targetFn: s => 200 + s * 100, rewardFn: s => 60 + s * 25 },
-];
-
-// Difficulty weight per challenge type (multiplied against stage-scaled base)
-const DIAMOND_DIFFICULTY: Record<string, number> = {
-  kill_enemies: 1,
-  earn_gold: 1,
-  tap_damage: 1.5,
-  use_skills: 1.5,
-  defeat_bosses: 3,
-  reach_stage: 2,
-};
-
 function getDiamondReward(challengeType: string, highestStage: number): number {
-  const base = Math.max(1, Math.floor(highestStage / 20));
-  const weight = DIAMOND_DIFFICULTY[challengeType] ?? 1;
-  return Math.min(6, Math.floor(base * weight));
+  const base = Math.max(1, Math.floor(highestStage / DAILY_CONFIG.diamondStageDivisor));
+  const weight = DAILY_CONFIG.diamondDifficulty[challengeType] ?? 1;
+  return Math.min(DAILY_CONFIG.maxDiamondReward, Math.floor(base * weight));
 }
-
-const CHALLENGES_PER_DAY = 3;
 
 function getUTCDateString(): string {
   return new Date().toISOString().split('T')[0];
@@ -149,7 +122,7 @@ export class DailyPlugin implements IPlugin {
       challenge_date: today,
     });
 
-    if (data && data.length >= CHALLENGES_PER_DAY) {
+    if (data && data.length >= DAILY_CONFIG.challengesPerDay) {
       this.challenges = data as DailyChallenge[];
     } else {
       await this.generateChallenges(today);
@@ -163,7 +136,7 @@ export class DailyPlugin implements IPlugin {
     const stage = this.engine.state.highestStage ?? 1;
     const seed = dateSeed(date + this.userId.slice(0, 8));
     const shuffled = seededShuffle(CHALLENGE_TEMPLATES, seed);
-    const selected = shuffled.slice(0, CHALLENGES_PER_DAY);
+    const selected = shuffled.slice(0, DAILY_CONFIG.challengesPerDay);
 
     this.challenges = [];
     for (const template of selected) {

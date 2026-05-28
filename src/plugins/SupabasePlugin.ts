@@ -1,7 +1,6 @@
 import type { IPlugin, IEngine, GameEvent, GameState, Player } from '../engine/types';
 import type { AuthPlugin } from './AuthPlugin';
-
-const SCHEMA_VERSION = 1;
+import { SAVE_CONFIG } from '../config/game.config';
 
 export class SupabasePlugin implements IPlugin {
   id = 'supabase';
@@ -90,19 +89,16 @@ export class SupabasePlugin implements IPlugin {
     if (!savedState?.lastTickTime) return 0;
 
     const elapsed = (Date.now() - savedState.lastTickTime) / 1000;
-    if (elapsed < 5) return 0;
+    if (elapsed < SAVE_CONFIG.offlineMinSeconds) return 0;
 
     const components = savedState.components ?? {};
     let idleDps = 0;
     for (const comp of Object.values(components)) {
-      if (comp.level > 0) {
-        idleDps += comp.baseDps * comp.level;
-      }
+      if (comp.level > 0) idleDps += comp.baseDps * comp.level;
     }
 
-    const maxOfflineSecs = 8 * 3600;
-    const cappedElapsed = Math.min(elapsed, maxOfflineSecs);
-    return Math.floor(idleDps * cappedElapsed * 0.5);
+    const cappedElapsed = Math.min(elapsed, SAVE_CONFIG.offlineCapSeconds);
+    return Math.floor(idleDps * cappedElapsed * SAVE_CONFIG.offlineGoldMultiplier);
   }
 
   private async writeSave(): Promise<void> {
@@ -115,7 +111,7 @@ export class SupabasePlugin implements IPlugin {
     const { error } = await this.engine.storage.save('player_saves', {
       user_id: this.userId,
       save_data: state,
-      schema_version: SCHEMA_VERSION,
+      schema_version: SAVE_CONFIG.schemaVersion,
       updated_at: new Date().toISOString(),
     }, 'user_id');
 
