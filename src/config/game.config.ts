@@ -458,6 +458,18 @@ export const ITEM_CONFIG = {
     DARK_PCIE:         "PCIe lane to somewhere the spec forgot.",
     SHADOW_EXPANSION:  'Expands into address space that does not exist.',
   } as Record<string, string>,
+
+  /** Scrap values by rarity - scrapping items yields this amount of scrap. */
+  scrapValues: {
+    Common: 5,
+    Rare: 15,
+    Epic: 40,
+    Legendary: 100,
+    Mythic: 250,
+  } as Record<ItemRarity, number>,
+
+  /** Tier bonus for scrap: scrapValue + (tier * tierScrapBonus). */
+  tierScrapBonus: 3,
 } as const;
 
 // ── SHOP ──────────────────────────────────────────────────────────────────────
