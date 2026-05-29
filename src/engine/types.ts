@@ -42,7 +42,8 @@ export type GameEventType =
   | 'tournament_joined'
   | 'tournament_score_update'
   | 'set_completed'
-  | 'set_item_added';
+  | 'set_item_added'
+  | 'item_scrapped';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
@@ -191,6 +192,7 @@ export interface GameState {
   diamonds: number;
   setItems: HardwareItem[];
   collectedSets: Record<string, boolean>;
+  scrap: number;
   lastSaveTime: number;
   lastTickTime: number;
   schemaVersion: number;

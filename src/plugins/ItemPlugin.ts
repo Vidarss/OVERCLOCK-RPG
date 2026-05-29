@@ -84,8 +84,8 @@ const DEFAULT_EQUIPPED: GameState['equippedItems'] = {
 export class ItemPlugin implements IPlugin {
   id = 'items';
   dependencies = ['enemy'];
-  stateKeys = ['inventory', 'equippedItems'] as (keyof GameState)[];
-  defaultState = { inventory: [], equippedItems: DEFAULT_EQUIPPED };
+  stateKeys = ['inventory', 'equippedItems', 'scrap'] as (keyof GameState)[];
+  defaultState = { inventory: [], equippedItems: DEFAULT_EQUIPPED, scrap: 0 };
 
   private engine!: IEngine;
   private unsub?: () => void;
@@ -157,6 +157,55 @@ export class ItemPlugin implements IPlugin {
     this.applyEquippedModifiers();
     this.engine.emit('item_unequipped', { item, slot, slotIndex });
     return true;
+  }
+
+  /** Calculate scrap value for an item based on rarity and tier. */
+  getScrapValue(item: HardwareItem): number {
+    const baseValue = ITEM_CONFIG.scrapValues[item.rarity] ?? 5;
+    const tierBonus = item.tier * ITEM_CONFIG.tierScrapBonus;
+    return baseValue + tierBonus;
+  }
+
+  /** Scrap an item from inventory, converting it to scrap resource. */
+  scrapItem(itemId: string): { success: boolean; scrapGained: number } {
+    const state = this.engine.state;
+    const item = state.inventory.find(i => i.id === itemId);
+    if (!item) return { success: false, scrapGained: 0 };
+
+    const scrapGained = this.getScrapValue(item);
+    const newInventory = state.inventory.filter(i => i.id !== itemId);
+    const newScrap = (state.scrap ?? 0) + scrapGained;
+
+    this.engine.updateState({ inventory: newInventory, scrap: newScrap });
+    this.engine.emit('item_scrapped', { item, scrapGained, totalScrap: newScrap });
+    return { success: true, scrapGained };
+  }
+
+  /** Scrap multiple items at once. */
+  scrapItems(itemIds: string[]): { success: boolean; totalScrapGained: number } {
+    const state = this.engine.state;
+    let totalScrapGained = 0;
+    const itemsToScrap: HardwareItem[] = [];
+
+    for (const itemId of itemIds) {
+      const item = state.inventory.find(i => i.id === itemId);
+      if (item) {
+        itemsToScrap.push(item);
+        totalScrapGained += this.getScrapValue(item);
+      }
+    }
+
+    if (itemsToScrap.length === 0) return { success: false, totalScrapGained: 0 };
+
+    const scrapIds = new Set(itemsToScrap.map(i => i.id));
+    const newInventory = state.inventory.filter(i => !scrapIds.has(i.id));
+    const newScrap = (state.scrap ?? 0) + totalScrapGained;
+
+    this.engine.updateState({ inventory: newInventory, scrap: newScrap });
+    for (const item of itemsToScrap) {
+      this.engine.emit('item_scrapped', { item, scrapGained: this.getScrapValue(item), totalScrap: newScrap });
+    }
+    return { success: true, totalScrapGained };
   }
 
   private applyEquippedModifiers(): void {

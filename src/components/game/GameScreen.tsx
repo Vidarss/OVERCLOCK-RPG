@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users } from 'lucide-react';
+import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2 } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { CyberHUD } from './CyberHUD';
@@ -15,6 +15,7 @@ import { AchievementToast } from './AchievementToast';
 import { ShopScreen } from './ShopScreen';
 import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
+import { ScrapScreen } from './ScrapScreen';
 import { useGameState } from '../../hooks/useGameState';
 import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
 import type { OverclockPlugin } from '../../plugins/OverclockPlugin';
@@ -135,6 +136,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showShop, setShowShop] = useState(false);
   const [showTournament, setShowTournament] = useState(false);
   const [showClan, setShowClan] = useState(false);
+  const [showScrap, setShowScrap] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
@@ -169,6 +171,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showShop && <ShopScreen engine={engine} onClose={() => setShowShop(false)} />}
       {showTournament && <TournamentScreen engine={engine} onClose={() => setShowTournament(false)} />}
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
+      {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       <AchievementToast engine={engine} />
     </>
   );
@@ -236,6 +239,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             label="CLAN"
             activeColor="#00f5ff"
             onClick={() => setShowClan(true)}
+          />
+          <MobileTab
+            icon={<Trash2 size={15} color="#3a4a5a" />}
+            label="SCRAP"
+            activeColor="#ff4444"
+            onClick={() => setShowScrap(true)}
           />
           <MobileTab
             icon={<Trophy size={15} color="#3a4a5a" />}
@@ -433,6 +442,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             >
               <Users size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>CLAN</div>
+            </button>
+          </Tooltip>
+
+          {/* Scrapyard */}
+          <Tooltip content={<><TooltipLabel label="SCRAPYARD" color="#ff4444" /><TooltipText>Dismantle unwanted hardware into scrap components.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowScrap(true)}
+              style={{
+                width: '100%', background: '#080808',
+                border: '1px solid #2a1818',
+                color: '#4a2a2a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff4444'; e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.boxShadow = '0 0 14px rgba(255,68,68,0.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1818'; e.currentTarget.style.color = '#4a2a2a'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <Trash2 size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SCRAP</div>
             </button>
           </Tooltip>
 
