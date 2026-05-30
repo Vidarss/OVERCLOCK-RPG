@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { X, Trophy, RefreshCw, Wifi } from 'lucide-react';
+import { X, Trophy, Wifi } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { LeaderboardPlugin, LeaderboardEntry } from '../../plugins/LeaderboardPlugin';
 
@@ -33,8 +33,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ engine, on
   const plugin = engine.getPlugin<LeaderboardPlugin>('leaderboard');
   const [entries, setEntries] = useState<LeaderboardEntry[]>(plugin?.getEntries() ?? []);
   const [onlineCount, setOnlineCount] = useState(plugin?.getOnlineCount() ?? 0);
-  const [refreshing, setRefreshing] = useState(false);
-
   const currentUserId = plugin?.getCurrentUserId() ?? null;
 
   const sync = useCallback(() => {
@@ -48,13 +46,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ engine, on
     sync();
     return plugin.subscribe(sync);
   }, [plugin, sync]);
-
-  const handleRefresh = async () => {
-    if (!plugin || refreshing) return;
-    setRefreshing(true);
-    await plugin.fetchLeaderboard();
-    setRefreshing(false);
-  };
 
   return (
     <div
@@ -115,20 +106,6 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ engine, on
                 {onlineCount}
               </span>
             </div>
-            {/* Refresh */}
-            <button
-              onClick={handleRefresh}
-              style={{
-                background: 'none', border: '1px solid #0a2838', color: '#3a5a6a',
-                width: 24, height: 24, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'color 0.15s',
-              }}
-              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = '#00f5ff'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = '#3a5a6a'; }}
-            >
-              <RefreshCw size={10} style={{ animation: refreshing ? 'spin 0.6s linear infinite' : 'none' }} />
-            </button>
             {/* Close */}
             <button
               onClick={onClose}
