@@ -278,7 +278,9 @@ const BoardPanel: React.FC<BoardPanelProps> = ({
           >
             <ArrowUpCircle size={8} />
             <span>{nextTier.revision}</span>
-            <span style={{ marginLeft: 4 }}>◆{formatGold(nextTier.goldCost)}</span>
+            {nextTier.goldCost > 0 && (
+              <span style={{ marginLeft: 4 }}>◆{formatGold(nextTier.goldCost)}</span>
+            )}
             {nextTier.diamondCost > 0 && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4, color: canUpgrade && diamonds >= nextTier.diamondCost ? '#00e5ff' : '#1a3a3a' }}>
                 <Diamond size={7} />

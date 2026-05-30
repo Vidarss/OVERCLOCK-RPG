@@ -363,7 +363,7 @@ export interface MoboTierDef {
 
 export const MOBO_TIERS: MoboTierDef[] = [
   { tier: 0, name: 'BUDGET BOARD',      revision: 'REV.1', goldCost: 0,         diamondCost: 0,   ramSlots: 1, expansionSlots: 1, description: 'Entry level. Single RAM bank, single expansion bay.' },
-  { tier: 1, name: 'MODDED BOARD',      revision: 'REV.2', goldCost: 500,       diamondCost: 5,   ramSlots: 2, expansionSlots: 1, description: 'Dual RAM channel. Increased memory bandwidth.' },
+  { tier: 1, name: 'MODDED BOARD',      revision: 'REV.2', goldCost: 0,         diamondCost: 5,   ramSlots: 2, expansionSlots: 1, description: 'Dual RAM channel. Increased memory bandwidth.' },
   { tier: 2, name: 'OVERCLOCKED BOARD', revision: 'REV.3', goldCost: 2_500,     diamondCost: 10,  ramSlots: 3, expansionSlots: 2, description: 'Triple RAM. Second expansion bay. Serious throughput.' },
   { tier: 3, name: 'PHANTOM BOARD',     revision: 'REV.4', goldCost: 10_000,    diamondCost: 25,  ramSlots: 4, expansionSlots: 2, description: 'Quad RAM. Full expansion. Maximum hardware density.' },
   { tier: 4, name: 'SILICON GHOST',     revision: 'REV.X', goldCost: 50_000,    diamondCost: 50,  ramSlots: 4, expansionSlots: 3, description: 'Experimental board. Three expansion bays. Undocumented specs.' },

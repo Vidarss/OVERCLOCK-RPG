@@ -22,6 +22,7 @@ export interface TournamentEntry {
   score: number;
   rank: number | null;
   joined_at: string;
+  start_max_stage: number;
 }
 
 export class TournamentPlugin implements IPlugin {
@@ -89,7 +90,7 @@ export class TournamentPlugin implements IPlugin {
     const { data } = await this.engine.storage.loadMany<TournamentEntry>(
       'tournament_entries',
       { user_id: this.userId },
-      'id, tournament_id, user_id, handle, score, rank, joined_at'
+      'id, tournament_id, user_id, handle, score, rank, joined_at, start_max_stage'
     );
     this.myEntries = {};
     for (const e of data) {
@@ -107,7 +108,7 @@ export class TournamentPlugin implements IPlugin {
     const { data } = await this.engine.storage.loadMany<TournamentEntry>(
       'tournament_entries',
       { tournament_id: tournamentId },
-      'id, user_id, handle, score, rank, joined_at'
+      'id, user_id, handle, score, rank, joined_at, start_max_stage'
     );
     const sorted = data.sort((a, b) => b.score - a.score).slice(0, 50);
     this.leaderboards[tournamentId] = sorted;
@@ -132,6 +133,10 @@ export class TournamentPlugin implements IPlugin {
       this.engine.updateState({ diamonds: this.engine.state.diamonds - t.entry_fee_diamonds });
     }
 
+    // Capture the user's current max stage for this tournament session
+    const currentMaxStage = this.engine.state.maxStage ?? 1;
+    const sessionId = `${tournamentId}-${this.userId}-${Date.now()}`;
+
     const { data, error } = await this.engine.storage.insert<TournamentEntry>(
       'tournament_entries',
       {
@@ -140,8 +145,9 @@ export class TournamentPlugin implements IPlugin {
         handle: this.handle,
         score: this.engine.state.highestStage,
         rank: null,
+        start_max_stage: currentMaxStage,
       },
-      'id, tournament_id, user_id, handle, score, rank, joined_at'
+      'id, tournament_id, user_id, handle, score, rank, joined_at, start_max_stage'
     );
 
     if (error || !data) {
@@ -152,8 +158,10 @@ export class TournamentPlugin implements IPlugin {
       return { success: false, error: 'Failed to join' };
     }
 
+    // Set tournament session state
     this.myEntries[tournamentId] = data;
     this.participantCounts[tournamentId] = participantCount + 1;
+    this.engine.updateState({ tournamentSessionId: sessionId, tournamentMaxStage: currentMaxStage });
     await this.loadLeaderboard(tournamentId);
     this.engine.emit('tournament_joined', { tournament: t });
     this.notify();
