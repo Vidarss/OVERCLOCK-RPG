@@ -3,6 +3,8 @@ import { StateManager, DEFAULT_STATE } from './StateManager';
 import { ModifierSystem } from './ModifierSystem';
 import { PluginRegistry } from './PluginRegistry';
 import { PluginStorage } from './PluginStorage';
+import { schemaManager } from './SchemaManager';
+import { registerAllSchemas } from './schemas';
 import type {
   IEngine,
   IPlugin,
@@ -106,6 +108,19 @@ export class GameEngine implements IEngine {
   async boot(): Promise<void> {
     this.emit('boot_log', '> OVERCLOCK.EXE v1.0.0');
     this.emit('boot_log', '> INITIALIZING ENGINE...');
+    
+    // Register and auto-create database schemas
+    this.emit('boot_log', '> CHECKING DATABASE SCHEMA...');
+    registerAllSchemas();
+    try {
+      const schemaLog = await schemaManager.ensureSchemas();
+      for (const line of schemaLog) {
+        this.emit('boot_log', `  ${line}`);
+      }
+    } catch (err) {
+      this.emit('boot_log', `  Schema check skipped: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
+    
     await this.registry.initAll(this);
     this.emit('boot_log', '> ALL SYSTEMS ONLINE');
     this.isBooted = true;

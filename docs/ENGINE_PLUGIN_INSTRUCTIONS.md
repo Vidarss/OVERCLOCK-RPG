@@ -431,9 +431,70 @@ const modals = (
 
 ---
 
-## 8. Database Integration
+## 8. Database Integration (Auto-Schema)
 
-### Migration File Format
+The engine now supports **automatic table creation** via the `SchemaManager`. Instead of manually running migrations, define your table schema in code and the engine will create it on boot if missing.
+
+### Option A: Add Schema to `src/engine/schemas.ts` (Recommended)
+
+```typescript
+// In src/engine/schemas.ts
+
+const myFeatureSchema: TableSchema = {
+  name: 'my_feature',
+  columns: [
+    { name: 'id', type: 'uuid', primaryKey: true, default: 'gen_random_uuid()' },
+    { name: 'user_id', type: 'uuid', nullable: false },
+    { name: 'data', type: 'jsonb', nullable: true },
+    { name: 'created_at', type: 'timestamptz', nullable: false, default: 'now()' },
+  ],
+  indexes: [
+    { name: 'idx_my_feature_user_id', columns: ['user_id'] },
+  ],
+  rls: [
+    { name: 'my_feature_select_own', operation: 'SELECT', using: 'auth.uid() = user_id' },
+    { name: 'my_feature_insert_own', operation: 'INSERT', withCheck: 'auth.uid() = user_id' },
+    { name: 'my_feature_update_own', operation: 'UPDATE', using: 'auth.uid() = user_id' },
+  ],
+};
+
+// Then add to registerAllSchemas():
+export function registerAllSchemas(): void {
+  // ... existing schemas
+  schemaManager.register(myFeatureSchema);
+}
+```
+
+### Schema Definition Reference
+
+```typescript
+interface TableSchema {
+  name: string;           // Table name (lowercase, snake_case)
+  columns: ColumnDef[];   // Column definitions
+  indexes?: IndexDef[];   // Optional indexes
+  rls?: RLSPolicy[];      // Optional Row Level Security policies
+}
+
+interface ColumnDef {
+  name: string;
+  type: string;           // 'uuid', 'text', 'integer', 'bigint', 'boolean', 'jsonb', 'timestamptz', 'date'
+  primaryKey?: boolean;
+  default?: string;       // SQL expression: 'gen_random_uuid()', 'now()', "'pending'"
+  nullable?: boolean;     // Default false (NOT NULL)
+  unique?: boolean;
+  references?: { table: string; column: string; onDelete?: 'CASCADE' | 'SET NULL' };
+  check?: string;         // CHECK constraint: "status IN ('active', 'inactive')"
+}
+
+interface RLSPolicy {
+  name: string;
+  operation: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'ALL';
+  using?: string;         // For SELECT/UPDATE/DELETE
+  withCheck?: string;     // For INSERT/UPDATE
+}
+```
+
+### Option B: Manual Migration File (Legacy)
 
 Location: `supabase/migrations/YYYYMMDDHHMMSS_description.sql`
 
