@@ -112,7 +112,8 @@ export function createDatabaseConfig(overrides?: Partial<DatabaseConfig>): Datab
 export function isConfigValid(config: DatabaseConfig): boolean {
   if (!config.url || !config.anonKey) return false;
   if (!config.url.includes('supabase')) return false;
-  if (!config.anonKey.startsWith('eyJ')) return false;
+  // Accept both JWT format (eyJ...) and Supabase marketplace format (sb_publishable_...)
+  if (!config.anonKey.startsWith('eyJ') && !config.anonKey.startsWith('sb_')) return false;
   return true;
 }
 
@@ -131,8 +132,8 @@ export function validateConfig(config: DatabaseConfig): void {
   
   if (!config.anonKey) {
     errors.push('Missing database anon key. Set NEXT_PUBLIC_SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY in your environment.');
-  } else if (!config.anonKey.startsWith('eyJ')) {
-    errors.push('Invalid anon key format. Expected a JWT token starting with "eyJ".');
+  } else if (!config.anonKey.startsWith('eyJ') && !config.anonKey.startsWith('sb_')) {
+    errors.push('Invalid anon key format. Expected a JWT token (eyJ...) or Supabase marketplace key (sb_...).');
   }
   
   if (config.query.timeoutMs < 1000) {
