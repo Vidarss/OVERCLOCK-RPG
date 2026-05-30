@@ -4,6 +4,7 @@ import type { GameEngine } from '../../engine/Engine';
 import { OverclockPanel } from './OverclockPanel';
 import { useGameState } from '../../hooks/useGameState';
 import { calculateOverclockGain } from '../../plugins/OverclockPlugin';
+import { OVERCLOCK_CONFIG } from '../../config/game.config';
 
 interface OverclockScreenProps {
   engine: GameEngine;
@@ -64,7 +65,7 @@ export const OverclockScreen: React.FC<OverclockScreenProps> = ({ engine, onClos
                 OVERCLOCK TREE
               </div>
               <div style={{ color: '#3a2535', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-                {totalOverclocks} REBOOTS · {gain > 0 ? `+${gain} OCT AVAILABLE` : 'REACH STG 10 TO REBOOT'}
+                {totalOverclocks} REBOOTS · {gain > 0 ? `+${gain} OCT AVAILABLE` : `REACH STG ${OVERCLOCK_CONFIG.minStageToOverclock} TO REBOOT`}
               </div>
             </div>
           </div>
