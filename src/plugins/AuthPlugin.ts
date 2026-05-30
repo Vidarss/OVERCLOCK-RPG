@@ -238,17 +238,26 @@ export class AuthPlugin implements IPlugin {
    */
   private async resolveEmailForHandle(handle: string): Promise<string | null> {
     try {
+      console.log('[v0] resolveEmailForHandle called with:', handle);
+      
+      // Use ilike for case-insensitive match as a safety net
       const { data, error } = await getClient()
         .from('profiles')
-        .select('email')
-        .eq('handle', handle)
+        .select('email, handle')
+        .ilike('handle', handle)
         .maybeSingle();
+
+      console.log('[v0] profiles lookup result:', { data, error: error?.message });
 
       if (error) {
         console.error('[AuthPlugin] handle lookup error:', error.message);
         return null;
       }
-      if (!data?.email) return null;
+      if (!data?.email) {
+        console.log('[v0] No email found for handle:', handle);
+        return null;
+      }
+      console.log('[v0] Found email for handle:', handle, '->', data.email);
       return data.email as string;
     } catch (err) {
       console.error('[AuthPlugin] handle lookup exception:', err);
