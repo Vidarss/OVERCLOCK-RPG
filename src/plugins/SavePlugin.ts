@@ -1,50 +1,108 @@
-import type { IPlugin, IEngine, GameState } from '../engine/types';
+import type { IPlugin, IEngine, GameState, GameEventType } from '../engine/types';
 import { SAVE_CONFIG } from '../config/game.config';
 
+/**
+ * SavePlugin - Manages game state persistence with configurable triggers.
+ * 
+ * Features:
+ * - Periodic auto-save at configurable intervals
+ * - Action-based saving on important game events (configurable)
+ * - Debouncing to prevent rapid-fire saves
+ * - Save on tab hide / beforeunload for data safety
+ * - Manual save via saveNow() method
+ * 
+ * Configuration (in SAVE_CONFIG):
+ * - autoSaveIntervalMs: How often to auto-save (default: 5 minutes)
+ * - saveOnActions: Array of event types that trigger immediate saves
+ * - saveDebounceMs: Minimum time between saves (default: 2 seconds)
+ * - saveOnActionsEnabled: Toggle action-based saving on/off
+ */
 export class SavePlugin implements IPlugin {
   id = 'save';
   dependencies = ['supabase'];
   stateKeys = ['totalDamageDealt', 'overclockCount', 'lastSaveTime'] as (keyof GameState)[];
-  defaultState = { totalDamageDealt: 0, overclockCount: 0 };
+  defaultState = { totalDamageDealt: 0, overclockCount: 0, lastSaveTime: 0 };
 
   private engine!: IEngine;
   private saveTimer: ReturnType<typeof setInterval> | null = null;
+  private debounceTimer: ReturnType<typeof setTimeout> | null = null;
+  private lastSaveTime = 0;
+  private isAuthenticated = false;
   private boundBeforeUnload!: () => void;
   private boundVisibilityChange!: () => void;
+  private actionUnsubscribers: Array<() => void> = [];
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
 
+    // Start/stop auto-save based on auth state
     engine.on('auth_success', () => {
+      this.isAuthenticated = true;
       this.startAutoSave();
+      this.subscribeToActions();
     });
 
     engine.on('auth_signout', () => {
+      this.isAuthenticated = false;
       this.stopAutoSave();
+      this.unsubscribeFromActions();
     });
 
-    this.boundBeforeUnload = () => engine.emit('save_requested', {});
+    // Save on page unload
+    this.boundBeforeUnload = () => {
+      if (this.isAuthenticated) {
+        this.saveImmediate();
+      }
+    };
     window.addEventListener('beforeunload', this.boundBeforeUnload);
 
-    // Save when tab becomes hidden to ensure progress is persisted
-    // This prevents data loss if the user closes the browser from the hidden tab
+    // Save when tab becomes hidden to prevent data loss
     this.boundVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        engine.emit('save_requested', {});
+      if (document.visibilityState === 'hidden' && this.isAuthenticated) {
+        this.saveImmediate();
       }
-      // Note: We intentionally do NOT reload state when visibility becomes 'visible'
-      // to prevent resetting user progress when they switch back to this tab
     };
     document.addEventListener('visibilitychange', this.boundVisibilityChange);
   }
 
+  /**
+   * Subscribe to all configured "important action" events.
+   * Each action triggers a debounced save.
+   */
+  private subscribeToActions(): void {
+    if (!SAVE_CONFIG.saveOnActionsEnabled) return;
+
+    for (const action of SAVE_CONFIG.saveOnActions) {
+      const unsub = this.engine.on(action as GameEventType, () => {
+        this.saveDebounced();
+      });
+      this.actionUnsubscribers.push(unsub);
+    }
+  }
+
+  /**
+   * Unsubscribe from all action listeners.
+   */
+  private unsubscribeFromActions(): void {
+    for (const unsub of this.actionUnsubscribers) {
+      unsub();
+    }
+    this.actionUnsubscribers = [];
+  }
+
+  /**
+   * Start the periodic auto-save timer.
+   */
   private startAutoSave(): void {
     this.stopAutoSave();
     this.saveTimer = setInterval(() => {
-      this.engine.emit('save_requested', {});
+      this.saveDebounced();
     }, SAVE_CONFIG.autoSaveIntervalMs);
   }
 
+  /**
+   * Stop the periodic auto-save timer.
+   */
   private stopAutoSave(): void {
     if (this.saveTimer) {
       clearInterval(this.saveTimer);
@@ -52,12 +110,91 @@ export class SavePlugin implements IPlugin {
     }
   }
 
-  saveNow(): void {
+  /**
+   * Trigger a save with debouncing to prevent rapid-fire saves.
+   * Multiple calls within saveDebounceMs will result in a single save.
+   */
+  private saveDebounced(): void {
+    if (!this.isAuthenticated) return;
+
+    // Clear any pending debounce timer
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+    }
+
+    // Check if we're within the debounce window
+    const now = Date.now();
+    const timeSinceLastSave = now - this.lastSaveTime;
+
+    if (timeSinceLastSave >= SAVE_CONFIG.saveDebounceMs) {
+      // Enough time has passed, save immediately
+      this.saveImmediate();
+    } else {
+      // Schedule a save after the remaining debounce time
+      const delay = SAVE_CONFIG.saveDebounceMs - timeSinceLastSave;
+      this.debounceTimer = setTimeout(() => {
+        this.saveImmediate();
+      }, delay);
+    }
+  }
+
+  /**
+   * Perform an immediate save (bypasses debounce).
+   * Used for critical moments like page unload.
+   */
+  private saveImmediate(): void {
+    if (!this.isAuthenticated) return;
+
+    this.lastSaveTime = Date.now();
+    this.engine.updateState({ lastSaveTime: this.lastSaveTime });
     this.engine.emit('save_requested', {});
+
+    // Clear any pending debounce timer since we just saved
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+  }
+
+  /**
+   * Public method to manually trigger a save (e.g., from UI "Save" button).
+   * Respects debouncing.
+   */
+  saveNow(): void {
+    this.saveDebounced();
+  }
+
+  /**
+   * Public method to force an immediate save (bypasses debounce).
+   * Use sparingly - prefer saveNow() for normal operations.
+   */
+  forceSave(): void {
+    this.saveImmediate();
+  }
+
+  /**
+   * Get the timestamp of the last successful save.
+   */
+  getLastSaveTime(): number {
+    return this.lastSaveTime;
+  }
+
+  /**
+   * Check if a save is currently pending (debounce timer active).
+   */
+  isSavePending(): boolean {
+    return this.debounceTimer !== null;
   }
 
   cleanup(): void {
     this.stopAutoSave();
+    this.unsubscribeFromActions();
+    
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+
     window.removeEventListener('beforeunload', this.boundBeforeUnload);
     document.removeEventListener('visibilitychange', this.boundVisibilityChange);
   }
