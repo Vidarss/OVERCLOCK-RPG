@@ -69,6 +69,8 @@ export const SAVE_CONFIG = {
     'shop_purchase',
     'daily_completed',
     'set_completed',
+    'hero_upgrade',
+    'skill_upgrade',
   ] as const,
   /** Debounce delay (ms) to prevent rapid-fire saves when multiple actions fire quickly. */
   saveDebounceMs: 2000,
@@ -106,6 +108,136 @@ export const TAP_CONFIG = {
   comboThreshold: 5,
   /** Damage multiplier applied when the combo threshold is met. */
   comboMultiplier: 2,
+} as const;
+
+// ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
+
+export interface HeroUpgradeDef {
+  id: string;
+  name: string;
+  description: string;
+  baseCost: number;
+  costMultiplier: number;
+  maxLevel: number;
+  modifierType: 'tap_damage' | 'crit_chance' | 'crit_multiplier';
+  valuePerLevel: number;
+  isMultiplier: boolean;
+  color: string;
+  icon: string;
+}
+
+export const HERO_CONFIG = {
+  /** Hero level cost formula: baseCost * (costMultiplier ^ level) */
+  upgrades: [
+    {
+      id: 'hero_tap_power',
+      name: 'TAP POWER',
+      description: 'Increase base tap damage',
+      baseCost: 10,
+      costMultiplier: 1.15,
+      maxLevel: 9999,
+      modifierType: 'tap_damage',
+      valuePerLevel: 1, // +1 tap damage per level (additive before multipliers)
+      isMultiplier: false,
+      color: '#00f5ff',
+      icon: '👆',
+    },
+    {
+      id: 'hero_crit_chance',
+      name: 'CRIT CHANCE',
+      description: 'Increase critical hit chance',
+      baseCost: 500,
+      costMultiplier: 1.25,
+      maxLevel: 50,
+      modifierType: 'crit_chance',
+      valuePerLevel: 0.01, // +1% crit chance per level
+      isMultiplier: false,
+      color: '#ff0080',
+      icon: '⚡',
+    },
+    {
+      id: 'hero_crit_damage',
+      name: 'CRIT DAMAGE',
+      description: 'Increase critical damage multiplier',
+      baseCost: 1000,
+      costMultiplier: 1.3,
+      maxLevel: 100,
+      modifierType: 'crit_multiplier',
+      valuePerLevel: 0.1, // +10% crit damage per level
+      isMultiplier: false,
+      color: '#ffaa00',
+      icon: '💥',
+    },
+  ] as HeroUpgradeDef[],
+} as const;
+
+// ── SKILL UPGRADES ───────────────────────────────────────────────────────────
+
+export interface SkillUpgradeDef {
+  skillId: SkillId;
+  name: string;
+  description: string;
+  baseCost: number;
+  costMultiplier: number;
+  maxLevel: number;
+  effectPerLevel: number; // +% effectiveness per level
+  color: string;
+}
+
+export const SKILL_UPGRADE_CONFIG = {
+  /** Skill upgrades - increase effectiveness of skills */
+  upgrades: [
+    {
+      skillId: 'surge',
+      name: 'SURGE',
+      description: 'Boost tap damage buff duration & power',
+      baseCost: 100,
+      costMultiplier: 1.2,
+      maxLevel: 50,
+      effectPerLevel: 0.05, // +5% effectiveness per level
+      color: '#00f5ff',
+    },
+    {
+      skillId: 'gold_rush',
+      name: 'GOLD RUSH',
+      description: 'Boost gold bonus duration & power',
+      baseCost: 150,
+      costMultiplier: 1.2,
+      maxLevel: 50,
+      effectPerLevel: 0.05,
+      color: '#ffaa00',
+    },
+    {
+      skillId: 'chain_hack',
+      name: 'CHAIN HACK',
+      description: 'Boost auto-tap duration & frequency',
+      baseCost: 200,
+      costMultiplier: 1.25,
+      maxLevel: 50,
+      effectPerLevel: 0.05,
+      color: '#39ff14',
+    },
+    {
+      skillId: 'firewall',
+      name: 'FIREWALL',
+      description: 'Boost boss timer freeze duration',
+      baseCost: 250,
+      costMultiplier: 1.25,
+      maxLevel: 50,
+      effectPerLevel: 0.05,
+      color: '#ff4444',
+    },
+    {
+      skillId: 'overclock_pulse',
+      name: 'OC PULSE',
+      description: 'Boost damage & idle multiplier',
+      baseCost: 300,
+      costMultiplier: 1.3,
+      maxLevel: 50,
+      effectPerLevel: 0.05,
+      color: '#ff0080',
+    },
+  ] as SkillUpgradeDef[],
 } as const;
 
 // ── ENEMY ─────────────────────────────────────────────────────────────────────
