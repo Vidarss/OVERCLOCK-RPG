@@ -186,7 +186,7 @@ export const HERO_CONFIG = {
       costMultiplier: 1.15,        // ~7x cost every 15 levels
       maxLevel: 9999,
       modifierType: 'tap_damage',
-      valuePerLevel: 1,            // +1 tap damage per level (additive before multipliers)
+      valuePerLevel: 2,            // +2 tap damage per level (additive before multipliers)
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
