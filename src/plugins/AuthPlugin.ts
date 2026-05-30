@@ -1,4 +1,10 @@
-import { supabase } from '../lib/supabase';
+// ─────────────────────────────────────────────────────────────────────────────
+// Auth Plugin
+//
+// Handles user authentication using the modular database layer.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import * as auth from '../lib/db/auth';
 import type { IPlugin, IEngine, Player } from '../engine/types';
 
 export class AuthPlugin implements IPlugin {
@@ -7,7 +13,7 @@ export class AuthPlugin implements IPlugin {
 
   private engine!: IEngine;
   private currentPlayer: Player | null = null;
-  private isInitialSessionHandled = false;
+  private unsubscribeAuth?: () => void;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -17,7 +23,8 @@ export class AuthPlugin implements IPlugin {
     // Fire-and-forget: must not block boot
     void this.checkExistingSession();
 
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Subscribe to auth state changes using the modular auth module
+    this.unsubscribeAuth = auth.onAuthStateChange(({ event, session }) => {
       (async () => {
         if (event === 'SIGNED_IN' && session?.user) {
           // Only handle auth success if this is a NEW sign-in, not a token refresh
@@ -29,7 +36,6 @@ export class AuthPlugin implements IPlugin {
           await this.handleAuthSuccess(session.user.id, session.user.email ?? '');
         } else if (event === 'SIGNED_OUT') {
           this.currentPlayer = null;
-          this.isInitialSessionHandled = false;
           this.engine.emit('auth_signout', {});
         } else if (event === 'TOKEN_REFRESHED') {
           // Token was refreshed but user is the same - do nothing
@@ -41,7 +47,12 @@ export class AuthPlugin implements IPlugin {
 
   private async checkExistingSession(): Promise<void> {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { session, error } = await auth.getSession();
+      if (error) {
+        console.error('[AuthPlugin] Session check failed:', error);
+        this.engine.emit('auth_failed', { error: 'Session check failed' });
+        return;
+      }
       if (session?.user) {
         await this.handleAuthSuccess(session.user.id, session.user.email ?? '');
       }
@@ -92,32 +103,33 @@ export class AuthPlugin implements IPlugin {
   }
 
   async signUp(email: string, password: string, handle: string): Promise<{ error: string | null }> {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error) return { error: error.message };
+    const { user, error } = await auth.signUp(email, password);
+    if (error) return { error };
 
-    if (data.user) {
-      await this.engine.storage.save('profiles', { id: data.user.id, handle: handle.toUpperCase().slice(0, 12), avatar_index: 0 }, 'id');
+    if (user) {
+      await this.engine.storage.save('profiles', { id: user.id, handle: handle.toUpperCase().slice(0, 12), avatar_index: 0 }, 'id');
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) return { error: signInError.message };
+    // Sign in after sign up
+    const { error: signInError } = await auth.signIn(email, password);
+    if (signInError) return { error: signInError };
 
     return { error: null };
   }
 
   async signIn(email: string, password: string): Promise<{ error: string | null }> {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return { error: error.message };
+    const { error } = await auth.signIn(email, password);
+    if (error) return { error };
     return { error: null };
   }
 
   async signOut(): Promise<void> {
-    await supabase.auth.signOut();
+    await auth.signOut();
   }
 
   async resetPassword(email: string): Promise<{ error: string | null }> {
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
-    if (error) return { error: error.message };
+    const { error } = await auth.resetPassword(email);
+    if (error) return { error };
     return { error: null };
   }
 
@@ -125,5 +137,7 @@ export class AuthPlugin implements IPlugin {
     return this.currentPlayer;
   }
 
-  cleanup(): void {}
+  cleanup(): void {
+    this.unsubscribeAuth?.();
+  }
 }

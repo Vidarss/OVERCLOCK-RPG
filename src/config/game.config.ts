@@ -52,6 +52,28 @@ export const SAVE_CONFIG = {
   offlineGoldMultiplier: 0.5,
   /** Maximum offline seconds that count toward idle gold (8 hours). */
   offlineCapSeconds: 8 * 3600,
+  /** 
+   * Events that trigger an immediate save. These are "important actions" that 
+   * should persist progress immediately to prevent data loss.
+   */
+  saveOnActions: [
+    'stage_clear',
+    'boss_defeat',
+    'overclock_confirm',
+    'component_purchase',
+    'component_levelup',
+    'item_equipped',
+    'item_unequipped',
+    'mobo_upgrade',
+    'achievement_unlocked',
+    'shop_purchase',
+    'daily_completed',
+    'set_completed',
+  ] as const,
+  /** Debounce delay (ms) to prevent rapid-fire saves when multiple actions fire quickly. */
+  saveDebounceMs: 2000,
+  /** Whether action-based saving is enabled. Set to false to only use timed saves. */
+  saveOnActionsEnabled: true,
 } as const;
 
 // ── SKILL POINTS ─────────────────────────────────────────────────────────────
@@ -149,7 +171,7 @@ export const ENEMY_CONFIG = {
   ] as string[],
 } as const;
 
-// ── OVERCLOCK ────────────────────────────────────────────��────────────────────
+// ── OVERCLOCK ──────────────────────────────────────────���─��────────────────────
 
 export type PerkBranch = 'VOLTAGE' | 'SIGNAL' | 'THERMAL' | 'ENTROPY' | 'QUANTUM';
 

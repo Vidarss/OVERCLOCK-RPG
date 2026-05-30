@@ -1,6 +1,60 @@
 # DATABASE SETUP GUIDE
 
-Complete reference for Overclock's Supabase database — schemas, RLS policies, step-by-step setup, and how to add new tables.
+Complete reference for Overclock's Supabase database — architecture, schemas, RLS policies, step-by-step setup, and how to add new tables.
+
+---
+
+## 0. Architecture Overview
+
+The database layer is modular and configuration-driven. All database code lives in `src/lib/db/`:
+
+```
+src/lib/db/
+├── index.ts      # Re-exports everything (single import point)
+├── config.ts     # Configuration types and validation
+├── client.ts     # Supabase client factory
+├── queries.ts    # CRUD operations with retries and error handling
+├── auth.ts       # Authentication operations
+└── realtime.ts   # Presence and realtime subscriptions
+```
+
+### Importing
+
+```ts
+// Recommended: import from the db module
+import { loadOne, upsert, signIn, createPresenceChannel } from '../lib/db';
+
+// For plugins: use engine.storage (wraps the db module)
+const { data } = await this.engine.storage.load('profiles', { id: userId });
+
+// Legacy (deprecated but still works during migration)
+import { supabase } from '../lib/supabase';
+```
+
+### Configuration
+
+Database settings are centralized in `src/lib/db/config.ts`. You can customize:
+
+- Connection details (URL, anon key)
+- Auth behavior (token refresh, session persistence)
+- Query defaults (timeout, retry count, retry delay)
+- Realtime settings (presence channel name)
+
+```ts
+import { createDatabaseConfig, initializeClient } from '../lib/db';
+
+// Create custom configuration
+const config = createDatabaseConfig({
+  query: {
+    timeoutMs: 15000,    // 15 second timeout
+    retryCount: 5,       // 5 retries
+    retryDelayMs: 2000,  // 2 second delay between retries
+  },
+});
+
+// Initialize client with custom config
+initializeClient(config);
+```
 
 ---
 
@@ -507,7 +561,112 @@ CREATE POLICY "Users can delete own set items"
 
 ---
 
-## 5. Adding a New Table
+## 5. Module Reference
+
+### Query Functions (`src/lib/db/queries.ts`)
+
+All query functions include automatic retry logic and error handling.
+
+```ts
+import { loadOne, loadMany, upsert, insert, update, remove, rpc } from '../lib/db';
+
+// Load a single record
+const { data, error } = await loadOne<Profile>('profiles', { id: userId });
+
+// Load multiple records with sorting and limiting
+const { data: entries } = await loadMany<LeaderboardEntry>(
+  'leaderboard',
+  {},
+  '*',
+  { orderBy: 'highest_stage', ascending: false, limit: 100 }
+);
+
+// Upsert (insert or update on conflict)
+await upsert('player_saves', { user_id: id, save_data: state }, 'user_id');
+
+// Insert with returning
+const { data: newRow } = await insert<Profile>('profiles', { id, handle }, 'id, handle');
+
+// Update
+await update('profiles', { handle: 'NEW_NAME' }, { id: userId });
+
+// Delete
+await remove('daily_challenges', { user_id: userId, challenge_date: oldDate });
+
+// Raw RPC call
+const { data: result } = await rpc('my_function', { arg1: 'value' });
+```
+
+### Authentication (`src/lib/db/auth.ts`)
+
+```ts
+import { signUp, signIn, signOut, getSession, resetPassword, onAuthStateChange } from '../lib/db';
+
+// Sign up
+const { user, error } = await signUp('user@example.com', 'password123');
+
+// Sign in
+const { user, error } = await signIn('user@example.com', 'password123');
+
+// Sign out
+await signOut();
+
+// Get current session
+const { session } = await getSession();
+
+// Reset password
+await resetPassword('user@example.com');
+
+// Listen for auth changes
+const unsubscribe = onAuthStateChange(({ event, session }) => {
+  if (event === 'SIGNED_IN') {
+    console.log('User signed in:', session?.user.email);
+  }
+});
+// Later: unsubscribe();
+```
+
+### Realtime (`src/lib/db/realtime.ts`)
+
+```ts
+import { createPresenceChannel, subscribeToTable, createBroadcastChannel } from '../lib/db';
+
+// Track online presence
+const presence = createPresenceChannel(
+  userId,
+  { user_id: userId, handle: playerHandle },
+  {
+    onSync: (state) => {
+      // state is a map of user_id -> presence data[]
+      const onlineCount = Object.keys(state).length;
+    },
+    onJoin: (key, current, joined) => { /* user joined */ },
+    onLeave: (key, current, left) => { /* user left */ },
+  }
+);
+// Later: presence.unsubscribe();
+
+// Subscribe to table changes
+const subscription = subscribeToTable<Profile>('profiles', {
+  onInsert: (row) => console.log('New profile:', row),
+  onUpdate: (row, oldRow) => console.log('Updated:', row),
+  onDelete: (oldRow) => console.log('Deleted:', oldRow),
+});
+// Later: subscription.unsubscribe();
+
+// Broadcast channel for custom events
+const channel = createBroadcastChannel<{ message: string }>(
+  'game_events',
+  'player_action',
+  (payload) => console.log('Received:', payload.message)
+);
+await channel.broadcast({ message: 'Player did something!' });
+// Later: channel.unsubscribe();
+```
+
+---
+
+## 6. Adding a New Table
 
 ### Step 1 — Write the migration
 
