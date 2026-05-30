@@ -201,17 +201,17 @@ export class AuthPlugin implements IPlugin {
 
   /**
    * Sign out the current user.
-   * Supabase will fire the SIGNED_OUT event which then emits auth_signout.
+   * Clears local state immediately and calls Supabase signOut.
+   * Emits auth_signout regardless of success/failure to reliably disconnect.
    */
   async signOut(): Promise<void> {
     this.currentPlayer = null;
     const { error } = await auth.signOut();
     if (error) {
-      // Even if the remote sign-out failed, clear local state
-      console.error('[AuthPlugin] signOut error (forcing local clear):', error);
-      this.engine.emit('auth_signout', {});
+      console.error('[AuthPlugin] signOut error:', error);
     }
-    // Success case: SIGNED_OUT event from onAuthStateChange handles the emit
+    // Emit signout immediately — don't wait for onAuthStateChange event
+    this.engine.emit('auth_signout', {});
   }
 
   /**
