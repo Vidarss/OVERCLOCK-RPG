@@ -11,6 +11,8 @@ import { getClient } from './client';
 export interface AuthResult {
   user: User | null;
   error: string | null;
+  /** True if email confirmation is required before sign in */
+  needsConfirmation?: boolean;
 }
 
 export interface AuthStateChange {
@@ -20,6 +22,7 @@ export interface AuthStateChange {
 
 /**
  * Sign up a new user with email and password.
+ * Returns needsConfirmation=true if the user needs to confirm their email.
  */
 export async function signUp(
   email: string,
@@ -33,7 +36,12 @@ export async function signUp(
       return { user: null, error: error.message };
     }
     
-    return { user: data.user, error: null };
+    // Check if email confirmation is required
+    // If identities is empty or user.confirmed_at is null, confirmation is needed
+    const needsConfirmation = !data.user?.confirmed_at || 
+      (data.user?.identities && data.user.identities.length === 0);
+    
+    return { user: data.user, error: null, needsConfirmation };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return { user: null, error: message };

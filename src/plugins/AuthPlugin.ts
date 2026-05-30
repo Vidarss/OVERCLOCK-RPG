@@ -102,15 +102,35 @@ export class AuthPlugin implements IPlugin {
     };
   }
 
-  async signUp(email: string, password: string, handle: string): Promise<{ error: string | null }> {
-    const { user, error } = await auth.signUp(email, password);
+  async signUp(email: string, password: string, handle: string): Promise<{ error: string | null; needsConfirmation?: boolean }> {
+    const { user, error, needsConfirmation } = await auth.signUp(email, password);
     if (error) return { error };
 
-    if (user) {
-      await this.engine.storage.save('profiles', { id: user.id, handle: handle.toUpperCase().slice(0, 12), avatar_index: 0 }, 'id');
+    // If email confirmation is required, don't try to sign in yet
+    if (needsConfirmation) {
+      // Store the handle temporarily - we'll create the profile when they confirm
+      if (user) {
+        // Try to create profile now (will work if confirmation is disabled)
+        await this.engine.storage.save('profiles', { 
+          id: user.id, 
+          handle: handle.toUpperCase().slice(0, 12), 
+          avatar_index: 0 
+        }, 'id');
+      }
+      this.engine.emit('auth_awaiting_confirmation', { email });
+      return { error: null, needsConfirmation: true };
     }
 
-    // Sign in after sign up
+    // No confirmation needed - create profile and sign in
+    if (user) {
+      await this.engine.storage.save('profiles', { 
+        id: user.id, 
+        handle: handle.toUpperCase().slice(0, 12), 
+        avatar_index: 0 
+      }, 'id');
+    }
+
+    // Sign in after sign up (only if no confirmation required)
     const { error: signInError } = await auth.signIn(email, password);
     if (signInError) return { error: signInError };
 

@@ -14,6 +14,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ authPlugin, onSw
   const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [confirmationSent, setConfirmationSent] = useState(false);
 
   const handleRegister = async () => {
     setError('');
@@ -22,10 +23,63 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ authPlugin, onSw
     if (password.length < 6) return setError('KEY TOO SHORT (MIN 6 CHARS)');
 
     setLoading(true);
-    const { error: err } = await authPlugin.signUp(email, password, handle);
+    const { error: err, needsConfirmation } = await authPlugin.signUp(email, password, handle);
     setLoading(false);
-    if (err) setError(err);
+    
+    if (err) {
+      setError(err);
+    } else if (needsConfirmation) {
+      setConfirmationSent(true);
+    }
+    // If no error and no confirmation needed, auth_success will be emitted and App will navigate
   };
+
+  // Show confirmation message if email verification is needed
+  if (confirmationSent) {
+    return (
+      <div className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker">
+        <div className="w-full max-w-md mx-4">
+          <div className="text-center mb-8">
+            <div className="font-pixel glow-cyan mb-2" style={{ color: '#00f5ff', fontSize: '20px', letterSpacing: '4px' }}>
+              OVERCLOCK
+            </div>
+            <div className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px', letterSpacing: '8px' }}>
+              .EXE
+            </div>
+          </div>
+
+          <div className="pixel-border" style={{ background: '#0d0d1a', borderColor: '#1a2a3a', padding: '24px' }}>
+            <div className="font-pixel mb-6" style={{ color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #1a2a3a', paddingBottom: '12px' }}>
+              {'> EMAIL VERIFICATION REQUIRED'}
+            </div>
+
+            <div className="font-pixel mb-4" style={{ color: '#5a6a7a', fontSize: '9px', lineHeight: '1.8' }}>
+              {'> CHECK YOUR INBOX'}
+            </div>
+            
+            <div className="mb-6" style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '11px', lineHeight: '1.6' }}>
+              A confirmation link has been sent to <span style={{ color: '#00f5ff' }}>{email}</span>. 
+              Click the link to activate your account, then return here to login.
+            </div>
+
+            <button
+              onClick={onSwitchToLogin}
+              className="w-full font-pixel pixel-border-cyan"
+              style={{
+                background: '#001a20',
+                color: '#00f5ff',
+                padding: '14px',
+                fontSize: '9px',
+                letterSpacing: '2px',
+              }}
+            >
+              {'> BACK TO LOGIN'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker">
