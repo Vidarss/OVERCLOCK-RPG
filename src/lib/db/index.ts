@@ -11,6 +11,7 @@ export {
   DEFAULT_DB_CONFIG,
   createDatabaseConfig,
   validateConfig,
+  isConfigValid,
 } from './config';
 
 // Client management

@@ -6,7 +6,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { type DatabaseConfig, DEFAULT_DB_CONFIG, validateConfig } from './config';
+import { type DatabaseConfig, DEFAULT_DB_CONFIG, validateConfig, isConfigValid } from './config';
 
 let clientInstance: SupabaseClient | null = null;
 let currentConfig: DatabaseConfig | null = null;
@@ -14,9 +14,14 @@ let currentConfig: DatabaseConfig | null = null;
 /**
  * Get or create the Supabase client singleton.
  * Lazily initializes on first call using the default configuration.
+ * Throws a helpful error if env vars are not configured.
  */
 export function getClient(): SupabaseClient {
   if (!clientInstance) {
+    if (!isConfigValid(DEFAULT_DB_CONFIG)) {
+      console.warn('[v0] Database not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');
+      // Still attempt to create - validation will throw with detailed error
+    }
     clientInstance = createClientFromConfig(DEFAULT_DB_CONFIG);
     currentConfig = DEFAULT_DB_CONFIG;
   }

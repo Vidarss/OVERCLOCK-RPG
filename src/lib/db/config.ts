@@ -106,19 +106,31 @@ export function createDatabaseConfig(overrides?: Partial<DatabaseConfig>): Datab
 }
 
 /**
+ * Check if the configuration has valid connection details.
+ * Returns true if URL and key are present and valid.
+ */
+export function isConfigValid(config: DatabaseConfig): boolean {
+  if (!config.url || !config.anonKey) return false;
+  if (!config.url.includes('supabase')) return false;
+  if (!config.anonKey.startsWith('eyJ')) return false;
+  return true;
+}
+
+/**
  * Validate configuration and throw descriptive errors if invalid.
+ * Only call this when you actually need to use the database.
  */
 export function validateConfig(config: DatabaseConfig): void {
   const errors: string[] = [];
   
   if (!config.url) {
-    errors.push('Missing database URL. Set NEXT_PUBLIC_SUPABASE_URL or VITE_SUPABASE_URL.');
-  } else if (!config.url.includes('supabase.co')) {
+    errors.push('Missing database URL. Set NEXT_PUBLIC_SUPABASE_URL or VITE_SUPABASE_URL in your environment.');
+  } else if (!config.url.includes('supabase')) {
     errors.push(`Invalid database URL: "${config.url}". Expected a Supabase URL.`);
   }
   
   if (!config.anonKey) {
-    errors.push('Missing database anon key. Set NEXT_PUBLIC_SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY.');
+    errors.push('Missing database anon key. Set NEXT_PUBLIC_SUPABASE_ANON_KEY or VITE_SUPABASE_ANON_KEY in your environment.');
   } else if (!config.anonKey.startsWith('eyJ')) {
     errors.push('Invalid anon key format. Expected a JWT token starting with "eyJ".');
   }
@@ -132,6 +144,8 @@ export function validateConfig(config: DatabaseConfig): void {
   }
   
   if (errors.length > 0) {
-    throw new Error(`Database configuration invalid:\n  - ${errors.join('\n  - ')}`);
+    const message = `Database configuration invalid:\n  - ${errors.join('\n  - ')}\n\nMake sure your Supabase environment variables are set.`;
+    console.error('[v0] Database config error:', message);
+    throw new Error(message);
   }
 }
