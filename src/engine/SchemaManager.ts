@@ -1,4 +1,11 @@
-import { supabase } from '../lib/supabase';
+// ─────────────────────────────────────────────────────────────────────────────
+// Schema Manager
+//
+// Handles automatic table creation on engine boot.
+// Plugins can define their own schemas and the manager ensures all tables exist.
+// ─────────────────────────────────────────────────────────────────────────────
+
+import { getClient, rpc } from '../lib/db';
 import type { TableSchema, ColumnDef, IndexDef, RLSPolicy, IPlugin } from './types';
 
 /**
@@ -34,7 +41,8 @@ export class SchemaManager {
    */
   private async tableExists(tableName: string): Promise<boolean> {
     try {
-      const { data, error } = await supabase
+      const client = getClient();
+      const { error } = await client
         .from(tableName)
         .select('*')
         .limit(0);
@@ -140,13 +148,13 @@ export class SchemaManager {
       log.push(`Creating table "${schema.name}"...`);
       
       try {
-        // Create table
+        // Create table using the rpc helper from db module
         const createSQL = this.buildCreateTableSQL(schema);
-        const { error: createError } = await supabase.rpc('exec_sql', { sql: createSQL });
+        const { error: createError } = await rpc('exec_sql', { sql: createSQL });
         
         if (createError) {
           // Try alternative: direct query (may not work depending on permissions)
-          log.push(`  Warning: Could not create via RPC: ${createError.message}`);
+          log.push(`  Warning: Could not create via RPC: ${createError}`);
           log.push(`  Table "${schema.name}" may need manual creation`);
           continue;
         }
@@ -157,7 +165,7 @@ export class SchemaManager {
         if (schema.indexes) {
           for (const index of schema.indexes) {
             const indexSQL = this.buildIndexSQL(schema.name, index);
-            await supabase.rpc('exec_sql', { sql: indexSQL });
+            await rpc('exec_sql', { sql: indexSQL });
             log.push(`  Index "${index.name}" created`);
           }
         }
@@ -166,7 +174,7 @@ export class SchemaManager {
         if (schema.rls) {
           for (const policy of schema.rls) {
             const rlsSQL = this.buildRLSSQL(schema.name, policy);
-            await supabase.rpc('exec_sql', { sql: rlsSQL });
+            await rpc('exec_sql', { sql: rlsSQL });
             log.push(`  RLS policy "${policy.name}" applied`);
           }
         }

@@ -1,5 +1,12 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Leaderboard Plugin
+//
+// Handles leaderboard display and online presence tracking.
+// Uses the modular database layer for all database operations.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import type { IPlugin, IEngine, Player } from '../engine/types';
-import { supabase } from '../lib/supabase';
+import { createPresenceChannel, type PresenceState, type RealtimeSubscription } from '../lib/db';
 
 export interface LeaderboardEntry {
   user_id: string;
@@ -11,8 +18,6 @@ export interface LeaderboardEntry {
   isOnline?: boolean;
 }
 
-type PresenceState = Record<string, { user_id: string; handle: string }[]>;
-
 export class LeaderboardPlugin implements IPlugin {
   id = 'leaderboard';
   dependencies = ['auth'];
@@ -21,7 +26,7 @@ export class LeaderboardPlugin implements IPlugin {
   private entries: LeaderboardEntry[] = [];
   private onlineUserIds = new Set<string>();
   private onlineCount = 0;
-  private presenceChannel: ReturnType<typeof supabase.channel> | null = null;
+  private presenceSubscription: RealtimeSubscription | null = null;
   private listeners = new Set<() => void>();
   private unsubAuth?: () => void;
   private unsubSignout?: () => void;
@@ -67,26 +72,16 @@ export class LeaderboardPlugin implements IPlugin {
     }
   }
 
-  private async joinPresence(): Promise<void> {
-    if (this.presenceChannel || !this.userId) return;
+  private joinPresence(): void {
+    if (this.presenceSubscription || !this.userId) return;
 
-    this.presenceChannel = supabase.channel('online_players', {
-      config: { presence: { key: this.userId } },
-    });
-
-    this.presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = this.presenceChannel!.presenceState<{ user_id: string; handle: string }>();
-        this.syncPresence(state as unknown as PresenceState);
-      })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          await this.presenceChannel!.track({
-            user_id: this.userId,
-            handle: this.playerHandle,
-          });
-        }
-      });
+    this.presenceSubscription = createPresenceChannel(
+      this.userId,
+      { user_id: this.userId, handle: this.playerHandle },
+      {
+        onSync: (state) => this.syncPresence(state),
+      }
+    );
   }
 
   private syncPresence(state: PresenceState): void {
@@ -105,9 +100,9 @@ export class LeaderboardPlugin implements IPlugin {
   }
 
   private leavePresence(): void {
-    if (this.presenceChannel) {
-      supabase.removeChannel(this.presenceChannel);
-      this.presenceChannel = null;
+    if (this.presenceSubscription) {
+      this.presenceSubscription.unsubscribe();
+      this.presenceSubscription = null;
     }
     this.onlineUserIds.clear();
     this.onlineCount = 0;
