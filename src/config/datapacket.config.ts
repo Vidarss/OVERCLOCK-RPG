@@ -74,8 +74,8 @@ export const DATAPACKET_CONFIG = {
       color: '#ffaa00',
       icon: '🔐',
       requiresAd: true,
-      /** Ad reward = worth 15 enemies (enough to progress ~1-2 stages) */
-      enemyEquivalent: 15,
+      /** Ad reward = worth 3 enemies (same as basic, but benefits from gold skills) */
+      enemyEquivalent: 3,
       spawnWeight: 30,
     },
   ] as DataPacketDef[],

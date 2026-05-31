@@ -5,6 +5,7 @@
 import type { IPlugin, IEngine, GameState } from '../engine/types';
 import { DATAPACKET_CONFIG, type DataPacketDef, type DataPacketType } from '../config/datapacket.config';
 import { AdService } from '../services/AdService';
+import type { SkillPlugin } from './SkillPlugin';
 
 export interface ActiveDataPacket {
   id: string;
@@ -74,6 +75,21 @@ export class DataPacketPlugin implements IPlugin {
   }
 
   /**
+   * Get gold multiplier from active skills (gold_rush, signal_jam, etc.)
+   */
+  private getGoldMultiplier(): number {
+    const skillPlugin = this.engine.getPlugin<SkillPlugin>('skill');
+    if (!skillPlugin) return 1;
+
+    let multiplier = 1;
+    // Gold multiplier skills: gold_rush (×3), signal_jam (×2), entropy_burst (×3 gold)
+    if (skillPlugin.isSkillActive('gold_rush')) multiplier *= 3;
+    if (skillPlugin.isSkillActive('signal_jam')) multiplier *= 2;
+    if (skillPlugin.isSkillActive('entropy_burst')) multiplier *= 3;
+    return multiplier;
+  }
+
+  /**
    * Collect a basic (non-ad) packet immediately
    */
   collectBasicPacket(): void {
@@ -82,7 +98,9 @@ export class DataPacketPlugin implements IPlugin {
     }
 
     this.isProcessing = true;
-    const reward = this.activePacket.goldReward;
+    const baseReward = this.activePacket.goldReward;
+    const multiplier = this.getGoldMultiplier();
+    const reward = Math.floor(baseReward * multiplier);
 
     // Add gold immediately
     this.engine.updateState({
@@ -121,7 +139,9 @@ export class DataPacketPlugin implements IPlugin {
       const adResult = await AdService.showRewardedAd();
 
       if (adResult.success && this.activePacket?.id === packet.id) {
-        const reward = packet.goldReward;
+        const baseReward = packet.goldReward;
+        const multiplier = this.getGoldMultiplier();
+        const reward = Math.floor(baseReward * multiplier);
 
         // Add gold
         this.engine.updateState({
