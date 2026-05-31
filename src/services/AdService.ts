@@ -61,25 +61,31 @@ class AdServiceImpl {
     const config = getActiveAdConfig();
     
     if (!config) {
+      console.log('[v0] No ad config available');
       return { success: false, error: 'No ad network configured' };
     }
 
+    const isNative = Capacitor?.isNativePlatform?.();
+    console.log('[v0] showRewardedAd - isNative:', isNative, 'config:', config);
+
     try {
-      if (config.type === 'admob' && Capacitor?.isNativePlatform?.()) {
+      if (isNative && config.type === 'admob') {
+        console.log('[v0] Showing AdMob rewarded ad');
         return await this.showAdMobRewardedAd(config);
-      } else if (!Capacitor?.isNativePlatform?.()) {
-        // Web: Try AdSense first, then fallback to simulation
+      } else {
+        // Web platform - try AdSense or fallback
+        console.log('[v0] Web platform - showing ad');
         if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.adSlotId) {
+          console.log('[v0] Showing AdSense ad');
           return await this.showAdSenseAd();
         }
+        console.log('[v0] Showing web fallback simulation');
         return await this.showWebAdFallback();
       }
     } catch (error) {
       console.error('[AdService] Ad failed:', error);
       return { success: false, error: String(error) };
     }
-
-    return { success: false, error: 'Unknown error' };
   }
 
   /**
