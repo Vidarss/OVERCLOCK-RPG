@@ -7,7 +7,13 @@ import { Wifi, Lock, X } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { DataPacketPlugin, ActiveDataPacket } from '../../plugins/DataPacketPlugin';
 import { DATAPACKET_CONFIG } from '../../config/datapacket.config';
-import { formatNumber } from '../../utils/format';
+
+function formatNumber(n: number): string {
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
+  return Math.floor(n).toString();
+}
 
 interface DataPacketPopupProps {
   engine: GameEngine;
