@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp } from 'lucide-react';
+import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { CyberHUD } from './CyberHUD';
@@ -231,6 +231,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             activeColor="#ff0080"
             badge={availableOCT > 0 ? availableOCT : null}
             onClick={() => openDrawer('overclock')}
+          />
+          <MobileTab
+            icon={<Cpu size={15} color="#3a4a5a" />}
+            label="HARDWARE"
+            activeColor="#39ff14"
+            badge={inventoryCount > 0 ? inventoryCount : null}
+            onClick={() => setShowMotherboard(true)}
           />
           <MobileTab
             icon={<ShoppingBag size={15} color="#3a4a5a" />}
