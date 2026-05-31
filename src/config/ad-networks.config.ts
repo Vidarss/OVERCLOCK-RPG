@@ -17,20 +17,19 @@ export const AD_NETWORKS_CONFIG = {
     enabled: true, // Set to true after getting your Ad Unit IDs
     appId: 'ca-app-pub-9196447836572769~2813228142', // Your AdMob App ID
     rewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372', // Your Rewarded Ad Unit ID
-    // iOS Ad Unit IDs (if different from Android)
-    iosRewardedAdUnitId: process.env.REACT_APP_ADMOB_IOS_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
-    // Android Ad Unit IDs
-    androidRewardedAdUnitId: process.env.REACT_APP_ADMOB_ANDROID_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
+    // iOS Ad Unit IDs (if different from Android) - use same as default
+    iosRewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372',
+    // Android Ad Unit IDs - use same as default
+    androidRewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372',
   },
 
   // Google AdSense - Web monetization
   adsense: {
     type: 'adsense' as const,
-    enabled: true, // Set to true after configuring your ad units in AdSense
+    enabled: false, // Set to true after adding your ad slot ID below
     publisherId: 'ca-pub-9196447836572769', // Your AdSense Publisher ID (same as AdMob)
-    // Create ad units in AdSense and add them here
-    // Example ad unit (get these from your AdSense account):
-    adSlotId: process.env.REACT_APP_ADSENSE_AD_SLOT_ID || '', // 16-digit ad unit ID
+    // Create ad units in AdSense and add your 16-digit ad slot ID here:
+    adSlotId: '', // e.g. '1234567890123456'
   },
 
   // ─────────────────────────────────────────────────
