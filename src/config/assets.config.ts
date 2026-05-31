@@ -46,7 +46,7 @@ export const ENEMY_SPRITES: EnemyTierSprites[] = [
   {
     tier: 0,
     sprites: [
-      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 1.0 },
+      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 2.0 },
       // Add more tier 0 sprites here:
       // { id: 'malware', name: 'MALWARE.BAT', src: '/assets/enemies/malware.png', scale: 1.0 },
     ],
@@ -93,17 +93,17 @@ export function getEnemySpritesForTier(tier: number): EnemyTierSprites | null {
 export function getRandomEnemySprite(tier: number, isBoss: boolean, isElite: boolean): EnemySpriteDef | null {
   const tierSprites = getEnemySpritesForTier(tier);
   if (!tierSprites) return null;
-  
+
   // Boss takes priority
   if (isBoss && tierSprites.bossSprite) {
     return tierSprites.bossSprite;
   }
-  
+
   // Elite takes second priority
   if (isElite && tierSprites.eliteSprite) {
     return tierSprites.eliteSprite;
   }
-  
+
   // Regular sprites
   if (tierSprites.sprites.length === 0) return null;
   const idx = Math.floor(Math.random() * tierSprites.sprites.length);
@@ -181,7 +181,7 @@ export function preloadImage(src: string): Promise<HTMLImageElement> {
  */
 export async function preloadAllAssets(): Promise<void> {
   const imagesToLoad: string[] = [];
-  
+
   // Collect enemy sprites
   for (const tier of ENEMY_SPRITES) {
     for (const sprite of tier.sprites) {
@@ -190,12 +190,12 @@ export async function preloadAllAssets(): Promise<void> {
     if (tier.bossSprite) imagesToLoad.push(tier.bossSprite.src);
     if (tier.eliteSprite) imagesToLoad.push(tier.eliteSprite.src);
   }
-  
+
   // Collect zone backgrounds
   for (const bg of ZONE_BACKGROUNDS) {
     imagesToLoad.push(bg.src);
   }
-  
+
   // Preload all in parallel
   await Promise.allSettled(imagesToLoad.map(preloadImage));
 }
