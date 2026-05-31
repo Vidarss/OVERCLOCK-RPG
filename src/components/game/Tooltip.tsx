@@ -59,7 +59,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
       onMouseLeave={hide}
       onFocus={show}
       onBlur={hide}
-      style={{ position: 'relative', display: 'inline-flex' }}
+      style={{ position: 'relative', display: 'inline-flex', zIndex: 1001 }}
     >
       {children}
 
@@ -67,7 +67,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         <div
           style={{
             position: 'absolute',
-            zIndex: 999,
+            zIndex: 10000,
             pointerEvents: 'none',
             ...positionStyles[position],
           }}
