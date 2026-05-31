@@ -31,15 +31,14 @@ export class SavePlugin implements IPlugin {
   private debounceTimer: ReturnType<typeof setTimeout> | null = null;
   private lastSaveTime = 0;
   private isAuthenticated = false;
-  private boundBeforeUnload!: () => void;
-  private boundVisibilityChange!: () => void;
   private actionUnsubscribers: Array<() => void> = [];
-  private capacitorAppStateListener: (() => void) | null = null;
+  
+  // Centralized cleanup references for all listeners
+  private cleanupListeners: (() => void)[] = [];
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
 
-    // Start/stop auto-save based on auth state
     engine.on('auth_success', () => {
       this.isAuthenticated = true;
       this.startAutoSave();
@@ -52,52 +51,45 @@ export class SavePlugin implements IPlugin {
       this.unsubscribeFromActions();
     });
 
-    // Set up platform-specific lifecycle listeners
+    this.setupListeners();
+  }
+
+  /**
+   * Set up platform-specific lifecycle listeners.
+   * All listeners are tracked in cleanupListeners for guaranteed cleanup.
+   */
+  private setupListeners(): void {
     if (Capacitor.isNativePlatform()) {
       // Mobile: Use Capacitor App plugin for lifecycle events
-      this.setupCapacitorListeners();
+      App.addListener('appStateChange', ({ isActive }) => {
+        if (!isActive && this.isAuthenticated) {
+          this.saveImmediate();
+        }
+      }).then(handle => {
+        this.cleanupListeners.push(() => handle.remove());
+      });
     } else {
       // Web: Use browser events
-      this.setupWebListeners();
+      const handleBeforeUnload = () => {
+        if (this.isAuthenticated) {
+          this.saveImmediate();
+        }
+      };
+
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === 'hidden' && this.isAuthenticated) {
+          this.saveImmediate();
+        }
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+
+      this.cleanupListeners.push(() => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      });
     }
-  }
-
-  /**
-   * Set up Capacitor app lifecycle listeners for mobile platforms.
-   */
-  private async setupCapacitorListeners(): Promise<void> {
-    // Save when app goes to background (pause)
-    const listener = await App.addListener('appStateChange', (state) => {
-      if (!state.isActive && this.isAuthenticated) {
-        // App is going to background - save immediately
-        this.saveImmediate();
-      }
-    });
-    
-    this.capacitorAppStateListener = () => {
-      listener.remove();
-    };
-  }
-
-  /**
-   * Set up web browser lifecycle listeners.
-   */
-  private setupWebListeners(): void {
-    // Save on page unload
-    this.boundBeforeUnload = () => {
-      if (this.isAuthenticated) {
-        this.saveImmediate();
-      }
-    };
-    window.addEventListener('beforeunload', this.boundBeforeUnload);
-
-    // Save when tab becomes hidden to prevent data loss
-    this.boundVisibilityChange = () => {
-      if (document.visibilityState === 'hidden' && this.isAuthenticated) {
-        this.saveImmediate();
-      }
-    };
-    document.addEventListener('visibilitychange', this.boundVisibilityChange);
   }
 
   /**
@@ -107,21 +99,18 @@ export class SavePlugin implements IPlugin {
   private subscribeToActions(): void {
     if (!SAVE_CONFIG.saveOnActionsEnabled) return;
 
-    for (const action of SAVE_CONFIG.saveOnActions) {
-      const unsub = this.engine.on(action as GameEventType, () => {
-        this.saveDebounced();
-      });
-      this.actionUnsubscribers.push(unsub);
-    }
+    SAVE_CONFIG.saveOnActions.forEach(action => {
+      this.actionUnsubscribers.push(
+        this.engine.on(action as GameEventType, () => this.saveDebounced())
+      );
+    });
   }
 
   /**
    * Unsubscribe from all action listeners.
    */
   private unsubscribeFromActions(): void {
-    for (const unsub of this.actionUnsubscribers) {
-      unsub();
-    }
+    this.actionUnsubscribers.forEach(unsub => unsub());
     this.actionUnsubscribers = [];
   }
 
@@ -130,9 +119,10 @@ export class SavePlugin implements IPlugin {
    */
   private startAutoSave(): void {
     this.stopAutoSave();
-    this.saveTimer = setInterval(() => {
-      this.saveDebounced();
-    }, SAVE_CONFIG.autoSaveIntervalMs);
+    this.saveTimer = setInterval(
+      () => this.saveDebounced(),
+      SAVE_CONFIG.autoSaveIntervalMs
+    );
   }
 
   /**
@@ -146,48 +136,51 @@ export class SavePlugin implements IPlugin {
   }
 
   /**
+   * Clear any pending debounce timer.
+   * Extracted to DRY principle - used in multiple places.
+   */
+  private clearDebounce(): void {
+    if (this.debounceTimer) {
+      clearTimeout(this.debounceTimer);
+      this.debounceTimer = null;
+    }
+  }
+
+  /**
    * Trigger a save with debouncing to prevent rapid-fire saves.
    * Multiple calls within saveDebounceMs will result in a single save.
    */
   private saveDebounced(): void {
     if (!this.isAuthenticated) return;
 
-    // Clear any pending debounce timer
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-    }
+    this.clearDebounce();
 
-    // Check if we're within the debounce window
     const now = Date.now();
-    const timeSinceLastSave = now - this.lastSaveTime;
+    const delay = Math.max(0, SAVE_CONFIG.saveDebounceMs - (now - this.lastSaveTime));
 
-    if (timeSinceLastSave >= SAVE_CONFIG.saveDebounceMs) {
-      // Enough time has passed, save immediately
+    if (delay === 0) {
       this.saveImmediate();
     } else {
-      // Schedule a save after the remaining debounce time
-      const delay = SAVE_CONFIG.saveDebounceMs - timeSinceLastSave;
-      this.debounceTimer = setTimeout(() => {
-        this.saveImmediate();
-      }, delay);
+      this.debounceTimer = setTimeout(() => this.saveImmediate(), delay);
     }
   }
 
   /**
    * Perform an immediate save (bypasses debounce).
+   * Captures state atomically and emits save event.
    * Used for critical moments like page unload.
    */
   private saveImmediate(): void {
     if (!this.isAuthenticated) return;
 
-    this.lastSaveTime = Date.now();
-    this.engine.updateState({ lastSaveTime: this.lastSaveTime });
-    this.engine.emit('save_requested', {});
-
-    // Clear any pending debounce timer since we just saved
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
+    try {
+      this.lastSaveTime = Date.now();
+      // Capture state atomically at save time
+      this.engine.updateState({ lastSaveTime: this.lastSaveTime });
+      this.engine.emit('save_requested', {});
+      this.clearDebounce();
+    } catch (error) {
+      console.error('[SavePlugin] Failed to perform immediate save', error);
     }
   }
 
@@ -221,24 +214,16 @@ export class SavePlugin implements IPlugin {
     return this.debounceTimer !== null;
   }
 
+  /**
+   * Clean up all resources: timers, listeners, and subscriptions.
+   */
   cleanup(): void {
     this.stopAutoSave();
     this.unsubscribeFromActions();
+    this.clearDebounce();
     
-    if (this.debounceTimer) {
-      clearTimeout(this.debounceTimer);
-      this.debounceTimer = null;
-    }
-
-    // Clean up platform-specific listeners
-    if (Capacitor.isNativePlatform()) {
-      if (this.capacitorAppStateListener) {
-        this.capacitorAppStateListener();
-        this.capacitorAppStateListener = null;
-      }
-    } else {
-      window.removeEventListener('beforeunload', this.boundBeforeUnload);
-      document.removeEventListener('visibilitychange', this.boundVisibilityChange);
-    }
+    // Execute all cleanup listeners in guaranteed order
+    this.cleanupListeners.forEach(fn => fn());
+    this.cleanupListeners = [];
   }
 }
