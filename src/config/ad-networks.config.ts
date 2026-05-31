@@ -13,13 +13,13 @@ export const AD_NETWORKS_CONFIG = {
   // Google AdMob - Recommended for mobile (iOS/Android) via Capacitor
   admob: {
     type: 'admob' as const,
-    enabled: false, // Set to true after getting your Ad Unit IDs
-    appId: process.env.REACT_APP_ADMOB_APP_ID || '', // Add to .env
-    rewardedAdUnitId: process.env.REACT_APP_ADMOB_REWARDED_UNIT_ID || '', // Add to .env
+    enabled: true, // Set to true after getting your Ad Unit IDs
+    appId: 'ca-app-pub-9196447836572769~2813228142', // Your AdMob App ID
+    rewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372', // Your Rewarded Ad Unit ID
     // iOS Ad Unit IDs (if different from Android)
-    iosRewardedAdUnitId: process.env.REACT_APP_ADMOB_IOS_REWARDED_UNIT_ID || '',
+    iosRewardedAdUnitId: process.env.REACT_APP_ADMOB_IOS_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
     // Android Ad Unit IDs
-    androidRewardedAdUnitId: process.env.REACT_APP_ADMOB_ANDROID_REWARDED_UNIT_ID || '',
+    androidRewardedAdUnitId: process.env.REACT_APP_ADMOB_ANDROID_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
   },
 
   // Fallback for web (Google AdSense or similar)
