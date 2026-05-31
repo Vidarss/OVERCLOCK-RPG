@@ -46,7 +46,7 @@ export const ENEMY_SPRITES: EnemyTierSprites[] = [
   {
     tier: 0,
     sprites: [
-      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 3.0 },
+      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 2.0 },
       // Add more tier 0 sprites here:
       // { id: 'malware', name: 'MALWARE.BAT', src: '/assets/enemies/malware.png', scale: 1.0 },
     ],

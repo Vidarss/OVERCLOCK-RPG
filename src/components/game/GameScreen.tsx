@@ -478,25 +478,23 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
 
           {/* Clan */}
           {MODULES_CONFIG.clans.enabled && (
-            <div style={{ opacity: 0 }}>
-              <Tooltip content={<><TooltipLabel label="CLAN" color="#00f5ff" /><TooltipText>Join or create a clan to team up with other players.</TooltipText></>} position="left">
-                <button
-                  onClick={() => setShowClan(true)}
-                  style={{
-                    width: '100%', background: '#080810',
-                    border: '1px solid #0a2838',
-                    color: '#2a4a5a', padding: '12px 10px',
-                    cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#00f5ff'; e.currentTarget.style.color = '#00f5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,245,255,0.2)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a2838'; e.currentTarget.style.color = '#2a4a5a'; e.currentTarget.style.boxShadow = 'none'; }}
-                >
-                  <Users size={20} />
-                  <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>CLAN</div>
-                </button>
-              </Tooltip>
-            </div>
+            <Tooltip content={<><TooltipLabel label="CLAN" color="#00f5ff" /><TooltipText>Join or create a clan to team up with other players.</TooltipText></>} position="left">
+              <button
+                onClick={() => setShowClan(true)}
+                style={{
+                  width: '100%', background: '#080810',
+                  border: '1px solid #0a2838',
+                  color: '#2a4a5a', padding: '12px 10px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#00f5ff'; e.currentTarget.style.color = '#00f5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,245,255,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a2838'; e.currentTarget.style.color = '#2a4a5a'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <Users size={20} />
+                <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>CLAN</div>
+              </button>
+            </Tooltip>
           )}
 
           {/* Scrapyard */}
