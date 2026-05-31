@@ -3,6 +3,9 @@
  * Limits decimal places to keep numbers clean and readable
  */
 export function formatNumber(n: number): string {
+  // Handle edge cases
+  if (!isFinite(n)) return 'MAX';
+  if (isNaN(n)) return '0';
   if (n < 0) return '-' + formatNumber(-n);
   
   if (n >= 1_000_000_000_000_000) {
