@@ -38,7 +38,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
   };
 
   return (
-    <div className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker">
+    <div
+      className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker"
+      style={{
+        backgroundImage: 'url(/overclock-character.png)',
+        backgroundSize: 'contain',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
       <div className="w-full max-w-md mx-4">
         {/* Header */}
         <div className="text-center mb-8">
@@ -74,15 +82,6 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
               onChange={setPassword}
               type="password"
               placeholder="••••••••"
-            />
-          </div>
-
-          {/* Character image under credentials */}
-          <div className="flex justify-center my-4">
-            <img
-              src="/overclock-character.png"
-              alt="OVERCLOCK character"
-              style={{ width: '100%', maxWidth: 240, imageRendering: 'pixelated' }}
             />
           </div>
 
