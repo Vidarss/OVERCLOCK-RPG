@@ -4,7 +4,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { AdMob } from '@capacitor-community/admob';
-import { getActiveAdConfig } from '../config/ad-networks.config';
+import { AD_NETWORKS_CONFIG, getActiveAdConfig } from '../config/ad-networks.config';
 
 export interface AdResult {
   success: boolean;
@@ -143,8 +143,9 @@ class AdServiceImpl {
         box-shadow: 0 0 40px rgba(0, 245, 255, 0.3);
       `;
 
-      // Simulate ad duration: 5-8 seconds
-      const adDuration = 5000 + Math.random() * 3000;
+      // Use config values for duration and success rate
+      const { minDurationMs, maxDurationMs, successRate } = AD_NETWORKS_CONFIG.webFallback;
+      const adDuration = minDurationMs + Math.random() * (maxDurationMs - minDurationMs);
       let timeLeft = adDuration / 1000;
 
       const title = document.createElement('div');
@@ -175,8 +176,8 @@ class AdServiceImpl {
       setTimeout(() => {
         clearInterval(timerInterval);
         overlay.remove();
-        // 95% success rate for simulated ads
-        resolve({ success: Math.random() < 0.95 });
+        // Use success rate from config
+        resolve({ success: Math.random() < successRate });
       }, adDuration);
     });
   }

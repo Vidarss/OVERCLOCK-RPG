@@ -109,22 +109,18 @@ export class DataPacketPlugin implements IPlugin {
    */
   async collectEncryptedPacket(): Promise<boolean> {
     if (!this.activePacket || !this.activePacket.def.requiresAd || this.isProcessing) {
-      console.log('[v0] collectEncryptedPacket aborted - no packet or already processing');
       return false;
     }
 
     this.isProcessing = true;
     const packet = this.activePacket;
-    console.log('[v0] Starting encrypted packet collection, showing ad...');
 
     try {
       // Show real ad via AdService
       const adResult = await AdService.showRewardedAd();
-      console.log('[v0] Ad completed, result:', adResult);
 
       if (adResult.success && this.activePacket?.id === packet.id) {
         const reward = packet.goldReward;
-        console.log('[v0] Ad successful, granting reward:', reward);
 
         // Add gold
         this.engine.updateState({
@@ -143,8 +139,6 @@ export class DataPacketPlugin implements IPlugin {
         this.lastCollectTime = Date.now();
         this.scheduleNextSpawn();
         return true;
-      } else {
-        console.log('[v0] Ad failed or packet expired, no reward granted');
       }
     } catch (error) {
       console.error('[DataPacketPlugin] Ad error:', error);

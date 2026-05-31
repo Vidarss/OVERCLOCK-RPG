@@ -71,17 +71,14 @@ export const DataPacketPopup: React.FC<DataPacketPopupProps> = ({ engine }) => {
 
     if (packet.def.requiresAd) {
       setIsProcessing(true);
-      console.log('[v0] Starting ad collection for encrypted packet');
       try {
-        const success = await plugin.collectEncryptedPacket();
-        console.log('[v0] Ad collection result:', success);
-      } catch (error) {
-        console.error('[v0] Ad collection error:', error);
+        await plugin.collectEncryptedPacket();
+      } catch {
+        // Ad failed or cancelled
       } finally {
         setIsProcessing(false);
       }
     } else {
-      console.log('[v0] Collecting basic packet');
       plugin.collectBasicPacket();
     }
   }, [plugin, packet, isProcessing]);
