@@ -888,7 +888,7 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ─────────────────────────────────────────────────────────────────
+  // ── Basic ───────────────────────────────────────────────���─────────────────
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
   { type: 'reach_stage',     label: 'Reach stage {n}',                 targetFn: s => Math.max(s + 3, 5),     rewardFn: s => 80  + s * 30  },
@@ -1131,6 +1131,7 @@ export const UI_CONFIG = {
 } as const;
 
 export const SET_CATALOG: SetDef[] = [
+  // ── NEURAL NEXUS (Idle DPS Focus) ──────────────────────────────────────────
   {
     id: 'neural_nexus',
     name: 'NEURAL NEXUS',
@@ -1144,6 +1145,7 @@ export const SET_CATALOG: SetDef[] = [
       { name: 'NEXUS_SYNAPSE',slot: 'GPU', flavorText: 'Renders destruction in parallel threads of neural fire.',               stats: [{ type: 'idle_dps', value: 2.0, isMultiplier: true }, { type: 'crit_multiplier', value: 1.6,  isMultiplier: true  }] },
     ],
   },
+  // ── GHOST PROTOCOL (Tap + Crit Focus) ──────────────────────────────────────
   {
     id: 'ghost_protocol',
     name: 'GHOST PROTOCOL',
@@ -1161,12 +1163,13 @@ export const SET_CATALOG: SetDef[] = [
       { name: 'GHOST_TRACE', slot: 'RAM',       flavorText: "Tracks enemies through memory they don't own.",                   stats: [{ type: 'tap_damage', value: 1.7,  isMultiplier: true  }, { type: 'crit_chance',     value: 0.10, isMultiplier: false }] },
     ],
   },
+  // ── SINGULARITY CORE (Gold Focus) ──────────────────────────────────────────
   {
     id: 'singularity_core',
     name: 'SINGULARITY CORE',
     description: 'Beyond the event horizon of power.',
     color: '#ffaa00',
-    setBonusDescription: 'Full set: ×4 gold rate (permanent)',
+    setBonusDescription: 'Full set: x4 gold rate (permanent)',
     setBonus: [{ type: 'gold_rate', value: 4.0, isMultiplier: true }],
     pieces: [
       { name: 'SINGULARITY_LENS',  slot: 'GPU',       flavorText: 'Focuses all available value through a single computational point.', stats: [{ type: 'gold_rate', value: 2.5, isMultiplier: true }, { type: 'idle_dps',        value: 1.6, isMultiplier: true }] },
@@ -1174,6 +1177,58 @@ export const SET_CATALOG: SetDef[] = [
       { name: 'SINGULARITY_MATRIX',slot: 'RAM',       flavorText: 'A memory system that converts computation directly into wealth.',    stats: [{ type: 'gold_rate', value: 2.2, isMultiplier: true }, { type: 'crit_multiplier', value: 1.7, isMultiplier: true }] },
       { name: 'SINGULARITY_ANCHOR',slot: 'CPU',       flavorText: 'Tethers your rig to the most profitable timeline.',                  stats: [{ type: 'gold_rate', value: 2.0, isMultiplier: true }, { type: 'idle_dps',        value: 1.8, isMultiplier: true }] },
       { name: 'SINGULARITY_CROWN', slot: 'GPU',       flavorText: 'The sovereign piece. Alone it is powerful. Together it is absolute.',stats: [{ type: 'gold_rate', value: 3.0, isMultiplier: true }, { type: 'tap_damage',      value: 2.0, isMultiplier: true }] },
+    ],
+  },
+  // ── ENTROPY ENGINE (Crit Damage Focus) ─────────────────────────────────────
+  {
+    id: 'entropy_engine',
+    name: 'ENTROPY ENGINE',
+    description: 'Chaos weaponized. Every hit is a dice roll against oblivion.',
+    color: '#9933ff',
+    setBonusDescription: 'Full set: +150% crit damage + +20% crit chance (permanent)',
+    setBonus: [
+      { type: 'crit_multiplier', value: 2.5, isMultiplier: true },
+      { type: 'crit_chance', value: 0.20, isMultiplier: false },
+    ],
+    pieces: [
+      { name: 'ENTROPY_CORE',   slot: 'CPU', flavorText: 'Processes randomness into pure destruction.',                    stats: [{ type: 'crit_multiplier', value: 2.2, isMultiplier: true }, { type: 'crit_chance', value: 0.15, isMultiplier: false }] },
+      { name: 'ENTROPY_FLUX',   slot: 'GPU', flavorText: 'Renders probability collapse in real-time.',                     stats: [{ type: 'crit_multiplier', value: 2.0, isMultiplier: true }, { type: 'tap_damage',  value: 1.8,  isMultiplier: true  }] },
+      { name: 'ENTROPY_BUFFER', slot: 'RAM', flavorText: 'Stores infinite potential outcomes. Delivers the worst one.',    stats: [{ type: 'crit_multiplier', value: 1.9, isMultiplier: true }, { type: 'idle_dps',    value: 1.6,  isMultiplier: true  }] },
+    ],
+  },
+  // ── VOID LATTICE (Hybrid Balanced) ─────────────────────────────────────────
+  {
+    id: 'void_lattice',
+    name: 'VOID LATTICE',
+    description: 'Harvested from between dimensions. Perfectly balanced destruction.',
+    color: '#00ff88',
+    setBonusDescription: 'Full set: +50% ALL stats (tap, DPS, gold, crit) (permanent)',
+    setBonus: [
+      { type: 'tap_damage', value: 1.5, isMultiplier: true },
+      { type: 'idle_dps', value: 1.5, isMultiplier: true },
+      { type: 'gold_rate', value: 1.5, isMultiplier: true },
+      { type: 'crit_chance', value: 0.10, isMultiplier: false },
+    ],
+    pieces: [
+      { name: 'VOID_NODE',    slot: 'CPU',       flavorText: 'A processing unit that exists in negative space.',           stats: [{ type: 'tap_damage', value: 1.6, isMultiplier: true }, { type: 'idle_dps',        value: 1.6, isMultiplier: true }] },
+      { name: 'VOID_CACHE',   slot: 'RAM',       flavorText: 'Memory that remembers what never happened.',                  stats: [{ type: 'idle_dps',   value: 1.7, isMultiplier: true }, { type: 'gold_rate',       value: 1.5, isMultiplier: true }] },
+      { name: 'VOID_SHADER',  slot: 'GPU',       flavorText: 'Renders attacks from impossible angles.',                     stats: [{ type: 'tap_damage', value: 1.8, isMultiplier: true }, { type: 'crit_multiplier', value: 1.5, isMultiplier: true }] },
+      { name: 'VOID_BRIDGE',  slot: 'EXPANSION', flavorText: 'Connects your rig to the space between spaces.',              stats: [{ type: 'gold_rate',  value: 1.8, isMultiplier: true }, { type: 'crit_chance',     value: 0.08, isMultiplier: false }] },
+    ],
+  },
+  // ── QUANTUM ARRAY (Late-game Tap Focus) ────────────────────────────────────
+  {
+    id: 'quantum_array',
+    name: 'QUANTUM ARRAY',
+    description: 'Each tap exists in all states until observed. Then it destroys.',
+    color: '#ff6600',
+    setBonusDescription: 'Full set: x3 tap damage (permanent)',
+    setBonus: [{ type: 'tap_damage', value: 3.0, isMultiplier: true }],
+    pieces: [
+      { name: 'QUANTUM_PROCESSOR', slot: 'CPU',       flavorText: 'Computes attacks across parallel timelines.',               stats: [{ type: 'tap_damage', value: 2.5, isMultiplier: true }, { type: 'crit_chance',     value: 0.12, isMultiplier: false }] },
+      { name: 'QUANTUM_BUFFER',    slot: 'RAM',       flavorText: 'Holds superposition states until collapse.',                 stats: [{ type: 'tap_damage', value: 2.2, isMultiplier: true }, { type: 'idle_dps',        value: 1.5,  isMultiplier: true  }] },
+      { name: 'QUANTUM_RENDERER',  slot: 'GPU',       flavorText: 'Visualizes every possible outcome. Selects the lethal one.',stats: [{ type: 'tap_damage', value: 2.8, isMultiplier: true }, { type: 'crit_multiplier', value: 1.9,  isMultiplier: true  }] },
+      { name: 'QUANTUM_ENTANGLER', slot: 'EXPANSION', flavorText: 'Links your attacks to distant, unsuspecting targets.',       stats: [{ type: 'tap_damage', value: 2.0, isMultiplier: true }, { type: 'gold_rate',       value: 1.6,  isMultiplier: true  }] },
     ],
   },
 ];

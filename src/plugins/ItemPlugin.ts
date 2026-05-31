@@ -1,5 +1,14 @@
-import type { IPlugin, IEngine, GameState, GameEvent, HardwareItem, ItemSlot, ItemRarity } from '../engine/types';
+import type { IPlugin, IEngine, GameState, GameEvent, HardwareItem, ItemSlot, ItemRarity, ModifierDef } from '../engine/types';
 import { ITEM_CONFIG } from '../config/game.config';
+import { 
+  ENCHANTMENT_CONFIG, 
+  TIER_UP_CONFIG, 
+  getEnchantTier, 
+  getNextEnchantTier, 
+  getEnchantCost, 
+  getTierUpDef, 
+  canTierUp 
+} from '../config/enchantment.config';
 
 const SLOTS: ItemSlot[] = ['RAM', 'GPU', 'CPU', 'EXPANSION'];
 
@@ -208,6 +217,299 @@ export class ItemPlugin implements IPlugin {
     return { success: true, totalScrapGained };
   }
 
+  // ── ENCHANTMENT SYSTEM ─────────────────────────────────────────────────────
+
+  /** Calculate enchanted stats for an item based on its enchant level */
+  private calculateEnchantedStats(item: HardwareItem): ModifierDef[] {
+    const enchantLevel = item.enchantLevel ?? 0;
+    if (enchantLevel === 0) return item.stats;
+
+    const tier = getEnchantTier(enchantLevel);
+    if (!tier) return item.stats;
+
+    return item.stats.map(stat => ({
+      ...stat,
+      value: stat.isMultiplier
+        ? 1 + (stat.value - 1) * tier.bonusMultiplier
+        : stat.value * tier.bonusMultiplier,
+    }));
+  }
+
+  /** Get the scrap cost to enchant an item to the next level */
+  getEnchantCost(item: HardwareItem): number {
+    const currentLevel = item.enchantLevel ?? 0;
+    const nextLevel = currentLevel + 1;
+    if (nextLevel > ENCHANTMENT_CONFIG.maxEnchantLevel) return Infinity;
+    return getEnchantCost(nextLevel, item.rarity);
+  }
+
+  /** Get enchantment info for an item */
+  getEnchantInfo(item: HardwareItem): {
+    currentLevel: number;
+    maxLevel: number;
+    nextCost: number;
+    successChance: number;
+    failurePenalty: number;
+    canEnchant: boolean;
+  } {
+    const currentLevel = item.enchantLevel ?? 0;
+    const nextTier = getNextEnchantTier(currentLevel);
+    const cost = this.getEnchantCost(item);
+    const scrap = this.engine.state.scrap ?? 0;
+
+    return {
+      currentLevel,
+      maxLevel: ENCHANTMENT_CONFIG.maxEnchantLevel,
+      nextCost: cost,
+      successChance: nextTier?.successChance ?? 0,
+      failurePenalty: nextTier?.failurePenalty ?? 0,
+      canEnchant: nextTier !== null && scrap >= cost,
+    };
+  }
+
+  /** Attempt to enchant an item (inventory or equipped) */
+  enchantItem(
+    itemId: string, 
+    options?: { useProtection?: boolean; useLuckyCharm?: boolean; useGuaranteed?: boolean }
+  ): { success: boolean; newLevel: number; message: string } {
+    const state = this.engine.state;
+    
+    // Find item in inventory or equipped
+    let item = state.inventory.find(i => i.id === itemId);
+    let location: 'inventory' | { slot: ItemSlot; index: number } = 'inventory';
+    
+    if (!item) {
+      // Check equipped items
+      for (const [slot, slotArray] of Object.entries(state.equippedItems)) {
+        const arr = Array.isArray(slotArray) ? slotArray : [slotArray];
+        const idx = arr.findIndex(i => i?.id === itemId);
+        if (idx >= 0 && arr[idx]) {
+          item = arr[idx]!;
+          location = { slot: slot as ItemSlot, index: idx };
+          break;
+        }
+      }
+    }
+
+    if (!item) return { success: false, newLevel: 0, message: 'Item not found' };
+
+    const currentLevel = item.enchantLevel ?? 0;
+    const nextTier = getNextEnchantTier(currentLevel);
+    if (!nextTier) return { success: false, newLevel: currentLevel, message: 'Already at max enchant level' };
+
+    const cost = getEnchantCost(nextTier.level, item.rarity);
+    const scrap = state.scrap ?? 0;
+    let diamonds = state.diamonds ?? 0;
+
+    // Calculate total diamond cost for extras
+    let diamondCost = 0;
+    if (options?.useProtection) diamondCost += ENCHANTMENT_CONFIG.protectionScrollCost;
+    if (options?.useLuckyCharm) diamondCost += ENCHANTMENT_CONFIG.luckyCharmCost;
+    if (options?.useGuaranteed) diamondCost += ENCHANTMENT_CONFIG.guaranteedScrollCost;
+
+    if (scrap < cost) return { success: false, newLevel: currentLevel, message: 'Not enough scrap' };
+    if (diamonds < diamondCost) return { success: false, newLevel: currentLevel, message: 'Not enough diamonds' };
+
+    // Consume resources
+    this.engine.updateState({ 
+      scrap: scrap - cost,
+      diamonds: diamonds - diamondCost,
+    });
+
+    // Calculate success chance
+    let successChance = nextTier.successChance;
+    if (options?.useLuckyCharm) successChance = Math.min(1, successChance + 0.25);
+    if (options?.useGuaranteed) successChance = 1;
+
+    const roll = Math.random();
+    const succeeded = roll < successChance;
+
+    let newLevel = currentLevel;
+    let message = '';
+
+    if (succeeded) {
+      newLevel = nextTier.level;
+      message = `Enchantment successful! Item is now +${newLevel}`;
+    } else {
+      // Failure
+      const penalty = options?.useProtection ? 0 : nextTier.failurePenalty;
+      newLevel = Math.max(0, currentLevel - penalty);
+      message = penalty > 0 
+        ? `Enchantment failed! Item dropped to +${newLevel}`
+        : 'Enchantment failed! Level unchanged';
+    }
+
+    // Update item
+    const updatedItem: HardwareItem = {
+      ...item,
+      enchantLevel: newLevel,
+      enchantedStats: undefined, // Will be recalculated
+    };
+    updatedItem.enchantedStats = this.calculateEnchantedStats(updatedItem);
+
+    // Update state
+    if (location === 'inventory') {
+      const newInventory = state.inventory.map(i => i.id === itemId ? updatedItem : i);
+      this.engine.updateState({ inventory: newInventory });
+    } else {
+      const equipped = { ...state.equippedItems };
+      const arr = [...(Array.isArray(equipped[location.slot]) ? equipped[location.slot] : [equipped[location.slot]])];
+      arr[location.index] = updatedItem;
+      equipped[location.slot] = arr as (HardwareItem | null)[];
+      this.engine.updateState({ equippedItems: equipped });
+      this.applyEquippedModifiers();
+    }
+
+    // Emit event
+    if (succeeded) {
+      this.engine.emit('item_enchanted', { item: updatedItem, oldLevel: currentLevel, newLevel });
+    } else {
+      this.engine.emit('item_enchant_failed', { item: updatedItem, oldLevel: currentLevel, newLevel });
+    }
+
+    return { success: succeeded, newLevel, message };
+  }
+
+  // ── TIER-UP SYSTEM ─────────────────────────────────────────────────────────
+
+  /** Get tier-up info for an item */
+  getTierUpInfo(item: HardwareItem): {
+    currentTier: number;
+    maxTier: number;
+    nextCost: number;
+    successChance: number;
+    canTierUp: boolean;
+    reason?: string;
+  } {
+    const currentTier = item.tier;
+    const check = canTierUp(currentTier, item.rarity);
+    const nextTierDef = getTierUpDef(currentTier + 1);
+    const diamonds = this.engine.state.diamonds ?? 0;
+
+    return {
+      currentTier,
+      maxTier: TIER_UP_CONFIG.maxTier,
+      nextCost: nextTierDef?.diamondCost ?? Infinity,
+      successChance: nextTierDef?.successChance ?? 0,
+      canTierUp: check.canUpgrade && nextTierDef !== null && diamonds >= nextTierDef.diamondCost,
+      reason: check.reason,
+    };
+  }
+
+  /** Attempt to tier-up an item */
+  tierUpItem(
+    itemId: string,
+    options?: { useProtection?: boolean }
+  ): { success: boolean; newTier: number; message: string } {
+    const state = this.engine.state;
+    
+    // Find item in inventory or equipped
+    let item = state.inventory.find(i => i.id === itemId);
+    let location: 'inventory' | { slot: ItemSlot; index: number } = 'inventory';
+    
+    if (!item) {
+      for (const [slot, slotArray] of Object.entries(state.equippedItems)) {
+        const arr = Array.isArray(slotArray) ? slotArray : [slotArray];
+        const idx = arr.findIndex(i => i?.id === itemId);
+        if (idx >= 0 && arr[idx]) {
+          item = arr[idx]!;
+          location = { slot: slot as ItemSlot, index: idx };
+          break;
+        }
+      }
+    }
+
+    if (!item) return { success: false, newTier: 0, message: 'Item not found' };
+
+    const currentTier = item.tier;
+    const check = canTierUp(currentTier, item.rarity);
+    if (!check.canUpgrade) return { success: false, newTier: currentTier, message: check.reason ?? 'Cannot tier up' };
+
+    const tierDef = getTierUpDef(currentTier + 1);
+    if (!tierDef) return { success: false, newTier: currentTier, message: 'Tier data not found' };
+
+    let diamonds = state.diamonds ?? 0;
+    let totalCost = tierDef.diamondCost;
+    if (options?.useProtection) totalCost += TIER_UP_CONFIG.tierProtectionCost;
+
+    if (diamonds < totalCost) return { success: false, newTier: currentTier, message: 'Not enough diamonds' };
+
+    // Consume diamonds
+    this.engine.updateState({ diamonds: diamonds - totalCost });
+
+    // Roll for success
+    const roll = Math.random();
+    const succeeded = roll < tierDef.successChance;
+
+    let newTier = currentTier;
+    let message = '';
+
+    if (succeeded) {
+      newTier = tierDef.targetTier;
+      
+      // Apply stat multiplier to base stats
+      const statMultiplier = tierDef.statMultiplier;
+      const newStats = item.stats.map(stat => ({
+        ...stat,
+        value: stat.isMultiplier
+          ? 1 + (stat.value - 1) * statMultiplier
+          : stat.value * statMultiplier,
+      }));
+
+      const updatedItem: HardwareItem = {
+        ...item,
+        tier: newTier,
+        stats: newStats,
+        enchantedStats: undefined,
+      };
+      updatedItem.enchantedStats = this.calculateEnchantedStats(updatedItem);
+
+      // Update state
+      if (location === 'inventory') {
+        const newInventory = state.inventory.map(i => i.id === itemId ? updatedItem : i);
+        this.engine.updateState({ inventory: newInventory });
+      } else {
+        const equipped = { ...state.equippedItems };
+        const arr = [...(Array.isArray(equipped[location.slot]) ? equipped[location.slot] : [equipped[location.slot]])];
+        arr[location.index] = updatedItem;
+        equipped[location.slot] = arr as (HardwareItem | null)[];
+        this.engine.updateState({ equippedItems: equipped });
+        this.applyEquippedModifiers();
+      }
+
+      this.engine.emit('item_tier_up', { item: updatedItem, oldTier: currentTier, newTier });
+      message = `Tier-up successful! Item is now T${newTier}`;
+    } else {
+      // Failure
+      const penalty = options?.useProtection ? 0 : TIER_UP_CONFIG.failurePenalty;
+      newTier = Math.max(0, currentTier - penalty);
+      
+      if (penalty > 0 && newTier !== currentTier) {
+        // Update item tier on failure with penalty
+        const updatedItem: HardwareItem = { ...item, tier: newTier };
+        
+        if (location === 'inventory') {
+          const newInventory = state.inventory.map(i => i.id === itemId ? updatedItem : i);
+          this.engine.updateState({ inventory: newInventory });
+        } else {
+          const equipped = { ...state.equippedItems };
+          const arr = [...(Array.isArray(equipped[location.slot]) ? equipped[location.slot] : [equipped[location.slot]])];
+          arr[location.index] = updatedItem;
+          equipped[location.slot] = arr as (HardwareItem | null)[];
+          this.engine.updateState({ equippedItems: equipped });
+          this.applyEquippedModifiers();
+        }
+      }
+
+      this.engine.emit('item_tier_up_failed', { item, oldTier: currentTier, newTier });
+      message = penalty > 0 && newTier !== currentTier
+        ? `Tier-up failed! Item dropped to T${newTier}`
+        : 'Tier-up failed! Tier unchanged';
+    }
+
+    return { success: succeeded, newTier, message };
+  }
+
   private applyEquippedModifiers(): void {
     this.engine.removeModifiers('items');
     const equipped = this.engine.state.equippedItems;
@@ -215,7 +517,9 @@ export class ItemPlugin implements IPlugin {
       const arr = Array.isArray(rawSlot) ? rawSlot : [rawSlot as HardwareItem | null];
       for (const item of arr) {
         if (!item) continue;
-        for (const stat of item.stats) {
+        // Use enchanted stats if available, otherwise base stats
+        const stats = item.enchantedStats ?? this.calculateEnchantedStats(item);
+        for (const stat of stats) {
           this.engine.addModifier('items', stat);
         }
       }
