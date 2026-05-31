@@ -24,7 +24,7 @@ export interface EnemySpriteDef {
   name: string;
   /** Path relative to /public (e.g., '/assets/enemies/adware.png') */
   src: string;
-  /** Scale factor (1.0 = original size, 0.5 = half size, 2.0 = double) */
+  /** Scale factor (1.0 = 200px base, 0.5 = 100px, 2.0 = 400px) */
   scale?: number;
   /** Optional vertical offset in pixels */
   offsetY?: number;
@@ -46,11 +46,11 @@ export const ENEMY_SPRITES: EnemyTierSprites[] = [
   {
     tier: 0,
     sprites: [
-      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 0.35 },
+      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 1.0 },
       // Add more tier 0 sprites here:
-      // { id: 'malware', name: 'MALWARE.BAT', src: '/assets/enemies/malware.png', scale: 0.4 },
+      // { id: 'malware', name: 'MALWARE.BAT', src: '/assets/enemies/malware.png', scale: 1.0 },
     ],
-    // bossSprite: { id: 'firewall_boss', name: 'THE_FIREWALL', src: '/assets/enemies/firewall-boss.png', scale: 0.5 },
+    // bossSprite: { id: 'firewall_boss', name: 'THE_FIREWALL', src: '/assets/enemies/firewall-boss.png', scale: 1.2 },
   },
   // ── Tier 1 (Stages 51-100): FIREWALL ────────────────────────────────────────
   {
