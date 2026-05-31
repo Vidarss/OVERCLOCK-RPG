@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import { getComponentBulkCost, getComponentDps, getComponentMilestoneBonus } from '../../plugins/ComponentPlugin';
@@ -6,6 +6,7 @@ import type { ComponentPlugin } from '../../plugins/ComponentPlugin';
 import type { ComponentDef } from '../../engine/types';
 import { Tooltip, TooltipLabel, TooltipText, TooltipStat } from './Tooltip';
 import { COMPONENT_MILESTONE_CONFIG } from '../../config/game.config';
+import { formatNumber } from '../../utils/format';
 
 type PurchaseMode = 1 | 10 | 100 | 'max';
 
@@ -19,13 +20,6 @@ const COLOR_MAP = {
   amber: { text: '#ffaa00', border: '#3d2800', bg: '#1a1000', glow: 'rgba(255,170,0,0.3)' },
   pink: { text: '#ff0080', border: '#3d0024', bg: '#1a0010', glow: 'rgba(255,0,128,0.3)' },
 };
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return Math.floor(n).toString();
-}
 
 const ComponentCard: React.FC<{
   comp: ComponentDef;
@@ -41,8 +35,28 @@ const ComponentCard: React.FC<{
   const [levelUpQty, setLevelUpQty] = useState(0);
   const [showLevelUpText, setShowLevelUpText] = useState(false);
 
-  // Calculate next milestone
-  const nextMilestone = COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level);
+  // Calculate next milestone - memoized to update when level changes
+  const nextMilestone = useMemo(() => 
+    COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level),
+    [comp.level]
+  );
+
+  // Memoize tooltip content so it updates when comp data changes
+  const tooltipContent = useMemo(() => (
+    <>
+      <TooltipLabel label={comp.name} color={colors.text} />
+      <TooltipText>{comp.description}</TooltipText>
+      <TooltipStat label="Level" value={`${comp.level}`} color={colors.text} />
+      <TooltipStat label="DPS/lvl" value={`${formatNumber(comp.baseDps)}`} color="#5a7a8a" />
+      <TooltipStat label="Total DPS" value={`${formatNumber(dps)}/s`} color={colors.text} />
+      {milestoneBonus > 0 && (
+        <TooltipStat label="Milestone Bonus" value={`+${Math.round(milestoneBonus * 100)}%`} color="#ffaa00" />
+      )}
+      {nextMilestone && (
+        <TooltipStat label="Next Bonus" value={`Lv${nextMilestone.level} (+${Math.round(nextMilestone.bonus * 100)}%)`} color="#3a5a6a" />
+      )}
+    </>
+  ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone]);
 
   const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
   const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
@@ -103,21 +117,7 @@ const ComponentCard: React.FC<{
       <div className="flex justify-between items-start mb-1">
         <Tooltip
           position="right"
-          content={
-            <>
-              <TooltipLabel label={comp.name} color={colors.text} />
-              <TooltipText>{comp.description}</TooltipText>
-              <TooltipStat label="Level" value={`${comp.level}`} color={colors.text} />
-              <TooltipStat label="DPS/lvl" value={`${formatNumber(comp.baseDps ?? dps / Math.max(1, comp.level))}`} color="#5a7a8a" />
-              <TooltipStat label="Total DPS" value={`${formatNumber(dps)}/s`} color={colors.text} />
-              {milestoneBonus > 0 && (
-                <TooltipStat label="Milestone Bonus" value={`+${Math.round(milestoneBonus * 100)}%`} color="#ffaa00" />
-              )}
-              {nextMilestone && (
-                <TooltipStat label="Next Bonus" value={`Lv${nextMilestone.level} (+${Math.round(nextMilestone.bonus * 100)}%)`} color="#3a5a6a" />
-              )}
-            </>
-          }
+          content={tooltipContent}
         >
           <div>
             <div className="font-pixel" style={{ color: colors.text, fontSize: '8px', marginBottom: 3, cursor: 'help' }}>

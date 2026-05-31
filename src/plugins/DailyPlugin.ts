@@ -9,6 +9,7 @@ export interface DailyChallenge {
   target_value: number;
   current_value: number;
   completed: boolean;
+  reward_claimed: boolean;
   reward_gold: number;
   challenge_date: string;
 }
@@ -67,6 +68,7 @@ export class DailyPlugin implements IPlugin {
       { name: 'current_value', type: 'integer', nullable: false, default: '0' },
       { name: 'completed', type: 'boolean', nullable: false, default: 'false' },
       { name: 'reward_gold', type: 'integer', nullable: false, default: '0' },
+      { name: 'reward_claimed', type: 'boolean', nullable: false, default: 'false' },
       { name: 'challenge_date', type: 'date', nullable: false },
       { name: 'created_at', type: 'timestamptz', nullable: false, default: 'now()' },
     ],
@@ -276,6 +278,7 @@ export class DailyPlugin implements IPlugin {
         target_value: target,
         current_value: 0,
         completed: false,
+        reward_claimed: false,
         reward_gold: reward,
         challenge_date: date,
       };
@@ -308,8 +311,9 @@ export class DailyPlugin implements IPlugin {
           target_value: target,
           current_value: 0,
           completed: false,
+          reward_claimed: false,
           reward_gold: reward,
-        }, 'id, challenge_type, challenge_label, target_value, current_value, completed, reward_gold, challenge_date');
+        }, 'id, challenge_type, challenge_label, target_value, current_value, completed, reward_claimed, reward_gold, challenge_date');
 
         if (error) {
           console.log('[v0] DailyPlugin: DB insert failed, switching to local mode');
@@ -328,6 +332,7 @@ export class DailyPlugin implements IPlugin {
         target_value: target,
         current_value: 0,
         completed: false,
+        reward_claimed: false,
         reward_gold: reward,
         challenge_date: date,
       });
@@ -341,13 +346,16 @@ export class DailyPlugin implements IPlugin {
         c.current_value = Math.min(c.current_value + amount, c.target_value);
         if (c.current_value >= c.target_value) {
           c.completed = true;
-          const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
-          this.engine.emit('daily_completed', { challenge: c });
-          // Daily ops reward diamonds only - no gold
-          this.engine.updateState({
-            diamonds: this.engine.state.diamonds + diamonds,
-          });
-          this.engine.emit('diamonds_earned', { amount: diamonds, source: 'daily' });
+          // Only grant diamonds if reward hasn't been claimed yet
+          if (!c.reward_claimed) {
+            c.reward_claimed = true;
+            const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
+            this.engine.emit('daily_completed', { challenge: c });
+            this.engine.updateState({
+              diamonds: this.engine.state.diamonds + diamonds,
+            });
+            this.engine.emit('diamonds_earned', { amount: diamonds, source: 'daily' });
+          }
         }
         changed = true;
         void this.saveProgress(c);
@@ -363,13 +371,16 @@ export class DailyPlugin implements IPlugin {
         c.current_value = Math.min(value, c.target_value);
         if (c.current_value >= c.target_value) {
           c.completed = true;
-          const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
-          this.engine.emit('daily_completed', { challenge: c });
-          // Daily ops reward diamonds only - no gold
-          this.engine.updateState({
-            diamonds: this.engine.state.diamonds + diamonds,
-          });
-          this.engine.emit('diamonds_earned', { amount: diamonds, source: 'daily' });
+          // Only grant diamonds if reward hasn't been claimed yet
+          if (!c.reward_claimed) {
+            c.reward_claimed = true;
+            const diamonds = getDiamondReward(c.challenge_type, this.engine.state.highestStage);
+            this.engine.emit('daily_completed', { challenge: c });
+            this.engine.updateState({
+              diamonds: this.engine.state.diamonds + diamonds,
+            });
+            this.engine.emit('diamonds_earned', { amount: diamonds, source: 'daily' });
+          }
         }
         changed = true;
         void this.saveProgress(c);
@@ -386,6 +397,7 @@ export class DailyPlugin implements IPlugin {
       id: challenge.id,
       current_value: challenge.current_value,
       completed: challenge.completed,
+      reward_claimed: challenge.reward_claimed,
     }, 'id');
   }
 

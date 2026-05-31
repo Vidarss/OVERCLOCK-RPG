@@ -3,19 +3,13 @@ import { Wifi } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import { getTotalIdleDps } from '../../plugins/ComponentPlugin';
+import { formatNumber } from '../../utils/format';
 import type { AuthPlugin } from '../../plugins/AuthPlugin';
 import type { LeaderboardPlugin } from '../../plugins/LeaderboardPlugin';
 
 interface CyberHUDProps {
   engine: GameEngine;
   playerHandle: string;
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return Math.floor(n).toString();
 }
 
 export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {

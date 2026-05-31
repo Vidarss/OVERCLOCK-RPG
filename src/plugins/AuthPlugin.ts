@@ -137,19 +137,45 @@ export class AuthPlugin implements IPlugin {
   ): Promise<{ error: string | null; needsConfirmation?: boolean }> {
     const sanitisedHandle = handle.toUpperCase().replace(/[^A-Z0-9_]/g, '').slice(0, 12);
 
+    // Check if handle is already taken
+    const { data: existingHandle } = await this.engine.storage.load<{ id: string }>(
+      'profiles',
+      { handle: sanitisedHandle },
+      'id',
+    );
+    if (existingHandle) {
+      return { error: 'Username already taken. Choose a different handle.' };
+    }
+
+    // Check if email is already used (in profiles table)
+    const { data: existingEmail } = await this.engine.storage.load<{ id: string }>(
+      'profiles',
+      { email: email.toLowerCase() },
+      'id',
+    );
+    if (existingEmail) {
+      return { error: 'Email already registered. Try logging in instead.' };
+    }
+
     // Register with Supabase auth using email (required by Supabase)
     const { user, error, needsConfirmation } = await auth.signUp(
       email,
       password,
       AUTH_CONFIG.emailConfirmationEnabled,
     );
-    if (error) return { error };
+    if (error) {
+      // Supabase also returns "User already registered" for duplicate emails
+      if (error.toLowerCase().includes('already registered')) {
+        return { error: 'Email already registered. Try logging in instead.' };
+      }
+      return { error };
+    }
     if (!user) return { error: 'Registration failed.' };
 
     // Create profile with the chosen handle and recovery email
     await this.engine.storage.save(
       'profiles',
-      { id: user.id, handle: sanitisedHandle, email, avatar_index: 0 },
+      { id: user.id, handle: sanitisedHandle, email: email.toLowerCase(), avatar_index: 0 },
       'id',
     );
 

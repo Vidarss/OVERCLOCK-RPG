@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { GameEngine } from '../../engine/Engine';
 import type { DamageNumberEvent } from '../../engine/types';
 import { useGameState } from '../../hooks/useGameState';
+import { formatNumber } from '../../utils/format';
 import { EnemySprite } from './EnemySprite';
 import { DamageNumber } from './DamageNumber';
 import { BossTimer } from './BossTimer';
@@ -21,13 +22,6 @@ interface Ripple {
   x: number;
   y: number;
   color: string;
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return Math.floor(n).toString();
 }
 
 export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {

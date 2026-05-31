@@ -5,6 +5,7 @@ import type { HeroPlugin } from '../../plugins/HeroPlugin';
 import { useGameState } from '../../hooks/useGameState';
 import { Tooltip, TooltipLabel, TooltipText, TooltipStat } from './Tooltip';
 import { HERO_CONFIG, SKILL_UPGRADE_CONFIG } from '../../config/game.config';
+import { formatNumber } from '../../utils/format';
 
 interface UpgradeScreenProps {
   engine: GameEngine;
@@ -13,15 +14,6 @@ interface UpgradeScreenProps {
 
 type TabType = 'hero' | 'skills';
 type BulkAmount = 1 | 10 | 25 | 100 | 'max';
-
-function formatNumber(n: number): string {
-  if (!isFinite(n)) return 'MAX';
-  if (n >= 1_000_000_000_000) return `${(n / 1_000_000_000_000).toFixed(2)}T`;
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return Math.floor(n).toString();
-}
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   'hero_tap_power': <Zap size={18} />,

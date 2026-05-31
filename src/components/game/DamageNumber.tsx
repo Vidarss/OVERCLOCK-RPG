@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { DAMAGE_COLORS } from '../../theme';
 import type { DamageNumberEvent } from '../../engine/types';
+import { formatNumber } from '../../utils/format';
 
 interface DamageNumberProps {
   event: DamageNumberEvent;
   onDone: (id: string) => void;
-}
-
-function formatDamage(value: number): string {
-  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (value >= 1_000) return `${(value / 1_000).toFixed(1)}K`;
-  return value.toString();
 }
 
 export const DamageNumber: React.FC<DamageNumberProps> = ({ event, onDone }) => {
@@ -44,7 +39,7 @@ export const DamageNumber: React.FC<DamageNumberProps> = ({ event, onDone }) => 
       }}
     >
       {isCrit && <span style={{ fontSize: '7px', display: 'block', color: '#ffaa00' }}>CRIT!</span>}
-      {event.type === 'idle' ? '' : ''}{formatDamage(event.value)}
+      {event.type === 'idle' ? '' : ''}{formatNumber(event.value)}
     </div>
   );
 };

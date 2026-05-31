@@ -4,16 +4,11 @@ import type { GameEngine } from '../../engine/Engine';
 import type { DailyPlugin, DailyChallenge } from '../../plugins/DailyPlugin';
 import { getDiamondReward } from '../../plugins/DailyPlugin';
 import { useGameState } from '../../hooks/useGameState';
+import { formatNumber } from '../../utils/format';
 
 interface DailiesScreenProps {
   engine: GameEngine;
   onClose: () => void;
-}
-
-function formatNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return n.toString();
 }
 
 export const DailiesScreen: React.FC<DailiesScreenProps> = ({ engine, onClose }) => {

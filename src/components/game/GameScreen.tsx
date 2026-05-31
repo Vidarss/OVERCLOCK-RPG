@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
+import { formatNumber } from '../../utils/format';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
@@ -156,8 +157,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   useEffect(() => {
     const unsub = engine.on<{ goldEarned: number }>('offline_progress', event => {
       const g = event.payload.goldEarned;
-      const formatted = g >= 1000 ? `${(g / 1000).toFixed(1)}K` : g.toString();
-      setOfflineMsg(`OFFLINE INCOME: +${formatted} GOLD`);
+      setOfflineMsg(`OFFLINE INCOME: +${formatNumber(g)} GOLD`);
       setTimeout(() => setOfflineMsg(null), 5000);
     });
     return unsub;

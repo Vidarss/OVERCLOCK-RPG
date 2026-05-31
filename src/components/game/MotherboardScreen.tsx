@@ -9,6 +9,7 @@ import type { MoboPlugin } from '../../plugins/MoboPlugin';
 import { MOBO_TIERS } from '../../plugins/MoboPlugin';
 import { SET_CATALOG } from '../../plugins/SetPlugin';
 import type { SetPlugin } from '../../plugins/SetPlugin';
+import { formatNumber } from '../../utils/format';
 
 interface MotherboardScreenProps {
   engine: GameEngine;
@@ -77,12 +78,6 @@ function getStatLabel(type: ModifierDef['type']): string {
     crit_multiplier: 'CRIT×',
   };
   return m[type];
-}
-
-function formatGold(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-  return n.toString();
 }
 
 // ── PCB Trace overlay ──────────────────────────────────────────────────────

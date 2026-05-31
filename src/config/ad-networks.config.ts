@@ -24,7 +24,7 @@ export const AD_NETWORKS_CONFIG = {
   // Google AdSense - Web monetization
   adsense: {
     type: 'adsense' as const,
-    enabled: false, // Set to true after adding your ad slot ID
+    enabled: true, // Enabled - will show real AdSense ads on web
     publisherId: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-9196447836572769',
     adSlotId: import.meta.env.VITE_ADSENSE_AD_SLOT_ID || '',
   },

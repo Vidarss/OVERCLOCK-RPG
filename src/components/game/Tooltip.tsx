@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 type TooltipPosition = 'top' | 'bottom' | 'left' | 'right';
 
@@ -18,12 +19,19 @@ export const Tooltip: React.FC<TooltipProps> = ({
   disabled = false,
 }) => {
   const [visible, setVisible] = useState(false);
+  const [coords, setCoords] = useState({ x: 0, y: 0 });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const show = useCallback(() => {
     if (disabled) return;
-    timerRef.current = setTimeout(() => setVisible(true), delay);
+    timerRef.current = setTimeout(() => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setCoords({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+      }
+      setVisible(true);
+    }, delay);
   }, [delay, disabled]);
 
   const hide = useCallback(() => {
@@ -38,11 +46,18 @@ export const Tooltip: React.FC<TooltipProps> = ({
     };
   }, []);
 
-  const positionStyles: Record<TooltipPosition, React.CSSProperties> = {
-    top: { bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: 8 },
-    bottom: { top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: 8 },
-    left: { right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: 8 },
-    right: { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 8 },
+  const getTooltipStyle = (): React.CSSProperties => {
+    const offset = 12;
+    switch (position) {
+      case 'top':
+        return { left: coords.x, top: coords.y - offset, transform: 'translate(-50%, -100%)' };
+      case 'bottom':
+        return { left: coords.x, top: coords.y + offset, transform: 'translate(-50%, 0)' };
+      case 'left':
+        return { left: coords.x - offset, top: coords.y, transform: 'translate(-100%, -50%)' };
+      case 'right':
+        return { left: coords.x + offset, top: coords.y, transform: 'translate(0, -50%)' };
+    }
   };
 
   const arrowStyles: Record<TooltipPosition, React.CSSProperties> = {
@@ -53,23 +68,25 @@ export const Tooltip: React.FC<TooltipProps> = ({
   };
 
   return (
-    <div
-      ref={containerRef}
-      onMouseEnter={show}
-      onMouseLeave={hide}
-      onFocus={show}
-      onBlur={hide}
-      style={{ position: 'relative', display: 'inline-flex', zIndex: 1001 }}
-    >
-      {children}
+    <>
+      <div
+        ref={containerRef}
+        onMouseEnter={show}
+        onMouseLeave={hide}
+        onFocus={show}
+        onBlur={hide}
+        style={{ position: 'relative', display: 'inline-flex' }}
+      >
+        {children}
+      </div>
 
-      {visible && (
+      {visible && createPortal(
         <div
           style={{
-            position: 'absolute',
-            zIndex: 10000,
+            position: 'fixed',
+            zIndex: 99999,
             pointerEvents: 'none',
-            ...positionStyles[position],
+            ...getTooltipStyle(),
           }}
         >
           <div
@@ -101,9 +118,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
               ...arrowStyles[position],
             }}
           />
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   );
 };
 

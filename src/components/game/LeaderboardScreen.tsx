@@ -2,17 +2,11 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { X, Trophy, Wifi } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { LeaderboardPlugin, LeaderboardEntry } from '../../plugins/LeaderboardPlugin';
+import { formatNumber } from '../../utils/format';
 
 interface LeaderboardScreenProps {
   engine: GameEngine;
   onClose: () => void;
-}
-
-function formatDamage(n: number): string {
-  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)}B`;
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
-  return Math.floor(n).toString();
 }
 
 function getRankColor(rank: number): string {
@@ -208,7 +202,7 @@ export const LeaderboardScreen: React.FC<LeaderboardScreenProps> = ({ engine, on
                   width: 64, textAlign: 'right', fontFamily: 'var(--font-mono)', fontSize: '9px',
                   color: '#5a7a8a',
                 }}>
-                  {formatDamage(Number(entry.total_damage))}
+                  {formatNumber(Number(entry.total_damage))}
                 </div>
               </div>
             );
