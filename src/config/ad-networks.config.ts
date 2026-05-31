@@ -14,22 +14,19 @@ export const AD_NETWORKS_CONFIG = {
   // Google AdMob - Recommended for mobile (iOS/Android) via Capacitor
   admob: {
     type: 'admob' as const,
-    enabled: true, // Set to true after getting your Ad Unit IDs
-    appId: 'ca-app-pub-9196447836572769~2813228142', // Your AdMob App ID
-    rewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372', // Your Rewarded Ad Unit ID
-    // iOS Ad Unit IDs (if different from Android) - use same as default
-    iosRewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372',
-    // Android Ad Unit IDs - use same as default
-    androidRewardedAdUnitId: 'ca-app-pub-9196447836572769/7939916372',
+    enabled: true,
+    appId: import.meta.env.VITE_ADMOB_APP_ID || 'ca-app-pub-9196447836572769~2813228142',
+    rewardedAdUnitId: import.meta.env.VITE_ADMOB_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
+    iosRewardedAdUnitId: import.meta.env.VITE_ADMOB_IOS_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
+    androidRewardedAdUnitId: import.meta.env.VITE_ADMOB_ANDROID_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
   },
 
   // Google AdSense - Web monetization
   adsense: {
     type: 'adsense' as const,
-    enabled: false, // Set to true after adding your ad slot ID below
-    publisherId: 'ca-pub-9196447836572769', // Your AdSense Publisher ID (same as AdMob)
-    // Create ad units in AdSense and add your 16-digit ad slot ID here:
-    adSlotId: '', // e.g. '1234567890123456'
+    enabled: false, // Set to true after adding your ad slot ID
+    publisherId: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-9196447836572769',
+    adSlotId: import.meta.env.VITE_ADSENSE_AD_SLOT_ID || '',
   },
 
   // ─────────────────────────────────────────────────
