@@ -9,8 +9,9 @@ interface LoginScreenProps {
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
-  'Invalid login credentials': 'INVALID CREDENTIALS. CHECK YOUR EMAIL AND KEY.',
+  'Invalid login credentials': 'INVALID CREDENTIALS. CHECK YOUR USERNAME/EMAIL AND PASSWORD.',
   'Email not confirmed': 'CONFIRM YOUR EMAIL BEFORE LOGGING IN.',
+  'User not found. Check your username.': 'USER NOT FOUND. CHECK YOUR USERNAME.',
 };
 
 function friendlyError(raw: string): string {
