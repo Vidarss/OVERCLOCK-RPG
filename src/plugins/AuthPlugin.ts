@@ -164,9 +164,25 @@ export class AuthPlugin implements IPlugin {
   }
 
   /**
-   * Sign in with email + password.
+   * Sign in with email/username + password.
+   * If input looks like an email, use it directly.
+   * If input looks like a username/handle, look up the email from profiles first.
    */
-  async signIn(email: string, password: string): Promise<{ error: string | null }> {
+  async signIn(emailOrHandle: string, password: string): Promise<{ error: string | null }> {
+    let email = emailOrHandle;
+
+    // If input doesn't contain @, assume it's a handle and look up the email
+    if (!emailOrHandle.includes('@')) {
+      const { data: profile, error: lookupError } = await this.engine.storage.load<{
+        email: string;
+      }>('profiles', { handle: emailOrHandle.toUpperCase() }, 'email');
+
+      if (lookupError || !profile?.email) {
+        return { error: 'User not found. Check your username.' };
+      }
+      email = profile.email;
+    }
+
     const { error } = await auth.signIn(email, password);
     if (error) return { error };
     return { error: null };
