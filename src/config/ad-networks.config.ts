@@ -1,5 +1,6 @@
 // =====================================================================
 // AD_NETWORKS_CONFIG - Ad network setup and configuration
+// Easy to adjust for balancing ad frequency and behavior
 // =====================================================================
 
 export interface AdNetworkConfig {
@@ -28,6 +29,30 @@ export const AD_NETWORKS_CONFIG = {
     enabled: false, // Set to true to enable web ad fallback
     // Use a service like Admob for web, AdSense, or mediation networks
     adNetworkId: process.env.REACT_APP_WEB_AD_NETWORK_ID || '',
+  },
+
+  // ─────────────────────────────────────────────────
+  // Balancing: Web fallback ad simulation settings
+  // ─────────────────────────────────────────────────
+  webFallback: {
+    /** Minimum duration of simulated ad (ms) */
+    minDurationMs: 5000,
+    /** Maximum duration of simulated ad (ms) */
+    maxDurationMs: 8000,
+    /** Success rate of simulated ads (0-1) */
+    successRate: 0.95,
+  },
+
+  // ─────────────────────────────────────────────────
+  // Balancing: Global ad limits and cooldowns
+  // ─────────────────────────────────────────────────
+  limits: {
+    /** Maximum rewarded ads per hour (0 = unlimited) */
+    maxAdsPerHour: 0,
+    /** Cooldown between ad views (ms) - prevents spam clicking */
+    adCooldownMs: 10_000,
+    /** Daily ad view limit (0 = unlimited) */
+    dailyLimit: 0,
   },
 } as const;
 
