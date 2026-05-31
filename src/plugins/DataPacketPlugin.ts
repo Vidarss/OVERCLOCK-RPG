@@ -4,6 +4,7 @@
 
 import type { IPlugin, IEngine, GameState } from '../engine/types';
 import { DATAPACKET_CONFIG, type DataPacketDef, type DataPacketType } from '../config/datapacket.config';
+import { AdService } from '../services/AdService';
 
 export interface ActiveDataPacket {
   id: string;
@@ -29,6 +30,14 @@ export class DataPacketPlugin implements IPlugin {
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
+    
+    // Initialize ad service (safe to call - no-op if not configured)
+    try {
+      await AdService.initialize();
+    } catch (error) {
+      console.warn('[DataPacketPlugin] Ad service initialization failed:', error);
+    }
+    
     this.scheduleNextSpawn();
   }
 
@@ -96,7 +105,7 @@ export class DataPacketPlugin implements IPlugin {
 
   /**
    * Start watching an ad for encrypted packet
-   * Returns a promise that resolves when ad completes (simulated for now)
+   * Uses real ad networks (AdMob for mobile, web fallback for browser)
    */
   async collectEncryptedPacket(): Promise<boolean> {
     if (!this.activePacket || !this.activePacket.def.requiresAd || this.isProcessing) {
@@ -107,10 +116,10 @@ export class DataPacketPlugin implements IPlugin {
     const packet = this.activePacket;
 
     try {
-      // Simulate ad watching (replace with actual ad SDK integration)
-      const adCompleted = await this.simulateAdWatch();
+      // Show real ad via AdService
+      const adResult = await AdService.showRewardedAd();
 
-      if (adCompleted && this.activePacket?.id === packet.id) {
+      if (adResult.success && this.activePacket?.id === packet.id) {
         const reward = packet.goldReward;
 
         // Add gold
@@ -131,8 +140,8 @@ export class DataPacketPlugin implements IPlugin {
         this.scheduleNextSpawn();
         return true;
       }
-    } catch {
-      // Ad failed or was cancelled
+    } catch (error) {
+      console.error('[DataPacketPlugin] Ad error:', error);
     } finally {
       this.isProcessing = false;
     }
@@ -224,18 +233,6 @@ export class DataPacketPlugin implements IPlugin {
     const maxInterval = DATAPACKET_CONFIG.maxSpawnInterval;
     const delay = minInterval + Math.random() * (maxInterval - minInterval);
     this.nextSpawnTime = Date.now() + delay;
-  }
-
-  /**
-   * Simulate watching an ad (replace with actual ad SDK)
-   * Returns true if "ad" completed successfully
-   */
-  private async simulateAdWatch(): Promise<boolean> {
-    // Simulate a 2-3 second "ad" delay
-    const duration = 2000 + Math.random() * 1000;
-    await new Promise(resolve => setTimeout(resolve, duration));
-    // 95% success rate for simulation
-    return Math.random() < 0.95;
   }
 
   cleanup(): void {
