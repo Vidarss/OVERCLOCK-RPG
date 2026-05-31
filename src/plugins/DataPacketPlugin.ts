@@ -38,7 +38,9 @@ export class DataPacketPlugin implements IPlugin {
       console.warn('[DataPacketPlugin] Ad service initialization failed:', error);
     }
     
-    this.scheduleNextSpawn();
+    // Spawn first packet immediately instead of waiting for interval
+    console.log('[v0] DataPacketPlugin initialized, spawning first packet');
+    this.nextSpawnTime = Date.now(); // Set to now so first packet spawns on first tick
   }
 
   onTick(delta: number, state: GameState): void {
