@@ -178,8 +178,7 @@ export class DataPacketPlugin implements IPlugin {
 
   private spawnPacket(currentStage: number): void {
     const packetDef = this.selectRandomPacketType();
-    const baseGold = DATAPACKET_CONFIG.formulas.calculateBaseGold(currentStage);
-    const goldReward = Math.floor(baseGold * packetDef.rewardMultiplier);
+    const goldReward = DATAPACKET_CONFIG.formulas.calculateGold(currentStage, packetDef.enemyEquivalent);
 
     const now = Date.now();
     this.activePacket = {

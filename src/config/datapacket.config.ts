@@ -3,6 +3,9 @@
 // "Intercepted transmissions" that grant gold rewards
 // =====================================================================
 
+import { getEnemyHp } from '../plugins/EnemyPlugin';
+import { ENEMY_CONFIG } from './game.config';
+
 export type DataPacketType = 'basic' | 'encrypted';
 
 export interface DataPacketDef {
@@ -13,8 +16,8 @@ export interface DataPacketDef {
   icon: string;
   /** Whether this packet requires watching an ad */
   requiresAd: boolean;
-  /** Gold reward multiplier (multiplied by stage-based gold) */
-  rewardMultiplier: number;
+  /** Number of enemies worth of gold to reward */
+  enemyEquivalent: number;
   /** Spawn weight (higher = more likely) */
   spawnWeight: number;
 }
@@ -36,9 +39,16 @@ export const DATAPACKET_CONFIG = {
   // Reward formulas
   // ─────────────────────────────────────────────────
   formulas: {
-    /** Base gold calculation based on current stage */
-    calculateBaseGold: (stage: number): number => {
-      return Math.floor(50 + stage * 10 + Math.pow(stage, 1.3));
+    /** 
+     * Calculate gold based on current stage enemy HP
+     * This ensures rewards scale properly with progression
+     * @param stage - Current game stage
+     * @param enemyEquivalent - How many enemies worth of gold to give
+     */
+    calculateGold: (stage: number, enemyEquivalent: number): number => {
+      const enemyHp = getEnemyHp(stage);
+      const goldPerEnemy = enemyHp * ENEMY_CONFIG.normalGoldMultiplier;
+      return Math.floor(goldPerEnemy * enemyEquivalent);
     },
   },
 
@@ -53,7 +63,8 @@ export const DATAPACKET_CONFIG = {
       color: '#00f5ff',
       icon: '📦',
       requiresAd: false,
-      rewardMultiplier: 1.0,
+      /** Basic intercept = worth 3 enemies (small boost) */
+      enemyEquivalent: 3,
       spawnWeight: 70,
     },
     {
@@ -63,7 +74,8 @@ export const DATAPACKET_CONFIG = {
       color: '#ffaa00',
       icon: '🔐',
       requiresAd: true,
-      rewardMultiplier: 5.0,
+      /** Ad reward = worth 15 enemies (enough to progress ~1-2 stages) */
+      enemyEquivalent: 15,
       spawnWeight: 30,
     },
   ] as DataPacketDef[],
