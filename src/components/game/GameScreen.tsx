@@ -17,6 +17,7 @@ import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
+import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
 import { MODULES_CONFIG } from '../../config/modules.config';
@@ -177,6 +178,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
       <AchievementToast engine={engine} />
+      <DataPacketPopup engine={engine} />
     </>
   );
 

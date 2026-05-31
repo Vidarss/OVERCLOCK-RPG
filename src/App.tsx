@@ -25,6 +25,7 @@ import { SetPlugin } from './plugins/SetPlugin';
 import { ClanPlugin } from './plugins/ClanPlugin';
 import { SkillPointPlugin } from './plugins/SkillPointPlugin';
 import { HeroPlugin } from './plugins/HeroPlugin';
+import { DataPacketPlugin } from './plugins/DataPacketPlugin';
 
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegisterScreen } from './components/auth/RegisterScreen';
@@ -62,6 +63,7 @@ function createEngine(): GameEngine {
   engine.register(new ClanPlugin());
   engine.register(new SkillPointPlugin());
   engine.register(new HeroPlugin());
+  engine.register(new DataPacketPlugin());
 
   return engine;
 }
