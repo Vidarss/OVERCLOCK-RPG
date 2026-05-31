@@ -185,7 +185,7 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
             src={customSprite.src}
             alt={enemy.name}
             style={{
-              width: `${150 * scale}px`,
+              width: `${200 * scale}px`,
               height: 'auto',
               imageRendering: 'pixelated',
               pointerEvents: 'none',
