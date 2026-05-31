@@ -217,107 +217,114 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
               <div style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginBottom: 4 }}>
                 Upgrade your tap damage, crit chance, and crit multiplier.
               </div>
-              {heroUpgradesList.map(upgrade => (
-                <div
-                  key={upgrade.id}
-                  style={{
-                    background: '#080810',
-                    border: `1px solid ${upgrade.canAfford ? upgrade.color + '44' : '#1a1a2a'}`,
-                    padding: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  {/* Icon */}
+              {heroUpgradesList.map(upgrade => {
+                // Calculate actual cost for selected bulk amount
+                const count = getBulkCount(upgrade.id);
+                const actualCost = count > 1 ? heroPlugin?.getBulkCost(upgrade.id, count) ?? Infinity : upgrade.cost;
+                const canAffordBulk = gold >= actualCost && upgrade.level < upgrade.maxLevel;
+                
+                return (
                   <div
+                    key={upgrade.id}
                     style={{
-                      width: 40,
-                      height: 40,
-                      background: `${upgrade.color}11`,
-                      border: `1px solid ${upgrade.color}33`,
+                      background: '#080810',
+                      border: `1px solid ${canAffordBulk ? upgrade.color + '44' : '#1a1a2a'}`,
+                      padding: 12,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: upgrade.color,
-                      flexShrink: 0,
+                      gap: 12,
                     }}
                   >
-                    {ICON_MAP[upgrade.id] ?? <ArrowUp size={18} />}
-                  </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <Tooltip
-                      position="right"
-                      content={
-                        <>
-                          <TooltipLabel label={upgrade.name} color={upgrade.color} />
-                          <TooltipText>{upgrade.description}</TooltipText>
-                          <TooltipStat
-                            label="Effect"
-                            value={
-                              upgrade.modifierType === 'tap_damage'
-                                ? `+${upgrade.valuePerLevel} per level`
-                                : upgrade.modifierType === 'crit_chance'
-                                ? `+${(upgrade.valuePerLevel * 100).toFixed(0)}% per level`
-                                : `+${(upgrade.valuePerLevel * 100).toFixed(0)}% per level`
-                            }
-                            color={upgrade.color}
-                          />
-                        </>
-                      }
+                    {/* Icon */}
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        background: `${upgrade.color}11`,
+                        border: `1px solid ${upgrade.color}33`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: upgrade.color,
+                        flexShrink: 0,
+                      }}
                     >
-                      <div className="font-pixel" style={{ color: upgrade.color, fontSize: '9px', cursor: 'help' }}>
-                        {upgrade.name}
-                      </div>
-                    </Tooltip>
-                    <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginTop: 2 }}>
-                      {upgrade.description}
+                      {ICON_MAP[upgrade.id] ?? <ArrowUp size={18} />}
                     </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                      <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                        LVL <span style={{ color: upgrade.color }}>{upgrade.level}</span>
-                        {upgrade.maxLevel < 9999 && <span style={{ color: '#2a3a4a' }}>/{upgrade.maxLevel}</span>}
-                      </span>
-                      {upgrade.modifierType === 'tap_damage' && (
-                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                          +<span style={{ color: upgrade.color }}>{upgrade.level * upgrade.valuePerLevel}</span> DMG
-                        </span>
-                      )}
-                      {upgrade.modifierType === 'crit_chance' && (
-                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                          +<span style={{ color: upgrade.color }}>{(upgrade.level * upgrade.valuePerLevel * 100).toFixed(0)}%</span> CRIT
-                        </span>
-                      )}
-                      {upgrade.modifierType === 'crit_multiplier' && (
-                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                          +<span style={{ color: upgrade.color }}>{(upgrade.level * upgrade.valuePerLevel * 100).toFixed(0)}%</span> CRIT DMG
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Buy Button */}
-                  <button
-                    onClick={() => handleHeroUpgrade(upgrade.id)}
-                    disabled={!upgrade.canAfford}
-                    className="font-pixel"
-                    style={{
-                      background: upgrade.canAfford ? `${upgrade.color}11` : '#0a0a0f',
-                      border: `1px solid ${upgrade.canAfford ? upgrade.color : '#1a2a3a'}`,
-                      color: upgrade.canAfford ? upgrade.color : '#2a3a4a',
-                      padding: '8px 12px',
-                      fontSize: '8px',
-                      cursor: upgrade.canAfford ? 'pointer' : 'not-allowed',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {upgrade.level >= upgrade.maxLevel ? 'MAX' : `◆${formatNumber(upgrade.cost)}`}
-                  </button>
-                </div>
-              ))}
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <Tooltip
+                        position="right"
+                        content={
+                          <>
+                            <TooltipLabel label={upgrade.name} color={upgrade.color} />
+                            <TooltipText>{upgrade.description}</TooltipText>
+                            <TooltipStat
+                              label="Effect"
+                              value={
+                                upgrade.modifierType === 'tap_damage'
+                                  ? `+${upgrade.valuePerLevel} per level`
+                                  : upgrade.modifierType === 'crit_chance'
+                                  ? `+${(upgrade.valuePerLevel * 100).toFixed(0)}% per level`
+                                  : `+${(upgrade.valuePerLevel * 100).toFixed(0)}% per level`
+                              }
+                              color={upgrade.color}
+                            />
+                          </>
+                        }
+                      >
+                        <div className="font-pixel" style={{ color: upgrade.color, fontSize: '9px', cursor: 'help' }}>
+                          {upgrade.name}
+                        </div>
+                      </Tooltip>
+                      <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginTop: 2 }}>
+                        {upgrade.description}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                          LVL <span style={{ color: upgrade.color }}>{upgrade.level}</span>
+                          {upgrade.maxLevel < 9999 && <span style={{ color: '#2a3a4a' }}>/{upgrade.maxLevel}</span>}
+                        </span>
+                        {upgrade.modifierType === 'tap_damage' && (
+                          <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                            +<span style={{ color: upgrade.color }}>{upgrade.level * upgrade.valuePerLevel}</span> DMG
+                          </span>
+                        )}
+                        {upgrade.modifierType === 'crit_chance' && (
+                          <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                            +<span style={{ color: upgrade.color }}>{(upgrade.level * upgrade.valuePerLevel * 100).toFixed(0)}%</span> CRIT
+                          </span>
+                        )}
+                        {upgrade.modifierType === 'crit_multiplier' && (
+                          <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                            +<span style={{ color: upgrade.color }}>{(upgrade.level * upgrade.valuePerLevel * 100).toFixed(0)}%</span> CRIT DMG
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Buy Button */}
+                    <button
+                      onClick={() => handleHeroUpgrade(upgrade.id)}
+                      disabled={!canAffordBulk}
+                      className="font-pixel"
+                      style={{
+                        background: canAffordBulk ? `${upgrade.color}11` : '#0a0a0f',
+                        border: `1px solid ${canAffordBulk ? upgrade.color : '#1a2a3a'}`,
+                        color: canAffordBulk ? upgrade.color : '#2a3a4a',
+                        padding: '8px 12px',
+                        fontSize: '8px',
+                        cursor: canAffordBulk ? 'pointer' : 'not-allowed',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {upgrade.level >= upgrade.maxLevel ? 'MAX' : `◆${formatNumber(actualCost)}`}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -326,76 +333,83 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
               <div style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginBottom: 4 }}>
                 Upgrade your skills to increase their effectiveness.
               </div>
-              {skillUpgradesList.map(upgrade => (
-                <div
-                  key={upgrade.skillId}
-                  style={{
-                    background: '#080810',
-                    border: `1px solid ${upgrade.canAfford ? upgrade.color + '44' : '#1a1a2a'}`,
-                    padding: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                  }}
-                >
-                  {/* Icon placeholder */}
+              {skillUpgradesList.map(upgrade => {
+                // Calculate actual cost for selected bulk amount
+                const count = bulkAmount === 'max' ? 50 : bulkAmount;
+                const actualCost = count > 1 ? heroPlugin?.getSkillBulkCost(upgrade.skillId, count) ?? Infinity : upgrade.cost;
+                const canAffordBulk = gold >= actualCost && upgrade.level < upgrade.maxLevel;
+                
+                return (
                   <div
+                    key={upgrade.skillId}
                     style={{
-                      width: 40,
-                      height: 40,
-                      background: `${upgrade.color}11`,
-                      border: `1px solid ${upgrade.color}33`,
+                      background: '#080810',
+                      border: `1px solid ${canAffordBulk ? upgrade.color + '44' : '#1a1a2a'}`,
+                      padding: 12,
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center',
-                      color: upgrade.color,
-                      flexShrink: 0,
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '14px',
+                      gap: 12,
                     }}
                   >
-                    {upgrade.skillId.charAt(0).toUpperCase()}
-                  </div>
+                    {/* Icon placeholder */}
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        background: `${upgrade.color}11`,
+                        border: `1px solid ${upgrade.color}33`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: upgrade.color,
+                        flexShrink: 0,
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '14px',
+                      }}
+                    >
+                      {upgrade.skillId.charAt(0).toUpperCase()}
+                    </div>
 
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="font-pixel" style={{ color: upgrade.color, fontSize: '9px' }}>
-                      {upgrade.name}
+                    {/* Info */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="font-pixel" style={{ color: upgrade.color, fontSize: '9px' }}>
+                        {upgrade.name}
+                      </div>
+                      <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginTop: 2 }}>
+                        {upgrade.description}
+                      </div>
+                      <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                          LVL <span style={{ color: upgrade.color }}>{upgrade.level}</span>
+                          <span style={{ color: '#2a3a4a' }}>/{upgrade.maxLevel}</span>
+                        </span>
+                        <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                          <span style={{ color: upgrade.color }}>{((upgrade.effectiveness - 1) * 100).toFixed(0)}%</span> BONUS
+                        </span>
+                      </div>
                     </div>
-                    <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginTop: 2 }}>
-                      {upgrade.description}
-                    </div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                      <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                        LVL <span style={{ color: upgrade.color }}>{upgrade.level}</span>
-                        <span style={{ color: '#2a3a4a' }}>/{upgrade.maxLevel}</span>
-                      </span>
-                      <span style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                        <span style={{ color: upgrade.color }}>{((upgrade.effectiveness - 1) * 100).toFixed(0)}%</span> BONUS
-                      </span>
-                    </div>
-                  </div>
 
-                  {/* Buy Button */}
-                  <button
-                    onClick={() => handleSkillUpgrade(upgrade.skillId)}
-                    disabled={!upgrade.canAfford}
-                    className="font-pixel"
-                    style={{
-                      background: upgrade.canAfford ? `${upgrade.color}11` : '#0a0a0f',
-                      border: `1px solid ${upgrade.canAfford ? upgrade.color : '#1a2a3a'}`,
-                      color: upgrade.canAfford ? upgrade.color : '#2a3a4a',
-                      padding: '8px 12px',
-                      fontSize: '8px',
-                      cursor: upgrade.canAfford ? 'pointer' : 'not-allowed',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {upgrade.level >= upgrade.maxLevel ? 'MAX' : `◆${formatNumber(upgrade.cost)}`}
-                  </button>
-                </div>
-              ))}
+                    {/* Buy Button */}
+                    <button
+                      onClick={() => handleSkillUpgrade(upgrade.skillId)}
+                      disabled={!canAffordBulk}
+                      className="font-pixel"
+                      style={{
+                        background: canAffordBulk ? `${upgrade.color}11` : '#0a0a0f',
+                        border: `1px solid ${canAffordBulk ? upgrade.color : '#1a2a3a'}`,
+                        color: canAffordBulk ? upgrade.color : '#2a3a4a',
+                        padding: '8px 12px',
+                        fontSize: '8px',
+                        cursor: canAffordBulk ? 'pointer' : 'not-allowed',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {upgrade.level >= upgrade.maxLevel ? 'MAX' : `◆${formatNumber(actualCost)}`}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
