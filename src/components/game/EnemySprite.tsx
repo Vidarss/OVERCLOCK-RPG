@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { Enemy } from '../../engine/types';
 import type { ZoneConfig } from './ZoneScene';
+import { getRandomEnemySprite, type EnemySpriteDef } from '../../config/assets.config';
+import { ENEMY_CONFIG } from '../../config/game.config';
 
 interface EnemySpriteProps {
   enemy: Enemy;
@@ -113,6 +115,88 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
   const pixelSize = enemy.isBoss ? 12 : enemy.isElite ? 11 : 10;
   const colors = getSpriteColors(enemy, zone);
   const phaseStyle = getPhaseOverlay(enemy.bossPhase);
+
+  // Try to get a custom sprite image for this enemy
+  const customSprite: EnemySpriteDef | null = useMemo(() => {
+    const enemyTier = Math.floor(((enemy.tier ?? 0) * ENEMY_CONFIG.stagesPerTier) / ENEMY_CONFIG.stagesPerTier);
+    return getRandomEnemySprite(enemyTier, enemy.isBoss, enemy.isElite ?? false);
+  }, [enemy.tier, enemy.isBoss, enemy.isElite]);
+
+  // If we have a custom sprite, render it as an image
+  if (customSprite) {
+    const scale = customSprite.scale ?? 1;
+    const offsetY = customSprite.offsetY ?? 0;
+    
+    return (
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        {/* Phase overlay aura */}
+        {phaseStyle && (
+          <div
+            style={{
+              position: 'absolute', inset: -8, borderRadius: 4, pointerEvents: 'none',
+              ...phaseStyle,
+              animation: 'pulse 1.5s ease-in-out infinite',
+            }}
+          />
+        )}
+
+        {/* Elite indicator */}
+        {enemy.isElite && (
+          <div
+            className="font-pixel"
+            style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              color: '#ffaa00', fontSize: '6px', letterSpacing: '1px', whiteSpace: 'nowrap',
+              textShadow: '0 0 4px #ffaa00',
+            }}
+          >
+            ELITE
+          </div>
+        )}
+
+        {/* Boss phase label */}
+        {enemy.bossPhase && enemy.bossPhase !== 'none' && (
+          <div
+            className="font-pixel"
+            style={{
+              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              color: enemy.bossPhase === 'shield' ? '#00c8ff' : enemy.bossPhase === 'enrage' ? '#ff3200' : '#39ff14',
+              fontSize: '6px', letterSpacing: '1px', whiteSpace: 'nowrap',
+              textShadow: `0 0 4px currentColor`,
+            }}
+          >
+            {enemy.bossPhase.toUpperCase()}
+          </div>
+        )}
+
+        <div
+          className={isDying ? 'animate-enemy-death' : isHit ? 'animate-enemy-hit' : ''}
+          style={{
+            filter: enemy.isBoss
+              ? `drop-shadow(0 0 16px ${colors.glow}) drop-shadow(0 0 32px ${colors.glow})`
+              : enemy.isElite
+              ? `drop-shadow(0 0 12px #ffaa0088) drop-shadow(0 0 24px #ffaa0066)`
+              : `drop-shadow(0 0 8px ${colors.glow})`,
+            animation: enemy.isBoss && !isHit && !isDying ? 'boss-pulse 2s steps(4) infinite' : undefined,
+            transform: `translateY(${offsetY}px)`,
+          }}
+        >
+          <img
+            src={customSprite.src}
+            alt={enemy.name}
+            style={{
+              width: `${150 * scale}px`,
+              height: 'auto',
+              imageRendering: 'pixelated',
+              pointerEvents: 'none',
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback to pixel-art rendering
 
   return (
     <div

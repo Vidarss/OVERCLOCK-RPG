@@ -91,6 +91,11 @@ export default function App() {
 
     // Only boot once — guard against StrictMode second invocation
     if (!engine.isBooted) {
+      // Preload custom assets in parallel with engine boot
+      import('./config/assets.config').then(({ preloadAllAssets }) => {
+        preloadAllAssets().catch(() => {}); // Silently ignore preload failures
+      });
+
       engine.boot().then(() => {
         // Auth session check is fire-and-forget, give it a moment to resolve
         setTimeout(() => {
