@@ -2,9 +2,25 @@
 // AdService - Centralized ad network handling
 // =====================================================================
 
-import { Capacitor } from '@capacitor/core';
-import { AdMob } from '@capacitor-community/admob';
 import { AD_NETWORKS_CONFIG, getActiveAdConfig } from '../config/ad-networks.config';
+
+// Optional Capacitor imports - may not be available in web
+let Capacitor: any = null;
+let AdMob: any = null;
+
+try {
+  const capacitorModule = require('@capacitor/core');
+  Capacitor = capacitorModule.Capacitor;
+} catch {
+  // Capacitor not available on web
+}
+
+try {
+  const admobModule = require('@capacitor-community/admob');
+  AdMob = admobModule.AdMob;
+} catch {
+  // AdMob not available on web
+}
 
 export interface AdResult {
   success: boolean;
@@ -27,7 +43,7 @@ class AdServiceImpl {
     }
 
     try {
-      if (config.type === 'admob' && Capacitor.isNativePlatform()) {
+      if (config.type === 'admob' && Capacitor?.isNativePlatform?.()) {
         await this.initializeAdMob(config);
         this.isInitialized = true;
       }
@@ -48,11 +64,13 @@ class AdServiceImpl {
       return { success: false, error: 'No ad network configured' };
     }
 
+    const isNative = Capacitor?.isNativePlatform?.();
+
     try {
-      if (config.type === 'admob' && Capacitor.isNativePlatform()) {
+      if (isNative && config.type === 'admob') {
         return await this.showAdMobRewardedAd(config);
-      } else if (!Capacitor.isNativePlatform()) {
-        // Web: Try AdSense first, then fallback to simulation
+      } else {
+        // Web platform - try AdSense or fallback
         if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.adSlotId) {
           return await this.showAdSenseAd();
         }
@@ -62,14 +80,13 @@ class AdServiceImpl {
       console.error('[AdService] Ad failed:', error);
       return { success: false, error: String(error) };
     }
-
-    return { success: false, error: 'Unknown error' };
   }
 
   /**
    * Initialize AdMob on native platform
    */
   private async initializeAdMob(config: any): Promise<void> {
+    if (!AdMob) return;
     await AdMob.initialize({
       requestIdFactory: () => Math.random().toString(),
     });
@@ -79,9 +96,13 @@ class AdServiceImpl {
    * Show AdMob rewarded ad
    */
   private async showAdMobRewardedAd(config: any): Promise<AdResult> {
+    if (!AdMob || !Capacitor) {
+      return { success: false, error: 'AdMob or Capacitor not available' };
+    }
+
     try {
       // Use platform-specific ad unit ID
-      const adUnitId = Capacitor.getPlatform() === 'ios'
+      const adUnitId = Capacitor.getPlatform?.() === 'ios'
         ? config.iosRewardedAdUnitId || config.rewardedAdUnitId
         : config.androidRewardedAdUnitId || config.rewardedAdUnitId;
 
