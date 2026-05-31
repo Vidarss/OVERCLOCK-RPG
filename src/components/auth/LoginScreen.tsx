@@ -38,47 +38,46 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
   };
 
   return (
-    <div className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker">
-      <div className="w-full max-w-md mx-4">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="font-pixel glow-cyan mb-2" style={{ color: '#00f5ff', fontSize: '20px', letterSpacing: '4px' }}>
-            OVERCLOCK
-          </div>
-          <div className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px', letterSpacing: '8px' }}>
-            .EXE
-          </div>
-          <div className="mt-4" style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-            MOTHERBOARD UPGRADE SIMULATOR v1.0
-          </div>
-        </div>
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{
+        backgroundImage: 'url(/overclock-character.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="w-full max-w-sm mx-4">
+        {/* Spacer to push form down below the character art */}
+        <div style={{ height: '38vh' }} />
 
-        {/* Terminal panel */}
-        <div className="pixel-border" style={{ background: '#0d0d1a', borderColor: '#1a2a3a', padding: '24px' }}>
-          <div className="font-pixel mb-6" style={{ color: '#00f5ff', fontSize: '8px', borderBottom: '1px solid #1a2a3a', paddingBottom: '12px' }}>
-            {'> AUTHENTICATION REQUIRED'}
-          </div>
-
+        {/* Transparent login form positioned in the empty area */}
+        <div
+          style={{
+            background: 'transparent',
+            padding: '0 8px',
+          }}
+        >
           <div onKeyDown={handleKeyDown}>
             <TerminalInput
-              label="EMAIL"
+              label="USERNAME"
               value={email}
               onChange={setEmail}
               type="email"
-              placeholder="user@domain.net"
+              placeholder="[ ENTER USERNAME ]"
             />
 
             <TerminalInput
-              label="SECURITY KEY"
+              label="PASSWORD"
               value={password}
               onChange={setPassword}
               type="password"
-              placeholder="••••••••"
+              placeholder="[ ENTER PASSWORD ]"
             />
           </div>
 
           {error && (
-            <div className="mb-4 font-pixel glow-red" style={{ color: '#ff2222', fontSize: '7px', lineHeight: '1.8' }}>
+            <div className="mb-4 font-pixel glow-red text-center" style={{ color: '#ff2222', fontSize: '8px', lineHeight: '1.8' }}>
               {'> ERROR: '}{error}
             </div>
           )}
@@ -86,39 +85,41 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full font-pixel mt-2 pixel-border-cyan"
+            className="w-full font-pixel mt-2"
             style={{
-              background: loading ? '#003d42' : '#0a1f22',
-              color: '#00f5ff',
+              background: loading ? 'rgba(0, 61, 66, 0.6)' : 'rgba(57, 255, 20, 0.15)',
+              color: '#39ff14',
               padding: '14px',
-              fontSize: '9px',
-              letterSpacing: '2px',
-              transition: 'background 0.1s steps(2)',
+              fontSize: '12px',
+              letterSpacing: '4px',
+              border: '2px solid rgba(57, 255, 20, 0.5)',
+              textShadow: '0 0 10px #39ff14',
+              boxShadow: '0 0 15px rgba(57, 255, 20, 0.3), inset 0 0 15px rgba(57, 255, 20, 0.1)',
+              transition: 'all 0.2s',
             }}
           >
-            {loading ? '> AUTHENTICATING...' : '> INITIALIZE SESSION'}
+            {loading ? 'AUTHENTICATING...' : 'LOGIN'}
           </button>
 
-          <div className="mt-4 flex justify-between" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
-            <button
-              onClick={onSwitchToRegister}
-              style={{ color: '#39ff14', background: 'none', border: 'none', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
-            >
-              [NEW USER]
-            </button>
+          <div className="mt-4 flex flex-col items-center gap-2" style={{ fontFamily: 'var(--font-mono)', fontSize: '11px' }}>
             <button
               onClick={onSwitchToReset}
-              style={{ color: '#5a6a7a', background: 'none', border: 'none', fontFamily: 'var(--font-mono)', cursor: 'pointer' }}
+              style={{ color: '#00f5ff', background: 'none', border: 'none', fontFamily: 'var(--font-mono)', cursor: 'pointer', textShadow: '0 0 8px #00f5ff' }}
             >
-              [LOST KEY?]
+              Forgot Password?
+            </button>
+            <button
+              onClick={onSwitchToRegister}
+              style={{ color: '#00f5ff', background: 'none', border: 'none', fontFamily: 'var(--font-mono)', cursor: 'pointer', textShadow: '0 0 8px #00f5ff' }}
+            >
+              Create New Account
             </button>
           </div>
-        </div>
 
-        {/* Footer */}
-        <div className="text-center mt-6" style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-          <span className="animate-blink">{'_'}</span>
-          {' SYSTEM READY'}
+          {/* Press Start footer */}
+          <div className="text-center mt-6 font-pixel" style={{ color: '#8a9aaa', fontSize: '11px', letterSpacing: '4px' }}>
+            <span className="animate-blink">PRESS START</span>
+          </div>
         </div>
       </div>
     </div>

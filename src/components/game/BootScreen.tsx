@@ -39,17 +39,26 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
 
   return (
     <div
-      className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker"
-      style={{ background: '#0a0a0f' }}
+      className="min-h-screen flex flex-col items-center justify-between"
+      style={{
+        backgroundImage: 'url(/overclock-character.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        padding: '24px 24px 48px',
+      }}
     >
-      <div style={{ width: '100%', maxWidth: 520, padding: '0 24px' }}>
-        <div className="font-pixel glow-cyan mb-6 text-center" style={{ color: '#00f5ff', fontSize: '16px', letterSpacing: '4px' }}>
-          OVERCLOCK.EXE
-        </div>
-
+      {/* Top: boot log with transparent background */}
+      <div style={{ width: '100%', maxWidth: 520 }}>
         <div
           className="pixel-border"
-          style={{ background: '#0d0d1a', borderColor: '#1a2a3a', padding: '20px', minHeight: 200 }}
+          style={{
+            background: 'rgba(13, 13, 26, 0.7)',
+            borderColor: 'rgba(0, 245, 255, 0.3)',
+            padding: '20px',
+            minHeight: 180,
+            backdropFilter: 'blur(4px)',
+          }}
         >
           {lines.map((line, i) => (
             <div
@@ -59,8 +68,9 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
                 fontFamily: 'var(--font-mono)',
                 fontSize: '11px',
                 lineHeight: '1.8',
-                color: line.includes('OK') ? '#39ff14' : line.includes('ERROR') ? '#ff2222' : line.includes('ALL SYSTEMS') ? '#00f5ff' : '#5a6a7a',
+                color: line.includes('OK') ? '#39ff14' : line.includes('ERROR') ? '#ff2222' : line.includes('ALL SYSTEMS') ? '#00f5ff' : '#8a9aaa',
                 overflow: 'hidden',
+                textShadow: '0 0 8px currentColor',
               }}
             >
               {line}
@@ -78,6 +88,26 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
               {'> ENTERING MATRIX...'}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Bottom: Loading button - transparent */}
+      <div className="flex justify-center" style={{ width: '100%', maxWidth: 520 }}>
+        <div
+          className="font-pixel animate-blink"
+          style={{
+            color: '#00f5ff',
+            background: 'transparent',
+            border: '2px solid rgba(0, 245, 255, 0.5)',
+            padding: '12px 32px',
+            fontSize: '10px',
+            letterSpacing: '4px',
+            pointerEvents: 'none',
+            textShadow: '0 0 10px #00f5ff, 0 0 20px #00f5ff',
+            boxShadow: '0 0 15px rgba(0, 245, 255, 0.3), inset 0 0 15px rgba(0, 245, 255, 0.1)',
+          }}
+        >
+          {done ? '> ENTERING MATRIX...' : '> LOADING'}
         </div>
       </div>
     </div>
