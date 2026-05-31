@@ -39,8 +39,7 @@ export class DataPacketPlugin implements IPlugin {
     }
     
     // Spawn first packet immediately instead of waiting for interval
-    console.log('[v0] DataPacketPlugin initialized, spawning first packet');
-    this.nextSpawnTime = Date.now(); // Set to now so first packet spawns on first tick
+    this.nextSpawnTime = Date.now();
   }
 
   onTick(delta: number, state: GameState): void {
@@ -192,8 +191,6 @@ export class DataPacketPlugin implements IPlugin {
       expiresAt: now + DATAPACKET_CONFIG.packetLifetime,
     };
 
-    console.log('[v0] Spawned packet:', { type: packetDef.type, requiresAd: packetDef.requiresAd, goldReward });
-
     this.engine.emit('datapacket_spawned', {
       type: packetDef.type,
       goldReward,
@@ -210,7 +207,6 @@ export class DataPacketPlugin implements IPlugin {
     for (const packet of packets) {
       random -= packet.spawnWeight;
       if (random <= 0) {
-        console.log('[v0] Selected packet type:', packet.type);
         return packet;
       }
     }

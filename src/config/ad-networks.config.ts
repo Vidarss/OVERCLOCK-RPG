@@ -58,6 +58,7 @@ export const AD_NETWORKS_CONFIG = {
 
 /**
  * Get the appropriate ad config based on platform
+ * Returns AdMob config for mobile, or web config (enabled or as fallback)
  */
 export function getActiveAdConfig(): AdNetworkConfig | null {
   const isMobile = isNativePlatform();
@@ -66,8 +67,12 @@ export function getActiveAdConfig(): AdNetworkConfig | null {
     return AD_NETWORKS_CONFIG.admob;
   }
   
-  if (!isMobile && AD_NETWORKS_CONFIG.web.enabled) {
-    return AD_NETWORKS_CONFIG.web;
+  // On web, return the web config for fallback (even if disabled - service will use simulation)
+  if (!isMobile) {
+    return { 
+      type: 'custom' as const, 
+      enabled: true, // Always allow web fallback simulation
+    };
   }
   
   return null;
@@ -75,8 +80,11 @@ export function getActiveAdConfig(): AdNetworkConfig | null {
 
 function isNativePlatform(): boolean {
   try {
-    const { Capacitor } = require('@capacitor/core');
-    return Capacitor.isNativePlatform();
+    // Use dynamic import check for Capacitor
+    if (typeof window !== 'undefined' && (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform) {
+      return (window as unknown as { Capacitor: { isNativePlatform: () => boolean } }).Capacitor.isNativePlatform();
+    }
+    return false;
   } catch {
     return false;
   }
