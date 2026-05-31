@@ -219,7 +219,8 @@ class AdServiceImpl {
       }, adDuration);
     });
   }
-   *
+
+  /**
    * On web, AdMob is not available. Options:
    *  1. THIS: A branded "simulated" ad that counts down (testing/dev)
    *  2. Google AdSense for Games — add your AdSense script + ad unit and
