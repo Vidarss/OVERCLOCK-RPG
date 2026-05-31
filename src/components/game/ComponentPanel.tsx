@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
-import { getComponentBulkCost, getComponentDps } from '../../plugins/ComponentPlugin';
+import { getComponentBulkCost, getComponentDps, getComponentMilestoneBonus } from '../../plugins/ComponentPlugin';
 import type { ComponentPlugin } from '../../plugins/ComponentPlugin';
 import type { ComponentDef } from '../../engine/types';
 import { Tooltip, TooltipLabel, TooltipText, TooltipStat } from './Tooltip';
+import { COMPONENT_MILESTONE_CONFIG } from '../../config/game.config';
 
 type PurchaseMode = 1 | 10 | 100 | 'max';
 
@@ -35,9 +36,13 @@ const ComponentCard: React.FC<{
 }> = ({ comp, gold, purchaseMode, maxQty, onBuy }) => {
   const colors = COLOR_MAP[comp.color];
   const dps = getComponentDps(comp);
+  const milestoneBonus = getComponentMilestoneBonus(comp.level);
   const [levelUpKey, setLevelUpKey] = useState(0);
   const [levelUpQty, setLevelUpQty] = useState(0);
   const [showLevelUpText, setShowLevelUpText] = useState(false);
+
+  // Calculate next milestone
+  const nextMilestone = COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level);
 
   const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
   const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
@@ -105,6 +110,12 @@ const ComponentCard: React.FC<{
               <TooltipStat label="Level" value={`${comp.level}`} color={colors.text} />
               <TooltipStat label="DPS/lvl" value={`${formatNumber(comp.baseDps ?? dps / Math.max(1, comp.level))}`} color="#5a7a8a" />
               <TooltipStat label="Total DPS" value={`${formatNumber(dps)}/s`} color={colors.text} />
+              {milestoneBonus > 0 && (
+                <TooltipStat label="Milestone Bonus" value={`+${Math.round(milestoneBonus * 100)}%`} color="#ffaa00" />
+              )}
+              {nextMilestone && (
+                <TooltipStat label="Next Bonus" value={`Lv${nextMilestone.level} (+${Math.round(nextMilestone.bonus * 100)}%)`} color="#3a5a6a" />
+              )}
             </>
           }
         >

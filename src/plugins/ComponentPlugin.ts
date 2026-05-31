@@ -1,7 +1,7 @@
 import type { IPlugin, IEngine, GameState, GameEvent, ComponentDef } from '../engine/types';
 import type { GoldPlugin } from './GoldPlugin';
 import type { EnemyPlugin } from './EnemyPlugin';
-import { INITIAL_COMPONENTS } from '../config/game.config';
+import { INITIAL_COMPONENTS, COMPONENT_MILESTONE_CONFIG } from '../config/game.config';
 
 export { INITIAL_COMPONENTS };
 
@@ -17,9 +17,37 @@ export function getComponentBulkCost(comp: ComponentDef, quantity: number): numb
   return total;
 }
 
+/**
+ * Calculate milestone bonus multiplier for a component level
+ * Returns additional multiplier (e.g., 0.5 means +50% bonus)
+ */
+export function getComponentMilestoneBonus(level: number): number {
+  if (!COMPONENT_MILESTONE_CONFIG.enabled || level === 0) return 0;
+
+  const { customMilestones, milestoneInterval, bonusPerMilestone, maxMilestones } = COMPONENT_MILESTONE_CONFIG;
+
+  // Use custom milestones if defined
+  if (customMilestones && customMilestones.length > 0) {
+    let totalBonus = 0;
+    for (const milestone of customMilestones) {
+      if (level >= milestone.level) {
+        totalBonus = milestone.bonus; // Take highest reached milestone bonus
+      }
+    }
+    return totalBonus;
+  }
+
+  // Otherwise use linear calculation
+  const milestonesReached = Math.floor(level / milestoneInterval);
+  const cappedMilestones = maxMilestones > 0 ? Math.min(milestonesReached, maxMilestones) : milestonesReached;
+  return cappedMilestones * bonusPerMilestone;
+}
+
 export function getComponentDps(comp: ComponentDef): number {
   if (comp.level === 0) return 0;
-  return comp.baseDps * comp.level;
+  const baseDps = comp.baseDps * comp.level;
+  const milestoneBonus = getComponentMilestoneBonus(comp.level);
+  return baseDps * (1 + milestoneBonus);
 }
 
 export function getTotalIdleDps(components: Record<string, ComponentDef>): number {
