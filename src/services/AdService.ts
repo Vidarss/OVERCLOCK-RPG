@@ -38,6 +38,8 @@ class AdServiceImpl {
 
   /**
    * Show a rewarded ad and return result
+   * Mobile: Shows real AdMob rewarded ads
+   * Web: Shows AdSense ads or simulated ad modal
    */
   async showRewardedAd(): Promise<AdResult> {
     const config = getActiveAdConfig();
@@ -50,7 +52,10 @@ class AdServiceImpl {
       if (config.type === 'admob' && Capacitor.isNativePlatform()) {
         return await this.showAdMobRewardedAd(config);
       } else if (!Capacitor.isNativePlatform()) {
-        // Web fallback
+        // Web: Try AdSense first, then fallback to simulation
+        if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.adSlotId) {
+          return await this.showAdSenseAd();
+        }
         return await this.showWebAdFallback();
       }
     } catch (error) {
@@ -112,7 +117,108 @@ class AdServiceImpl {
   }
 
   /**
-   * Web fallback rewarded ad modal.
+   * Show Google AdSense ad
+   * AdSense requires you to:
+   * 1. Create an ad unit in your AdSense account (Display ad, recommended sizes 300x250 or responsive)
+   * 2. Get the slot ID (16 digits, looks like 1234567890123456)
+   * 3. Set REACT_APP_ADSENSE_AD_SLOT_ID env var with that ID
+   * Then this will display a real AdSense display ad in a modal
+   */
+  private async showAdSenseAd(): Promise<AdResult> {
+    return new Promise((resolve) => {
+      const adDuration = 10_000; // Show ad for 10 seconds
+      
+      // Create overlay
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.97);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000;
+        font-family: 'Courier New', monospace;
+      `;
+
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: #08080f;
+        border: 2px solid #1a2a3a;
+        width: 100%;
+        max-width: 400px;
+        padding: 16px;
+        box-sizing: border-box;
+        box-shadow: 0 0 60px rgba(0,245,255,0.15);
+      `;
+
+      // Ad container for AdSense
+      const adContainer = document.createElement('div');
+      adContainer.id = `adsbygoogle_${Date.now()}`;
+      adContainer.style.cssText = `
+        width: 100%;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a15;
+        border: 1px solid #1a2a3a;
+      `;
+
+      const adLabel = document.createElement('div');
+      adLabel.style.cssText = `
+        font-size: 10px; color: #2a3a4a; letter-spacing: 1px;
+        position: absolute; top: 8px; left: 8px;
+      `;
+      adLabel.textContent = 'ADVERTISEMENT';
+
+      const closeBtn = document.createElement('button');
+      closeBtn.style.cssText = `
+        position: absolute; top: 8px; right: 8px;
+        background: none; border: 1px solid #1a2a3a;
+        color: #3a5a6a; cursor: pointer;
+        padding: 4px 10px; font-size: 11px;
+        letter-spacing: 1px; font-family: inherit;
+        transition: all 0.2s;
+      `;
+      closeBtn.textContent = 'CLOSE AD';
+      closeBtn.onclick = () => {
+        overlay.remove();
+        resolve({ success: true }); // Count as success (user viewed ad)
+      };
+
+      modal.appendChild(adLabel);
+      modal.appendChild(closeBtn);
+      modal.appendChild(adContainer);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      // Push AdSense ad to the container
+      try {
+        const adScript = document.createElement('ins');
+        adScript.className = 'adsbygoogle';
+        adScript.style.cssText = `display: block; width: 100%;`;
+        adScript.setAttribute('data-ad-client', AD_NETWORKS_CONFIG.adsense.publisherId);
+        adScript.setAttribute('data-ad-slot', AD_NETWORKS_CONFIG.adsense.adSlotId);
+        adScript.setAttribute('data-ad-format', 'auto');
+        adScript.setAttribute('data-full-width-responsive', 'true');
+        
+        adContainer.appendChild(adScript);
+
+        // Trigger AdSense to render the ad
+        if ((window as any).adsbygoogle) {
+          (window as any).adsbygoogle.push({});
+        }
+      } catch (error) {
+        console.error('[AdService] Failed to load AdSense:', error);
+      }
+
+      // Auto-close after duration
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.remove();
+        }
+        resolve({ success: true });
+      }, adDuration);
+    });
+  }
    *
    * On web, AdMob is not available. Options:
    *  1. THIS: A branded "simulated" ad that counts down (testing/dev)

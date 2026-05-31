@@ -23,12 +23,14 @@ export const AD_NETWORKS_CONFIG = {
     androidRewardedAdUnitId: process.env.REACT_APP_ADMOB_ANDROID_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
   },
 
-  // Fallback for web (Google AdSense or similar)
-  web: {
-    type: 'custom' as const,
-    enabled: false, // Set to true to enable web ad fallback
-    // Use a service like Admob for web, AdSense, or mediation networks
-    adNetworkId: process.env.REACT_APP_WEB_AD_NETWORK_ID || '',
+  // Google AdSense - Web monetization
+  adsense: {
+    type: 'adsense' as const,
+    enabled: true, // Set to true after configuring your ad units in AdSense
+    publisherId: 'ca-pub-9196447836572769', // Your AdSense Publisher ID (same as AdMob)
+    // Create ad units in AdSense and add them here
+    // Example ad unit (get these from your AdSense account):
+    adSlotId: process.env.REACT_APP_ADSENSE_AD_SLOT_ID || '', // 16-digit ad unit ID
   },
 
   // ─────────────────────────────────────────────────
