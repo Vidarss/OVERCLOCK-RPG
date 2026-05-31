@@ -44,6 +44,10 @@ export type GameEventType =
   | 'tournament_score_update'
   | 'set_completed'
   | 'set_item_added'
+  | 'item_enchanted'
+  | 'item_tier_up'
+  | 'item_enchant_failed'
+  | 'item_tier_up_failed'
   | 'item_scrapped'
   | 'hero_upgrade'
   | 'skill_upgrade'
@@ -121,6 +125,10 @@ export interface HardwareItem {
   flavorText: string;
   droppedAt: number;
   setId?: string;
+  /** Enchantment level (0-10), affects stat bonuses */
+  enchantLevel?: number;
+  /** Cached enchanted stats (base stats * enchant multiplier) */
+  enchantedStats?: ModifierDef[];
 }
 
 export interface SetPieceDef {

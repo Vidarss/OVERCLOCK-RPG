@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { X, Cpu, MemoryStick, Zap, PlusSquare, CircuitBoard, ArrowUpCircle, Layers, Diamond } from 'lucide-react';
+import { X, Cpu, MemoryStick, Zap, PlusSquare, CircuitBoard, ArrowUpCircle, Layers, Diamond, Sparkles, TrendingUp } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import type { HardwareItem, ItemSlot, ItemRarity, ModifierDef, GameState } from '../../engine/types';
@@ -10,6 +10,7 @@ import { MOBO_TIERS } from '../../plugins/MoboPlugin';
 import { SET_CATALOG } from '../../plugins/SetPlugin';
 import type { SetPlugin } from '../../plugins/SetPlugin';
 import { formatNumber } from '../../utils/format';
+import { ENCHANTMENT_CONFIG, TIER_UP_CONFIG, getEnchantTier } from '../../config/enchantment.config';
 
 interface MotherboardScreenProps {
   engine: GameEngine;
@@ -78,6 +79,18 @@ function getStatLabel(type: ModifierDef['type']): string {
     crit_multiplier: 'CRIT×',
   };
   return m[type];
+}
+
+function getEnchantColor(level: number): string {
+  if (level === 0) return '#4a5a6a';
+  const tier = getEnchantTier(level);
+  return tier?.glowColor ?? '#4a5a6a';
+}
+
+function getEnchantGlow(level: number): string {
+  if (level === 0) return 'none';
+  const tier = getEnchantTier(level);
+  return tier ? `0 0 8px ${tier.glowColor}55` : 'none';
 }
 
 // ── PCB Trace overlay ──────────────────────────────────────────────────────
@@ -298,6 +311,8 @@ interface ItemCardProps {
 const ItemCard: React.FC<ItemCardProps> = ({ item, selected, onClick }) => {
   const rc = RARITY_COLOR[item.rarity];
   const Icon = SLOT_ICON[item.slot];
+  const enchantLevel = item.enchantLevel ?? 0;
+  const enchantColor = getEnchantColor(enchantLevel);
 
   return (
     <div
@@ -306,7 +321,7 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, selected, onClick }) => {
         background: selected ? `${rc}14` : '#050010',
         border: `1px solid ${selected ? rc : `${rc}44`}`,
         padding: '7px 9px', cursor: 'pointer',
-        boxShadow: selected ? RARITY_GLOW[item.rarity] : 'none',
+        boxShadow: selected ? RARITY_GLOW[item.rarity] : enchantLevel > 0 ? getEnchantGlow(enchantLevel) : 'none',
         position: 'relative', transition: 'border-color 0.12s, box-shadow 0.12s',
       }}
     >
@@ -314,8 +329,15 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, selected, onClick }) => {
       <div className="flex items-start gap-2" style={{ paddingLeft: 7 }}>
         <Icon size={10} color={rc} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="font-pixel" style={{ color: rc, fontSize: '6px', letterSpacing: '1px' }}>
-            {item.name}
+          <div className="flex items-center gap-1">
+            <div className="font-pixel" style={{ color: rc, fontSize: '6px', letterSpacing: '1px' }}>
+              {item.name}
+            </div>
+            {enchantLevel > 0 && (
+              <span className="font-pixel" style={{ color: enchantColor, fontSize: '6px', textShadow: `0 0 4px ${enchantColor}` }}>
+                +{enchantLevel}
+              </span>
+            )}
           </div>
           <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
             {item.rarity} T{item.tier}
@@ -324,10 +346,10 @@ const ItemCard: React.FC<ItemCardProps> = ({ item, selected, onClick }) => {
             {item.flavorText}
           </div>
           <div className="flex flex-wrap gap-x-3 mt-1">
-            {item.stats.map((stat, i) => (
+            {(item.enchantedStats ?? item.stats).map((stat, i) => (
               <span key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
                 <span style={{ color: '#3a4a3a' }}>{getStatLabel(stat.type)}: </span>
-                <span style={{ color: rc }}>{formatStatValue(stat)}</span>
+                <span style={{ color: enchantLevel > 0 ? enchantColor : rc }}>{formatStatValue(stat)}</span>
               </span>
             ))}
           </div>
@@ -457,6 +479,244 @@ const SetsPanel: React.FC<SetsPanelProps> = ({ engine }) => {
   );
 };
 
+// ── Enchant Panel ─────────────────────────────────────────────────────────────
+
+interface EnchantPanelProps {
+  engine: GameEngine;
+  item: HardwareItem;
+  itemPlugin: ItemPlugin | undefined;
+  onClose: () => void;
+}
+
+const EnchantPanel: React.FC<EnchantPanelProps> = ({ engine, item, itemPlugin, onClose }) => {
+  const scrap = useGameState(engine, s => s.scrap ?? 0);
+  const diamonds = useGameState(engine, s => s.diamonds ?? 0);
+  const [message, setMessage] = useState<string | null>(null);
+  const [useProtection, setUseProtection] = useState(false);
+  const [useLuckyCharm, setUseLuckyCharm] = useState(false);
+
+  const enchantInfo = itemPlugin?.getEnchantInfo(item);
+  const tierUpInfo = itemPlugin?.getTierUpInfo(item);
+  const rc = RARITY_COLOR[item.rarity];
+  const enchantLevel = item.enchantLevel ?? 0;
+  const enchantColor = getEnchantColor(enchantLevel);
+
+  const handleEnchant = () => {
+    if (!itemPlugin) return;
+    const result = itemPlugin.enchantItem(item.id, { useProtection, useLuckyCharm });
+    setMessage(result.message);
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const handleTierUp = () => {
+    if (!itemPlugin) return;
+    const result = itemPlugin.tierUpItem(item.id);
+    setMessage(result.message);
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const protectionCost = ENCHANTMENT_CONFIG.protectionScrollCost;
+  const charmCost = ENCHANTMENT_CONFIG.luckyCharmCost;
+  const successChance = enchantInfo?.successChance ?? 0;
+  const adjustedChance = useLuckyCharm ? Math.min(1, successChance + 0.25) : successChance;
+
+  return (
+    <div style={{
+      position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.92)',
+      zIndex: 20, display: 'flex', flexDirection: 'column', padding: 12,
+    }}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <div className="font-pixel flex items-center gap-2" style={{ color: rc, fontSize: '8px', letterSpacing: '1px' }}>
+            <Sparkles size={12} color={rc} />
+            {item.name}
+            {enchantLevel > 0 && <span style={{ color: enchantColor }}>+{enchantLevel}</span>}
+          </div>
+          <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            {item.rarity} T{item.tier}
+          </div>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: '1px solid #2a2a3a', color: '#4a5a6a', padding: '4px 8px', fontSize: '8px', cursor: 'pointer' }}>
+          CLOSE
+        </button>
+      </div>
+
+      {/* Current stats */}
+      <div style={{ background: '#0a0a12', border: '1px solid #1a1a28', padding: 10, marginBottom: 10 }}>
+        <div className="font-pixel" style={{ color: '#4a5a6a', fontSize: '6px', letterSpacing: '1px', marginBottom: 6 }}>CURRENT STATS</div>
+        <div className="flex flex-wrap gap-3">
+          {(item.enchantedStats ?? item.stats).map((stat, i) => (
+            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+              <span style={{ color: '#4a5a6a' }}>{getStatLabel(stat.type)}: </span>
+              <span style={{ color: enchantLevel > 0 ? enchantColor : rc }}>{formatStatValue(stat)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Message */}
+      {message && (
+        <div style={{
+          background: message.includes('successful') ? '#0a2a0a' : '#2a0a0a',
+          border: `1px solid ${message.includes('successful') ? '#39ff14' : '#ff3333'}`,
+          color: message.includes('successful') ? '#39ff14' : '#ff6666',
+          padding: '8px 12px', marginBottom: 10, fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center',
+        }}>
+          {message}
+        </div>
+      )}
+
+      {/* Enchant Section */}
+      <div style={{ background: '#080810', border: '1px solid #1a1a28', padding: 12, marginBottom: 10 }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-pixel flex items-center gap-2" style={{ color: '#00f5ff', fontSize: '7px', letterSpacing: '1px' }}>
+            <Sparkles size={10} color="#00f5ff" />
+            ENCHANTMENT
+          </div>
+          <div style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            Level {enchantLevel}/{ENCHANTMENT_CONFIG.maxEnchantLevel}
+          </div>
+        </div>
+
+        {enchantInfo && enchantInfo.currentLevel < ENCHANTMENT_CONFIG.maxEnchantLevel ? (
+          <>
+            <div className="flex items-center justify-between mb-2" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+              <span style={{ color: '#4a5a6a' }}>Cost:</span>
+              <span style={{ color: scrap >= enchantInfo.nextCost ? '#39ff14' : '#ff3333' }}>
+                {formatNumber(enchantInfo.nextCost)} SCRAP
+              </span>
+            </div>
+            <div className="flex items-center justify-between mb-2" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+              <span style={{ color: '#4a5a6a' }}>Success Rate:</span>
+              <span style={{ color: adjustedChance >= 0.8 ? '#39ff14' : adjustedChance >= 0.5 ? '#ffaa00' : '#ff6600' }}>
+                {(adjustedChance * 100).toFixed(0)}%
+              </span>
+            </div>
+            {enchantInfo.failurePenalty > 0 && (
+              <div className="flex items-center justify-between mb-3" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+                <span style={{ color: '#4a5a6a' }}>Failure Penalty:</span>
+                <span style={{ color: '#ff6666' }}>-{enchantInfo.failurePenalty} levels</span>
+              </div>
+            )}
+
+            {/* Options */}
+            <div className="flex flex-col gap-2 mb-3">
+              <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={useProtection}
+                  onChange={e => setUseProtection(e.target.checked)}
+                  style={{ accentColor: '#00f5ff' }}
+                />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: diamonds >= protectionCost ? '#6a7a8a' : '#3a3a4a' }}>
+                  Protection Scroll ({protectionCost} <Diamond size={8} style={{ display: 'inline', verticalAlign: 'middle' }} />) - No level loss on fail
+                </span>
+              </label>
+              <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={useLuckyCharm}
+                  onChange={e => setUseLuckyCharm(e.target.checked)}
+                  style={{ accentColor: '#ffaa00' }}
+                />
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: '8px', color: diamonds >= charmCost ? '#6a7a8a' : '#3a3a4a' }}>
+                  Lucky Charm ({charmCost} <Diamond size={8} style={{ display: 'inline', verticalAlign: 'middle' }} />) - +25% success
+                </span>
+              </label>
+            </div>
+
+            <button
+              onClick={handleEnchant}
+              disabled={!enchantInfo.canEnchant && scrap < enchantInfo.nextCost}
+              className="w-full font-pixel"
+              style={{
+                background: scrap >= enchantInfo.nextCost ? '#0a1a2a' : '#0a0a0a',
+                border: `1px solid ${scrap >= enchantInfo.nextCost ? '#00f5ff' : '#2a2a3a'}`,
+                color: scrap >= enchantInfo.nextCost ? '#00f5ff' : '#3a3a4a',
+                padding: '8px', fontSize: '7px', letterSpacing: '1px',
+                cursor: scrap >= enchantInfo.nextCost ? 'pointer' : 'not-allowed',
+              }}
+            >
+              ENCHANT TO +{enchantLevel + 1}
+            </button>
+          </>
+        ) : (
+          <div style={{ color: '#39ff14', fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center', padding: 10 }}>
+            MAX ENCHANTMENT REACHED
+          </div>
+        )}
+      </div>
+
+      {/* Tier-Up Section */}
+      <div style={{ background: '#080810', border: '1px solid #1a1a28', padding: 12 }}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="font-pixel flex items-center gap-2" style={{ color: '#ffaa00', fontSize: '7px', letterSpacing: '1px' }}>
+            <TrendingUp size={10} color="#ffaa00" />
+            TIER UPGRADE
+          </div>
+          <div style={{ color: '#5a4a3a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+            Tier {item.tier}/{TIER_UP_CONFIG.maxTier}
+          </div>
+        </div>
+
+        {tierUpInfo && tierUpInfo.currentTier < TIER_UP_CONFIG.maxTier ? (
+          <>
+            {tierUpInfo.reason && (
+              <div style={{ color: '#ff6666', fontFamily: 'var(--font-mono)', fontSize: '8px', marginBottom: 8 }}>
+                {tierUpInfo.reason}
+              </div>
+            )}
+            {tierUpInfo.canTierUp || !tierUpInfo.reason ? (
+              <>
+                <div className="flex items-center justify-between mb-2" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+                  <span style={{ color: '#4a5a6a' }}>Cost:</span>
+                  <span className="flex items-center gap-1" style={{ color: diamonds >= tierUpInfo.nextCost ? '#00e5ff' : '#ff3333' }}>
+                    {tierUpInfo.nextCost} <Diamond size={9} />
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mb-3" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+                  <span style={{ color: '#4a5a6a' }}>Success Rate:</span>
+                  <span style={{ color: tierUpInfo.successChance >= 0.8 ? '#39ff14' : tierUpInfo.successChance >= 0.5 ? '#ffaa00' : '#ff6600' }}>
+                    {(tierUpInfo.successChance * 100).toFixed(0)}%
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleTierUp}
+                  disabled={!tierUpInfo.canTierUp}
+                  className="w-full font-pixel"
+                  style={{
+                    background: tierUpInfo.canTierUp ? '#1a1a0a' : '#0a0a0a',
+                    border: `1px solid ${tierUpInfo.canTierUp ? '#ffaa00' : '#2a2a3a'}`,
+                    color: tierUpInfo.canTierUp ? '#ffaa00' : '#3a3a4a',
+                    padding: '8px', fontSize: '7px', letterSpacing: '1px',
+                    cursor: tierUpInfo.canTierUp ? 'pointer' : 'not-allowed',
+                  }}
+                >
+                  UPGRADE TO T{item.tier + 1}
+                </button>
+              </>
+            ) : null}
+          </>
+        ) : (
+          <div style={{ color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center', padding: 10 }}>
+            MAX TIER REACHED
+          </div>
+        )}
+      </div>
+
+      {/* Resources */}
+      <div className="flex justify-center gap-6 mt-3" style={{ fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+        <span style={{ color: '#6a8a6a' }}>SCRAP: {formatNumber(scrap)}</span>
+        <span className="flex items-center gap-1" style={{ color: '#00e5ff' }}>
+          <Diamond size={9} /> {diamonds}
+        </span>
+      </div>
+    </div>
+  );
+};
+
 // ── Bottom Panel: Tabs + slot content ─────────────────────────────────────
 
 interface SlotPanelProps {
@@ -467,12 +727,14 @@ interface SlotPanelProps {
   ramSlots: number;
   expansionSlots: number;
   itemPlugin: ItemPlugin | undefined;
+  engine: GameEngine;
 }
 
 const SlotPanel: React.FC<SlotPanelProps> = ({
-  activeSlot, onSelectSlot, equipped, inventory, ramSlots, expansionSlots, itemPlugin,
+  activeSlot, onSelectSlot, equipped, inventory, ramSlots, expansionSlots, itemPlugin, engine,
 }) => {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [enchantingItem, setEnchantingItem] = useState<HardwareItem | null>(null);
 
   const slot = activeSlot;
   const color = SLOT_COLOR[slot];
@@ -539,13 +801,15 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
           {Array.from({ length: slotCount }).map((_, i) => {
             const item = slotArray[i] ?? null;
             if (item) {
+              const enchantLevel = item.enchantLevel ?? 0;
+              const enchantColor = getEnchantColor(enchantLevel);
               return (
                 <div
                   key={i}
                   style={{
                     background: `${RARITY_COLOR[item.rarity]}0a`,
                     border: `1px solid ${RARITY_COLOR[item.rarity]}`,
-                    padding: '6px 8px', boxShadow: RARITY_GLOW[item.rarity], position: 'relative',
+                    padding: '6px 8px', boxShadow: enchantLevel > 0 ? getEnchantGlow(enchantLevel) : RARITY_GLOW[item.rarity], position: 'relative',
                   }}
                 >
                   <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 2, background: RARITY_COLOR[item.rarity] }} />
@@ -555,29 +819,47 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
                       <div className="font-pixel" style={{ color: RARITY_COLOR[item.rarity], fontSize: '6px' }}>
                         {item.name}
                       </div>
+                      {enchantLevel > 0 && (
+                        <span className="font-pixel" style={{ color: enchantColor, fontSize: '6px', textShadow: `0 0 4px ${enchantColor}` }}>
+                          +{enchantLevel}
+                        </span>
+                      )}
                     </div>
                     <div style={{ color: '#3a4a3a', fontFamily: 'var(--font-mono)', fontSize: '7px', marginBottom: 3 }}>
                       {item.rarity} T{item.tier}
                     </div>
                     <div className="flex flex-wrap gap-x-2">
-                      {item.stats.map((stat, si) => (
+                      {(item.enchantedStats ?? item.stats).map((stat, si) => (
                         <span key={si} style={{ fontFamily: 'var(--font-mono)', fontSize: '7px' }}>
                           <span style={{ color: '#3a4a3a' }}>{getStatLabel(stat.type)}: </span>
-                          <span style={{ color: RARITY_COLOR[item.rarity] }}>{formatStatValue(stat)}</span>
+                          <span style={{ color: enchantLevel > 0 ? enchantColor : RARITY_COLOR[item.rarity] }}>{formatStatValue(stat)}</span>
                         </span>
                       ))}
                     </div>
-                    <button
-                      onClick={() => itemPlugin?.unequip(slot, i)}
-                      style={{
-                        marginTop: 4, background: 'none',
-                        border: `1px solid ${color}33`, color: `${color}55`,
-                        padding: '2px 0', fontSize: '7px', fontFamily: 'var(--font-mono)',
-                        cursor: 'pointer', width: '100%', letterSpacing: '1px',
-                      }}
-                    >
-                      REMOVE
-                    </button>
+                    <div className="flex gap-1 mt-1">
+                      <button
+                        onClick={() => setEnchantingItem(item)}
+                        style={{
+                          flex: 1, background: 'none',
+                          border: '1px solid #00f5ff33', color: '#00f5ff55',
+                          padding: '2px 0', fontSize: '6px', fontFamily: 'var(--font-mono)',
+                          cursor: 'pointer', letterSpacing: '1px',
+                        }}
+                      >
+                        UPGRADE
+                      </button>
+                      <button
+                        onClick={() => itemPlugin?.unequip(slot, i)}
+                        style={{
+                          flex: 1, background: 'none',
+                          border: `1px solid ${color}33`, color: `${color}55`,
+                          padding: '2px 0', fontSize: '6px', fontFamily: 'var(--font-mono)',
+                          cursor: 'pointer', letterSpacing: '1px',
+                        }}
+                      >
+                        REMOVE
+                      </button>
+                    </div>
                   </div>
                 </div>
               );
@@ -621,21 +903,43 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
                 onClick={() => setSelectedItemId(prev => prev === item.id ? null : item.id)}
               />
               {selectedItemId === item.id && (
-                <button
-                  onClick={() => { itemPlugin?.equip(item.id); setSelectedItemId(null); }}
-                  className="w-full font-pixel"
-                  style={{
-                    background: `${color}18`, border: `1px solid ${color}`, borderTop: 'none',
-                    color, padding: '5px', fontSize: '6px', cursor: 'pointer', letterSpacing: '1px',
-                  }}
-                >
-                  INSTALL INTO {SLOT_FULL_LABEL[slot]}
-                </button>
+                <div className="flex" style={{ borderTop: 'none' }}>
+                  <button
+                    onClick={() => { itemPlugin?.equip(item.id); setSelectedItemId(null); }}
+                    className="font-pixel"
+                    style={{
+                      flex: 1, background: `${color}18`, border: `1px solid ${color}`, borderTop: 'none', borderRight: 'none',
+                      color, padding: '5px', fontSize: '6px', cursor: 'pointer', letterSpacing: '1px',
+                    }}
+                  >
+                    INSTALL
+                  </button>
+                  <button
+                    onClick={() => setEnchantingItem(item)}
+                    className="font-pixel"
+                    style={{
+                      flex: 1, background: '#00f5ff18', border: '1px solid #00f5ff', borderTop: 'none',
+                      color: '#00f5ff', padding: '5px', fontSize: '6px', cursor: 'pointer', letterSpacing: '1px',
+                    }}
+                  >
+                    UPGRADE
+                  </button>
+                </div>
               )}
             </div>
           ))
         )}
       </div>
+
+      {/* Enchant Panel Overlay */}
+      {enchantingItem && (
+        <EnchantPanel
+          engine={engine}
+          item={enchantingItem}
+          itemPlugin={itemPlugin}
+          onClose={() => setEnchantingItem(null)}
+        />
+      )}
     </div>
   );
 };
@@ -785,6 +1089,7 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
                 ramSlots={ramSlots}
                 expansionSlots={expansionSlots}
                 itemPlugin={itemPlugin}
+                engine={engine}
               />
             ) : (
               <SetsPanel engine={engine} />
