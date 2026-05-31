@@ -98,11 +98,9 @@ export class DataPacketPlugin implements IPlugin {
     }
 
     this.isProcessing = true;
-    const baseReward = this.activePacket.goldReward;
-    const multiplier = this.getGoldMultiplier();
-    const reward = Math.floor(baseReward * multiplier);
+    const reward = this.activePacket.goldReward;
 
-    // Add gold immediately
+    // Add gold immediately (no skill multiplier for basic)
     this.engine.updateState({
       gold: this.engine.state.gold + reward,
     });
@@ -124,7 +122,8 @@ export class DataPacketPlugin implements IPlugin {
 
   /**
    * Start watching an ad for encrypted packet
-   * Uses real ad networks (AdMob for mobile, web fallback for browser)
+   * Ad rewards include skill multiplier bonus (gold_rush, signal_jam, entropy_burst)
+   * Skill is not activated, just the gold amount gets the bonus
    */
   async collectEncryptedPacket(): Promise<boolean> {
     if (!this.activePacket || !this.activePacket.def.requiresAd || this.isProcessing) {
@@ -140,6 +139,7 @@ export class DataPacketPlugin implements IPlugin {
 
       if (adResult.success && this.activePacket?.id === packet.id) {
         const baseReward = packet.goldReward;
+        // Ad rewards get skill multiplier bonus as gold only (skill not actually activated)
         const multiplier = this.getGoldMultiplier();
         const reward = Math.floor(baseReward * multiplier);
 
