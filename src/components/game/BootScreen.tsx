@@ -39,10 +39,20 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
 
   return (
     <div
-      className="min-h-screen circuit-bg scanlines flex items-center justify-center animate-crt-flicker"
-      style={{ background: '#0a0a0f' }}
+      className="min-h-screen circuit-bg scanlines flex flex-col items-center justify-between animate-crt-flicker"
+      style={{ background: '#0a0a0f', padding: '24px 24px 32px' }}
     >
-      <div style={{ width: '100%', maxWidth: 520, padding: '0 24px' }}>
+      {/* Top: image + title + boot log */}
+      <div style={{ width: '100%', maxWidth: 520 }}>
+        {/* Character image */}
+        <div className="flex justify-center mb-4">
+          <img
+            src="/overclock-character.png"
+            alt="OVERCLOCK character"
+            style={{ width: '100%', maxWidth: 320, imageRendering: 'pixelated' }}
+          />
+        </div>
+
         <div className="font-pixel glow-cyan mb-6 text-center" style={{ color: '#00f5ff', fontSize: '16px', letterSpacing: '4px' }}>
           OVERCLOCK.EXE
         </div>
@@ -78,6 +88,24 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
               {'> ENTERING MATRIX...'}
             </div>
           )}
+        </div>
+      </div>
+
+      {/* Bottom: Loading button */}
+      <div className="flex justify-center mt-8" style={{ width: '100%', maxWidth: 520 }}>
+        <div
+          className="font-pixel pixel-border animate-blink"
+          style={{
+            color: '#00f5ff',
+            background: '#0d0d1a',
+            borderColor: '#1a2a3a',
+            padding: '10px 28px',
+            fontSize: '9px',
+            letterSpacing: '4px',
+            pointerEvents: 'none',
+          }}
+        >
+          {done ? '> ENTERING MATRIX...' : '> LOADING'}
         </div>
       </div>
     </div>

@@ -77,6 +77,15 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
             />
           </div>
 
+          {/* Character image under credentials */}
+          <div className="flex justify-center my-4">
+            <img
+              src="/overclock-character.png"
+              alt="OVERCLOCK character"
+              style={{ width: '100%', maxWidth: 240, imageRendering: 'pixelated' }}
+            />
+          </div>
+
           {error && (
             <div className="mb-4 font-pixel glow-red" style={{ color: '#ff2222', fontSize: '7px', lineHeight: '1.8' }}>
               {'> ERROR: '}{error}
