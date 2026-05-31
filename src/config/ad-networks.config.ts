@@ -23,12 +23,14 @@ export const AD_NETWORKS_CONFIG = {
     androidRewardedAdUnitId: process.env.REACT_APP_ADMOB_ANDROID_REWARDED_UNIT_ID || 'ca-app-pub-9196447836572769/7939916372',
   },
 
-  // Fallback for web (Google AdSense or similar)
-  web: {
-    type: 'custom' as const,
-    enabled: false, // Set to true to enable web ad fallback
-    // Use a service like Admob for web, AdSense, or mediation networks
-    adNetworkId: process.env.REACT_APP_WEB_AD_NETWORK_ID || '',
+  // Google AdSense - Web monetization
+  adsense: {
+    type: 'adsense' as const,
+    enabled: true, // Set to true after configuring your ad units in AdSense
+    publisherId: 'ca-pub-9196447836572769', // Your AdSense Publisher ID (same as AdMob)
+    // Create ad units in AdSense and add them here
+    // Example ad unit (get these from your AdSense account):
+    adSlotId: process.env.REACT_APP_ADSENSE_AD_SLOT_ID || '', // 16-digit ad unit ID
   },
 
   // ─────────────────────────────────────────────────
@@ -58,6 +60,7 @@ export const AD_NETWORKS_CONFIG = {
 
 /**
  * Get the appropriate ad config based on platform
+ * Returns AdMob config for mobile, or web config (enabled or as fallback)
  */
 export function getActiveAdConfig(): AdNetworkConfig | null {
   const isMobile = isNativePlatform();
@@ -66,8 +69,12 @@ export function getActiveAdConfig(): AdNetworkConfig | null {
     return AD_NETWORKS_CONFIG.admob;
   }
   
-  if (!isMobile && AD_NETWORKS_CONFIG.web.enabled) {
-    return AD_NETWORKS_CONFIG.web;
+  // On web, return the web config for fallback (even if disabled - service will use simulation)
+  if (!isMobile) {
+    return { 
+      type: 'custom' as const, 
+      enabled: true, // Always allow web fallback simulation
+    };
   }
   
   return null;
@@ -75,8 +82,11 @@ export function getActiveAdConfig(): AdNetworkConfig | null {
 
 function isNativePlatform(): boolean {
   try {
-    const { Capacitor } = require('@capacitor/core');
-    return Capacitor.isNativePlatform();
+    // Use dynamic import check for Capacitor
+    if (typeof window !== 'undefined' && (window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }).Capacitor?.isNativePlatform) {
+      return (window as unknown as { Capacitor: { isNativePlatform: () => boolean } }).Capacitor.isNativePlatform();
+    }
+    return false;
   } catch {
     return false;
   }

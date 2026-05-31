@@ -38,6 +38,8 @@ class AdServiceImpl {
 
   /**
    * Show a rewarded ad and return result
+   * Mobile: Shows real AdMob rewarded ads
+   * Web: Shows AdSense ads or simulated ad modal
    */
   async showRewardedAd(): Promise<AdResult> {
     const config = getActiveAdConfig();
@@ -50,7 +52,10 @@ class AdServiceImpl {
       if (config.type === 'admob' && Capacitor.isNativePlatform()) {
         return await this.showAdMobRewardedAd(config);
       } else if (!Capacitor.isNativePlatform()) {
-        // Web fallback
+        // Web: Try AdSense first, then fallback to simulation
+        if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.adSlotId) {
+          return await this.showAdSenseAd();
+        }
         return await this.showWebAdFallback();
       }
     } catch (error) {
@@ -112,73 +117,264 @@ class AdServiceImpl {
   }
 
   /**
-   * Web fallback: show a simple modal that simulates watching an ad
-   * In production, use Google AdSense, Admob web, or similar
+   * Show Google AdSense ad
+   * AdSense requires you to:
+   * 1. Create an ad unit in your AdSense account (Display ad, recommended sizes 300x250 or responsive)
+   * 2. Get the slot ID (16 digits, looks like 1234567890123456)
+   * 3. Set REACT_APP_ADSENSE_AD_SLOT_ID env var with that ID
+   * Then this will display a real AdSense display ad in a modal
    */
-  private async showWebAdFallback(): Promise<AdResult> {
+  private async showAdSenseAd(): Promise<AdResult> {
     return new Promise((resolve) => {
-      // Create a modal overlay
+      const adDuration = 10_000; // Show ad for 10 seconds
+      
+      // Create overlay
       const overlay = document.createElement('div');
       overlay.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.95);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.97);
+        display: flex; align-items: center; justify-content: center;
         z-index: 10000;
         font-family: 'Courier New', monospace;
       `;
 
       const modal = document.createElement('div');
       modal.style.cssText = `
-        background: #0a0a12;
-        border: 2px solid #00f5ff;
-        padding: 40px;
-        text-align: center;
+        background: #08080f;
+        border: 2px solid #1a2a3a;
+        width: 100%;
         max-width: 400px;
-        box-shadow: 0 0 40px rgba(0, 245, 255, 0.3);
+        padding: 16px;
+        box-sizing: border-box;
+        box-shadow: 0 0 60px rgba(0,245,255,0.15);
       `;
 
-      // Use config values for duration and success rate
-      const { minDurationMs, maxDurationMs, successRate } = AD_NETWORKS_CONFIG.webFallback;
-      const adDuration = minDurationMs + Math.random() * (maxDurationMs - minDurationMs);
-      let timeLeft = adDuration / 1000;
+      // Ad container for AdSense
+      const adContainer = document.createElement('div');
+      adContainer.id = `adsbygoogle_${Date.now()}`;
+      adContainer.style.cssText = `
+        width: 100%;
+        min-height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0a0a15;
+        border: 1px solid #1a2a3a;
+      `;
 
-      const title = document.createElement('div');
-      title.style.cssText = 'color: #00f5ff; font-size: 16px; letter-spacing: 2px; margin-bottom: 20px; font-weight: bold;';
-      title.textContent = 'WATCHING AD...';
+      const adLabel = document.createElement('div');
+      adLabel.style.cssText = `
+        font-size: 10px; color: #2a3a4a; letter-spacing: 1px;
+        position: absolute; top: 8px; left: 8px;
+      `;
+      adLabel.textContent = 'ADVERTISEMENT';
 
-      const timer = document.createElement('div');
-      timer.style.cssText = 'color: #39ff14; font-size: 48px; font-weight: bold; margin: 30px 0; font-family: monospace;';
-      timer.textContent = Math.ceil(timeLeft).toString();
+      const closeBtn = document.createElement('button');
+      closeBtn.style.cssText = `
+        position: absolute; top: 8px; right: 8px;
+        background: none; border: 1px solid #1a2a3a;
+        color: #3a5a6a; cursor: pointer;
+        padding: 4px 10px; font-size: 11px;
+        letter-spacing: 1px; font-family: inherit;
+        transition: all 0.2s;
+      `;
+      closeBtn.textContent = 'CLOSE AD';
+      closeBtn.onclick = () => {
+        overlay.remove();
+        resolve({ success: true }); // Count as success (user viewed ad)
+      };
 
-      const subtitle = document.createElement('div');
-      subtitle.style.cssText = 'color: #3a5a6a; font-size: 12px; margin-top: 20px;';
-      subtitle.textContent = 'Ad will close automatically...';
-
-      modal.appendChild(title);
-      modal.appendChild(timer);
-      modal.appendChild(subtitle);
+      modal.appendChild(adLabel);
+      modal.appendChild(closeBtn);
+      modal.appendChild(adContainer);
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
 
-      // Update timer every 100ms
-      const timerInterval = setInterval(() => {
-        timeLeft -= 0.1;
-        timer.textContent = Math.max(0, Math.ceil(timeLeft)).toString();
-      }, 100);
+      // Push AdSense ad to the container
+      try {
+        const adScript = document.createElement('ins');
+        adScript.className = 'adsbygoogle';
+        adScript.style.cssText = `display: block; width: 100%;`;
+        adScript.setAttribute('data-ad-client', AD_NETWORKS_CONFIG.adsense.publisherId);
+        adScript.setAttribute('data-ad-slot', AD_NETWORKS_CONFIG.adsense.adSlotId);
+        adScript.setAttribute('data-ad-format', 'auto');
+        adScript.setAttribute('data-full-width-responsive', 'true');
+        
+        adContainer.appendChild(adScript);
 
-      // Close ad when time runs out
+        // Trigger AdSense to render the ad
+        if ((window as any).adsbygoogle) {
+          (window as any).adsbygoogle.push({});
+        }
+      } catch (error) {
+        console.error('[AdService] Failed to load AdSense:', error);
+      }
+
+      // Auto-close after duration
       setTimeout(() => {
+        if (overlay.parentNode) {
+          overlay.remove();
+        }
+        resolve({ success: true });
+      }, adDuration);
+    });
+  }
+
+  /**
+   * On web, AdMob is not available. Options:
+   *  1. THIS: A branded "simulated" ad that counts down (testing/dev)
+   *  2. Google AdSense for Games — add your AdSense script + ad unit and
+   *     swap the placeholder div below with your ad slot
+   *  3. IronSource / Unity Ads web SDK — drop in their JS tag
+   *
+   * To integrate a real web ad network, replace the content inside
+   * `adContent` below with your network's ad container/script.
+   */
+  private async showWebAdFallback(): Promise<AdResult> {
+    return new Promise((resolve) => {
+      const { minDurationMs, maxDurationMs, successRate } = AD_NETWORKS_CONFIG.webFallback;
+      const adDuration = minDurationMs + Math.random() * (maxDurationMs - minDurationMs);
+      let timeLeft = adDuration / 1000;
+      let canSkip = false;
+      const skipAfterSec = 5;
+
+      // ── Overlay ──────────────────────────────────────────────────
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.97);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 10000;
+        font-family: 'Courier New', monospace;
+      `;
+
+      // ── Modal wrapper ─────────────────────────────────────────────
+      const modal = document.createElement('div');
+      modal.style.cssText = `
+        background: #08080f;
+        border: 2px solid #1a2a3a;
+        width: 100%;
+        max-width: 480px;
+        overflow: hidden;
+        box-shadow: 0 0 60px rgba(0,245,255,0.15);
+        position: relative;
+      `;
+
+      // ── Ad content area (swap this with real ad SDK container) ────
+      const adContent = document.createElement('div');
+      adContent.style.cssText = `
+        width: 100%; aspect-ratio: 16/9;
+        background: linear-gradient(135deg, #0a0a20 0%, #0d1520 50%, #0a0a20 100%);
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 12px; padding: 24px; box-sizing: border-box;
+        border-bottom: 1px solid #1a2a3a;
+      `;
+
+      // Brand logo placeholder
+      const logo = document.createElement('div');
+      logo.style.cssText = `
+        font-size: 28px; font-weight: bold; letter-spacing: 6px;
+        color: #00f5ff;
+        text-shadow: 0 0 20px #00f5ff, 0 0 40px #00f5ff44;
+      `;
+      logo.textContent = 'OVERCLOCK.EXE';
+
+      const tagline = document.createElement('div');
+      tagline.style.cssText = `font-size: 12px; color: #5a6a7a; letter-spacing: 2px;`;
+      tagline.textContent = 'MOTHERBOARD UPGRADE SIMULATOR';
+
+      // Animated pulse bar
+      const bar = document.createElement('div');
+      bar.style.cssText = `
+        width: 80%; height: 3px; background: #1a2a3a;
+        margin-top: 16px; position: relative; overflow: hidden;
+      `;
+      const barFill = document.createElement('div');
+      barFill.style.cssText = `
+        position: absolute; left: 0; top: 0; height: 100%;
+        background: linear-gradient(90deg, #00f5ff, #39ff14);
+        width: 0%; transition: width 0.1s linear;
+      `;
+      bar.appendChild(barFill);
+
+      adContent.appendChild(logo);
+      adContent.appendChild(tagline);
+      adContent.appendChild(bar);
+
+      // ── Bottom bar ────────────────────────────────────────────────
+      const bottomBar = document.createElement('div');
+      bottomBar.style.cssText = `
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 16px;
+      `;
+
+      const adLabel = document.createElement('div');
+      adLabel.style.cssText = `font-size: 10px; color: #2a3a4a; letter-spacing: 1px;`;
+      adLabel.textContent = 'AD';
+
+      const timerBox = document.createElement('div');
+      timerBox.style.cssText = `
+        font-size: 11px; letter-spacing: 1px;
+        color: #3a5a6a; padding: 4px 10px; border: 1px solid #1a2a3a;
+      `;
+      timerBox.textContent = `CLOSES IN ${Math.ceil(timeLeft)}s`;
+
+      const skipBtn = document.createElement('button');
+      skipBtn.style.cssText = `
+        font-size: 11px; letter-spacing: 1px; cursor: not-allowed;
+        color: #2a3a4a; background: none; border: 1px solid #1a2a3a;
+        padding: 4px 12px; font-family: inherit;
+        transition: all 0.2s;
+      `;
+      skipBtn.textContent = `SKIP IN ${Math.ceil(skipAfterSec)}s`;
+      skipBtn.disabled = true;
+      skipBtn.onclick = () => {
+        if (!canSkip) return;
         clearInterval(timerInterval);
         overlay.remove();
-        // Use success rate from config
-        resolve({ success: Math.random() < successRate });
-      }, adDuration);
+        resolve({ success: true });
+      };
+
+      bottomBar.appendChild(adLabel);
+      bottomBar.appendChild(timerBox);
+      bottomBar.appendChild(skipBtn);
+
+      modal.appendChild(adContent);
+      modal.appendChild(bottomBar);
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      // ── Tick ──────────────────────────────────────────────────────
+      const totalSec = adDuration / 1000;
+      const timerInterval = setInterval(() => {
+        timeLeft -= 0.1;
+        const elapsed = totalSec - timeLeft;
+        const pct = Math.min(100, (elapsed / totalSec) * 100);
+
+        barFill.style.width = `${pct}%`;
+
+        const remaining = Math.max(0, Math.ceil(timeLeft));
+        timerBox.textContent = `CLOSES IN ${remaining}s`;
+
+        const skipRemaining = Math.max(0, Math.ceil(skipAfterSec - elapsed));
+        if (skipRemaining > 0) {
+          skipBtn.textContent = `SKIP IN ${skipRemaining}s`;
+        } else if (!canSkip) {
+          canSkip = true;
+          skipBtn.disabled = false;
+          skipBtn.style.cssText += `
+            color: #00f5ff; border-color: #00f5ff44; cursor: pointer;
+          `;
+          skipBtn.textContent = 'SKIP AD';
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(timerInterval);
+          overlay.remove();
+          resolve({ success: Math.random() < successRate });
+        }
+      }, 100);
     });
   }
 }

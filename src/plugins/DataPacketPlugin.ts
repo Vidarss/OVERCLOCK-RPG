@@ -39,8 +39,7 @@ export class DataPacketPlugin implements IPlugin {
     }
     
     // Spawn first packet immediately instead of waiting for interval
-    console.log('[v0] DataPacketPlugin initialized, spawning first packet');
-    this.nextSpawnTime = Date.now(); // Set to now so first packet spawns on first tick
+    this.nextSpawnTime = Date.now();
   }
 
   onTick(delta: number, state: GameState): void {
