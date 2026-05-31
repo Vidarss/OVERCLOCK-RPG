@@ -437,23 +437,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           </Tooltip>
 
           {/* Shop */}
-          <Tooltip content={<><TooltipLabel label="BLACK MARKET" color="#00e5ff" /><TooltipText>Spend OC tokens and Diamonds on permanent upgrades.</TooltipText></>} position="left">
-            <button
-              onClick={() => setShowShop(true)}
-              style={{
-                width: '100%', background: '#080810',
-                border: '1px solid #0a1a28',
-                color: '#2a3a5a', padding: '12px 10px',
-                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00e5ff'; e.currentTarget.style.color = '#00e5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,229,255,0.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a1a28'; e.currentTarget.style.color = '#2a3a5a'; e.currentTarget.style.boxShadow = 'none'; }}
-            >
-              <ShoppingBag size={20} />
-              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SHOP</div>
-            </button>
-          </Tooltip>
+          <div style={{ opacity: 0 }}>
+            <Tooltip content={<><TooltipLabel label="BLACK MARKET" color="#00e5ff" /><TooltipText>Spend OC tokens and Diamonds on permanent upgrades.</TooltipText></>} position="left">
+              <button
+                onClick={() => setShowShop(true)}
+                style={{
+                  width: '100%', background: '#080810',
+                  border: '1px solid #0a1a28',
+                  color: '#2a3a5a', padding: '12px 10px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#00e5ff'; e.currentTarget.style.color = '#00e5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,229,255,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a1a28'; e.currentTarget.style.color = '#2a3a5a'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <ShoppingBag size={20} />
+                <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SHOP</div>
+              </button>
+            </Tooltip>
+          </div>
 
           {/* Tournament */}
           {MODULES_CONFIG.tournaments.enabled && (
