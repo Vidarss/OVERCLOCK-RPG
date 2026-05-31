@@ -62,6 +62,33 @@ export const ENGINE_CONFIG = {
   authCheckDelayMs: 300,
 } as const;
 
+// ── COMPONENT MILESTONE BONUSES ──────────────────────────────────────────────
+// Hardware modules get bonus DPS multipliers at certain level milestones
+export const COMPONENT_MILESTONE_CONFIG = {
+  /** Enable/disable milestone bonus system */
+  enabled: true,
+  /** Level interval for milestone bonuses (every N levels) */
+  milestoneInterval: 50,
+  /** Bonus multiplier per milestone reached (e.g., 0.25 = +25% per milestone) */
+  bonusPerMilestone: 0.25,
+  /** Maximum number of milestones that count (0 = unlimited) */
+  maxMilestones: 0,
+  /** 
+   * Custom milestone tiers with specific bonuses (optional)
+   * If defined, these override the linear bonusPerMilestone for specific levels
+   */
+  customMilestones: [
+    { level: 50,  bonus: 0.25 },  // +25% at level 50
+    { level: 100, bonus: 0.50 },  // +50% at level 100
+    { level: 150, bonus: 0.75 },  // +75% at level 150
+    { level: 200, bonus: 1.00 },  // +100% at level 200
+    { level: 250, bonus: 1.50 },  // +150% at level 250
+    { level: 300, bonus: 2.00 },  // +200% at level 300
+    { level: 400, bonus: 3.00 },  // +300% at level 400
+    { level: 500, bonus: 5.00 },  // +500% at level 500
+  ],
+} as const;
+
 // ── SAVE ─────────────────────────────────────────────────────────────────────
 
 export const SAVE_CONFIG = {
