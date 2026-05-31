@@ -25,6 +25,7 @@ import { SetPlugin } from './plugins/SetPlugin';
 import { ClanPlugin } from './plugins/ClanPlugin';
 import { SkillPointPlugin } from './plugins/SkillPointPlugin';
 import { HeroPlugin } from './plugins/HeroPlugin';
+import { DataPacketPlugin } from './plugins/DataPacketPlugin';
 
 import { LoginScreen } from './components/auth/LoginScreen';
 import { RegisterScreen } from './components/auth/RegisterScreen';
@@ -62,6 +63,7 @@ function createEngine(): GameEngine {
   engine.register(new ClanPlugin());
   engine.register(new SkillPointPlugin());
   engine.register(new HeroPlugin());
+  engine.register(new DataPacketPlugin());
 
   return engine;
 }
@@ -89,6 +91,11 @@ export default function App() {
 
     // Only boot once — guard against StrictMode second invocation
     if (!engine.isBooted) {
+      // Preload custom assets in parallel with engine boot
+      import('./config/assets.config').then(({ preloadAllAssets }) => {
+        preloadAllAssets().catch(() => {}); // Silently ignore preload failures
+      });
+
       engine.boot().then(() => {
         // Auth session check is fire-and-forget, give it a moment to resolve
         setTimeout(() => {

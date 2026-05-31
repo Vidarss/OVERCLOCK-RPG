@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { ZONE_CONFIG, type ZoneDef } from '../../config/game.config';
+import { getZoneBackground, type ZoneBackgroundDef } from '../../config/assets.config';
 
 export type ZoneId = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
@@ -410,6 +411,9 @@ export const ZoneScene: React.FC<ZoneSceneProps> = ({
   stageClearText,
   showBossWarning,
 }) => {
+  // Check if zone has a custom background image
+  const customBg: ZoneBackgroundDef | null = useMemo(() => getZoneBackground(zone.id), [zone.id]);
+
   return (
     <div
       style={{
@@ -417,17 +421,52 @@ export const ZoneScene: React.FC<ZoneSceneProps> = ({
         inset: 0,
         overflow: 'hidden',
         background: zone.bgColor,
-        backgroundImage: `
-          linear-gradient(${zone.gridColor} 1px, transparent 1px),
-          linear-gradient(90deg, ${zone.gridColor} 1px, transparent 1px),
-          linear-gradient(${zone.gridColor.replace('0.04', '0.02').replace('0.05', '0.025').replace('0.02', '0.01')} 1px, transparent 1px),
-          linear-gradient(90deg, ${zone.gridColor.replace('0.04', '0.02').replace('0.05', '0.025').replace('0.02', '0.01')} 1px, transparent 1px)
-        `,
-        backgroundSize: '64px 64px, 64px 64px, 16px 16px, 16px 16px',
-        backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
         pointerEvents: 'none',
       }}
     >
+      {/* Custom background image layer */}
+      {customBg && (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundImage: `url(${customBg.src})`,
+              backgroundSize: customBg.fit || 'cover',
+              backgroundPosition: customBg.position || 'center',
+              backgroundRepeat: 'no-repeat',
+              imageRendering: 'pixelated',
+            }}
+          />
+          {/* Dark overlay for readability */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: customBg.overlayColor || zone.bgColor,
+              opacity: customBg.overlayOpacity ?? 0.7,
+            }}
+          />
+        </>
+      )}
+
+      {/* Procedural grid background (only if no custom background, or as overlay) */}
+      {!customBg && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundImage: `
+              linear-gradient(${zone.gridColor} 1px, transparent 1px),
+              linear-gradient(90deg, ${zone.gridColor} 1px, transparent 1px),
+              linear-gradient(${zone.gridColor.replace('0.04', '0.02').replace('0.05', '0.025').replace('0.02', '0.01')} 1px, transparent 1px),
+              linear-gradient(90deg, ${zone.gridColor.replace('0.04', '0.02').replace('0.05', '0.025').replace('0.02', '0.01')} 1px, transparent 1px)
+            `,
+            backgroundSize: '64px 64px, 64px 64px, 16px 16px, 16px 16px',
+            backgroundPosition: '-2px -2px, -2px -2px, -1px -1px, -1px -1px',
+          }}
+        />
+      )}
       {/* Far layer background elements */}
       <FarLayer zone={zone} />
 

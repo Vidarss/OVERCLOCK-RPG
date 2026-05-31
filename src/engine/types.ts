@@ -46,7 +46,10 @@ export type GameEventType =
   | 'set_item_added'
   | 'item_scrapped'
   | 'hero_upgrade'
-  | 'skill_upgrade';
+  | 'skill_upgrade'
+  | 'datapacket_spawned'
+  | 'datapacket_collected'
+  | 'datapacket_expired';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
