@@ -207,6 +207,8 @@ const ComponentCard: React.FC<{
           <>x{qty}</>
         )}
       </button>
+    </div>
+    </Tooltip>
   );
 };
 
