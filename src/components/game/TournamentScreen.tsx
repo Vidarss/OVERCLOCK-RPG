@@ -332,14 +332,40 @@ function TournamentDetail({
         )}
 
         {tournament.status === 'upcoming' && !isJoined && (
-          <div style={{ margin: '10px 0', padding: '10px', background: '#0a0800', border: '1px solid #ffaa0022', textAlign: 'center' }}>
-            <Clock size={14} color="#ffaa00" style={{ margin: '0 auto 6px' }} />
-            <div className="font-pixel" style={{ color: '#ffaa00', fontSize: '8px', marginBottom: 4 }}>
-              STARTS IN {formatTimeUntil(tournament.starts_at)}
-            </div>
-            <div style={{ color: '#3a3a2a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-              Registration opens when the tournament goes live.
-            </div>
+          <div style={{ margin: '10px 0' }}>
+            {isFull ? (
+              <div className="font-pixel" style={{ color: '#ff4444', fontSize: '8px', textAlign: 'center', padding: '10px', border: '1px solid #ff444422' }}>
+                BRACKET FULL
+              </div>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', justifyContent: 'center', marginBottom: 8 }}>
+                  <Clock size={10} color="#ffaa00" />
+                  Starts in {formatTimeUntil(tournament.starts_at)} — register now to secure your spot
+                </div>
+                <button
+                  onClick={handleJoin}
+                  disabled={joining}
+                  className="font-pixel w-full"
+                  style={{
+                    background: '#130a00', border: '1px solid #ffaa00',
+                    color: '#ffaa00', padding: '11px', fontSize: '8px', letterSpacing: '2px',
+                    cursor: !joining ? 'pointer' : 'not-allowed',
+                    boxShadow: '0 0 10px rgba(255,170,0,0.12)',
+                  }}
+                >
+                  {joining ? 'JOINING...' : tournament.entry_fee_diamonds > 0 ? `JOIN — ${tournament.entry_fee_diamonds} ◈` : 'PRE-REGISTER FREE'}
+                </button>
+                {joinError && (
+                  <div style={{ color: '#ff4444', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 5 }}>
+                    {joinError}
+                  </div>
+                )}
+                <div style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 5 }}>
+                  Starting score: STG {highestStage}
+                </div>
+              </>
+            )}
           </div>
         )}
 
