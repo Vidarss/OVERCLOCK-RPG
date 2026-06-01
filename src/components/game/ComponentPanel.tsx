@@ -131,22 +131,14 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Module Image (main visual) */}
+      {/* Module Image — fills the panel exactly, overflows transparently */}
       <Tooltip position="right" content={tooltipContent}>
         <div
           style={{
-            width: 320,
-            height: 320,
-            flexShrink: 0,
-            background: 'transparent',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'help',
             position: 'absolute',
-            left: -80,
-            top: '50%',
-            transform: 'translateY(-50%)',
+            inset: 0,
+            cursor: 'help',
+            zIndex: 1,
             overflow: 'visible',
           }}
         >
@@ -155,54 +147,57 @@ const ComponentCard: React.FC<{
               src={spriteImage}
               alt={comp.name}
               style={{
+                position: 'absolute',
+                inset: 0,
                 width: '100%',
                 height: '100%',
                 objectFit: 'contain',
                 imageRendering: 'pixelated',
+                overflow: 'visible',
               }}
             />
           ) : (
             <div
               className="font-pixel"
               style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 color: colors.text,
-                fontSize: '28px',
-                textAlign: 'center',
-                padding: 4,
-                opacity: 0.6,
+                fontSize: '20px',
+                opacity: 0.4,
               }}
             >
               {comp.name.slice(0, 3)}
             </div>
           )}
-          {/* Level badge - hidden, info in tooltip only */}
-        
         </div>
       </Tooltip>
 
       {/* Info column - hidden, all info in tooltip */}
 
-      {/* Buy button - positioned on top of image */}
+      {/* Buy button — bottom-right, transparent background */}
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
         className="font-pixel pixel-border"
         style={{
-          background: canAfford ? colors.bg : '#0a0a0f',
+          background: 'transparent',
           borderColor: canAfford ? colors.text : '#1a2a3a',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '14px 16px',
+          padding: '10px 14px',
           fontSize: '11px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
-          boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+          boxShadow: canAfford ? `0 0 8px ${colors.glow}` : 'none',
           whiteSpace: 'nowrap',
           transition: 'transform 0.08s, box-shadow 0.08s',
-          flexShrink: 0,
           lineHeight: 1.5,
           textAlign: 'center',
           position: 'absolute',
-          top: 12,
-          left: 12,
+          bottom: 10,
+          right: 10,
           zIndex: 20,
         }}
         onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
