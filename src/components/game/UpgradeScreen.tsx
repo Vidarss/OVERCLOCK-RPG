@@ -31,8 +31,21 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
   const skillUpgrades = useGameState(engine, s => s.skillUpgrades);
 
   const heroPlugin = engine.getPlugin<HeroPlugin>('hero');
+
+  // Derive computed lists from reactive state so they re-render on every upgrade
   const heroUpgradesList = heroPlugin?.getHeroUpgrades() ?? [];
   const skillUpgradesList = heroPlugin?.getSkillUpgrades() ?? [];
+  // Re-derive costs from current state (heroUpgrades / skillUpgrades are the reactive deps)
+  const derivedHeroList = heroUpgradesList.map(u => ({
+    ...u,
+    level: heroUpgrades[u.id] ?? 0,
+    cost: heroPlugin?.getBulkCost(u.id, 1) ?? u.cost,
+  }));
+  const derivedSkillList = skillUpgradesList.map(u => ({
+    ...u,
+    level: skillUpgrades[u.skillId as string] ?? 0,
+    cost: heroPlugin?.getSkillCost(u.skillId as any) ?? u.cost,
+  }));
 
   const getBulkCount = (upgradeId: string): number => {
     if (bulkAmount === 'max') {
@@ -51,7 +64,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
     heroPlugin?.purchaseSkillUpgrade(skillId as any, count);
   };
 
-  // Calculate total hero level for display
+  // Calculate total hero level for display (from reactive state)
   const totalHeroLevel = Object.values(heroUpgrades).reduce((sum, lvl) => sum + (lvl ?? 0), 0);
 
   return (
@@ -209,8 +222,7 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
               <div style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginBottom: 4 }}>
                 Upgrade your tap damage, crit chance, and crit multiplier.
               </div>
-              {heroUpgradesList.map(upgrade => {
-                // Calculate actual cost for selected bulk amount
+              {derivedHeroList.map(upgrade => {
                 const count = getBulkCount(upgrade.id);
                 const actualCost = count > 1 ? heroPlugin?.getBulkCost(upgrade.id, count) ?? Infinity : upgrade.cost;
                 const canAffordBulk = gold >= actualCost && upgrade.level < upgrade.maxLevel;
@@ -325,10 +337,9 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
               <div style={{ color: '#3a5a6a', fontFamily: 'var(--font-mono)', fontSize: '10px', marginBottom: 4 }}>
                 Upgrade your skills to increase their effectiveness.
               </div>
-              {skillUpgradesList.map(upgrade => {
-                // Calculate actual cost for selected bulk amount
+              {derivedSkillList.map(upgrade => {
                 const count = bulkAmount === 'max' ? 50 : bulkAmount;
-                const actualCost = count > 1 ? heroPlugin?.getSkillBulkCost(upgrade.skillId, count) ?? Infinity : upgrade.cost;
+                const actualCost = count > 1 ? heroPlugin?.getSkillBulkCost(upgrade.skillId as any, count) ?? Infinity : upgrade.cost;
                 const canAffordBulk = gold >= actualCost && upgrade.level < upgrade.maxLevel;
                 
                 return (
