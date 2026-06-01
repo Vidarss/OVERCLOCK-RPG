@@ -19,7 +19,7 @@ interface ComponentPanelProps {
 // If no image exists for a component, no background is shown.
 const COMPONENT_IMAGES: Record<string, string> = {
   gpu: '/images/components/gpu_unit.png',
-  // ram:         '/images/components/ram_bank.png',
+  ram: '/images/components/ram_bank.png',
   // cpu_cooler:  '/images/components/cpu_cooler.png',
   // ssd:         '/images/components/ssd_drive.png',
   // psu:         '/images/components/psu_core.png',
