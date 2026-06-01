@@ -219,7 +219,7 @@ export class DailyPlugin implements IPlugin {
 
     const today = getLondonDateString();
     
-    // If already loaded challenges for today, don't reload (prevents resets)
+    // If already loaded challenges for today in memory, don't reload
     if (this.currentDate === today && this.challenges.length > 0) {
       return;
     }
@@ -227,21 +227,20 @@ export class DailyPlugin implements IPlugin {
     this.isLoading = true;
     
     try {
-      // Try to load from DB first
+      // ALWAYS load from DB - this is the source of truth
       const { data, error } = await this.engine.storage.loadMany('daily_challenges', {
         user_id: this.userId,
         challenge_date: today,
       });
 
       if (error) {
-        this.generateLocalChallenges(today);
-        this.currentDate = today;
-        this.notify();
+        console.warn('[DailyPlugin] DB error loading challenges, will retry later:', error);
+        // Don't generate local challenges - wait for DB to be available
         return;
       }
 
       if (data && data.length >= DAILY_CONFIG.challengesPerDay) {
-        // Use existing challenges from DB
+        // Use existing challenges from DB - preserve all progress including reward_claimed
         this.challenges = data as DailyChallenge[];
         this.currentDate = today;
       } else if (data && data.length > 0) {
@@ -249,14 +248,8 @@ export class DailyPlugin implements IPlugin {
         this.challenges = data as DailyChallenge[];
         this.currentDate = today;
       } else {
-        // No data - generate new challenges
+        // No data for today - generate and save to DB
         await this.generateChallenges(today);
-        this.currentDate = today;
-      }
-      
-      // Final fallback: if still no challenges, generate locally
-      if (this.challenges.length === 0) {
-        this.generateLocalChallenges(today);
         this.currentDate = today;
       }
       
@@ -264,34 +257,6 @@ export class DailyPlugin implements IPlugin {
     } finally {
       this.isLoading = false;
     }
-  }
-
-  /**
-   * Generate challenges locally in memory (no DB).
-   * Used as fallback when DB is unavailable.
-   */
-  private generateLocalChallenges(date: string): void {
-    const stage = this.engine.state.highestStage ?? 1;
-    const seed = dateSeed(date + (this.userId?.slice(0, 8) ?? 'anon'));
-    const shuffled = seededShuffle(CHALLENGE_TEMPLATES, seed);
-    const selected = shuffled.slice(0, DAILY_CONFIG.challengesPerDay);
-
-    this.challenges = selected.map((template, idx) => {
-      const target = template.targetFn(stage);
-      const reward = template.rewardFn(stage);
-      const label = template.label.replace('{n}', target.toString());
-      return {
-        id: `local-${date}-${idx}`,
-        challenge_type: template.type,
-        challenge_label: label,
-        target_value: target,
-        current_value: 0,
-        completed: false,
-        reward_claimed: false,
-        reward_gold: reward,
-        challenge_date: date,
-      };
-    });
   }
 
   private async generateChallenges(date: string): Promise<void> {
@@ -399,9 +364,7 @@ export class DailyPlugin implements IPlugin {
   }
 
   private async saveProgress(challenge: DailyChallenge): Promise<void> {
-    // Skip DB save for local challenges
-    if (challenge.id.startsWith('local-')) return;
-    
+    // Always save to DB - no more local challenges
     await this.engine.storage.save('daily_challenges', {
       id: challenge.id,
       current_value: challenge.current_value,

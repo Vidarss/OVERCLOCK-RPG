@@ -26,7 +26,9 @@ export const AD_NETWORKS_CONFIG = {
     type: 'adsense' as const,
     enabled: true, // Enabled - will show real AdSense ads on web
     publisherId: import.meta.env.VITE_ADSENSE_PUBLISHER_ID || 'ca-pub-9196447836572769',
-    adSlotId: import.meta.env.VITE_ADSENSE_AD_SLOT_ID || '',
+    // Ad slot ID from your AdSense account - create a Display Ad unit and paste the slot ID here
+    // If empty, will use auto ads format
+    adSlotId: import.meta.env.VITE_ADSENSE_AD_SLOT_ID || '4758571826',
   },
 
   // ─────────────────────────────────────────────────

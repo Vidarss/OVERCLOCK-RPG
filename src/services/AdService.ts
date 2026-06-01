@@ -70,8 +70,8 @@ class AdServiceImpl {
       if (isNative && config.type === 'admob') {
         return await this.showAdMobRewardedAd(config);
       } else {
-        // Web platform - try AdSense or fallback
-        if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.adSlotId) {
+        // Web platform - use AdSense for real monetization
+        if (AD_NETWORKS_CONFIG.adsense.enabled && AD_NETWORKS_CONFIG.adsense.publisherId) {
           return await this.showAdSenseAd();
         }
         return await this.showWebAdFallback();
@@ -142,12 +142,17 @@ class AdServiceImpl {
    * AdSense requires you to:
    * 1. Create an ad unit in your AdSense account (Display ad, recommended sizes 300x250 or responsive)
    * 2. Get the slot ID (16 digits, looks like 1234567890123456)
-   * 3. Set REACT_APP_ADSENSE_AD_SLOT_ID env var with that ID
+   * 3. Set VITE_ADSENSE_AD_SLOT_ID env var with that ID
    * Then this will display a real AdSense display ad in a modal
    */
   private async showAdSenseAd(): Promise<AdResult> {
     return new Promise((resolve) => {
-      const adDuration = 10_000; // Show ad for 10 seconds
+      const adDuration = 8_000; // Show ad for 8 seconds minimum AFTER it loads
+      const skipAfterSec = 5; // Allow skip after 5 seconds of watching
+      let timeLeft = adDuration / 1000;
+      let canSkip = false;
+      let adLoaded = false; // Track if ad has actually loaded
+      let timerInterval: any = null;
       
       // Create overlay
       const overlay = document.createElement('div');
@@ -165,79 +170,198 @@ class AdServiceImpl {
         border: 2px solid #1a2a3a;
         width: 100%;
         max-width: 400px;
-        padding: 16px;
+        padding: 0;
         box-sizing: border-box;
         box-shadow: 0 0 60px rgba(0,245,255,0.15);
+        position: relative;
+        overflow: hidden;
       `;
 
-      // Ad container for AdSense
-      const adContainer = document.createElement('div');
-      adContainer.id = `adsbygoogle_${Date.now()}`;
-      adContainer.style.cssText = `
-        width: 100%;
-        min-height: 250px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      // Header bar
+      const headerBar = document.createElement('div');
+      headerBar.style.cssText = `
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 10px 14px;
         background: #0a0a15;
-        border: 1px solid #1a2a3a;
+        border-bottom: 1px solid #1a2a3a;
       `;
 
       const adLabel = document.createElement('div');
       adLabel.style.cssText = `
-        font-size: 10px; color: #2a3a4a; letter-spacing: 1px;
-        position: absolute; top: 8px; left: 8px;
+        font-size: 9px; color: #3a5a6a; letter-spacing: 2px;
       `;
-      adLabel.textContent = 'ADVERTISEMENT';
+      adLabel.textContent = 'SPONSORED DATA PACKET';
 
-      const closeBtn = document.createElement('button');
-      closeBtn.style.cssText = `
-        position: absolute; top: 8px; right: 8px;
-        background: none; border: 1px solid #1a2a3a;
-        color: #3a5a6a; cursor: pointer;
-        padding: 4px 10px; font-size: 11px;
-        letter-spacing: 1px; font-family: inherit;
+      const timerBox = document.createElement('div');
+      timerBox.style.cssText = `
+        font-size: 10px; letter-spacing: 1px;
+        color: #2a4a5a; padding: 2px 8px; 
+        border: 1px solid #1a3a4a33;
+        background: #0a1a2a0a;
+      `;
+      timerBox.textContent = `LOADING...`;
+
+      headerBar.appendChild(adLabel);
+      headerBar.appendChild(timerBox);
+
+      // Ad container for AdSense
+      const adContainer = document.createElement('div');
+      adContainer.style.cssText = `
+        width: 100%;
+        min-height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #050510;
+        position: relative;
+      `;
+
+      // Loading indicator while ad loads
+      const loadingText = document.createElement('div');
+      loadingText.style.cssText = `
+        position: absolute;
+        font-size: 10px; color: #2a3a4a; letter-spacing: 2px;
+        animation: pulse 1.5s infinite;
+      `;
+      loadingText.textContent = 'LOADING AD...';
+      adContainer.appendChild(loadingText);
+
+      // Bottom bar with skip button
+      const bottomBar = document.createElement('div');
+      bottomBar.style.cssText = `
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 12px 14px;
+        background: #0a0a15;
+        border-top: 1px solid #1a2a3a;
+      `;
+
+      const rewardInfo = document.createElement('div');
+      rewardInfo.style.cssText = `
+        font-size: 9px; color: #39ff14; letter-spacing: 1px;
+      `;
+      rewardInfo.textContent = 'WATCH TO EARN GOLD';
+
+      const skipBtn = document.createElement('button');
+      skipBtn.style.cssText = `
+        font-size: 10px; letter-spacing: 1px; cursor: not-allowed;
+        color: #2a3a4a; background: none; border: 1px solid #1a2a3a;
+        padding: 6px 14px; font-family: inherit;
         transition: all 0.2s;
       `;
-      closeBtn.textContent = 'CLOSE AD';
-      closeBtn.onclick = () => {
+      skipBtn.textContent = `LOADING...`;
+      skipBtn.disabled = true;
+      skipBtn.onclick = () => {
+        if (!canSkip || !adLoaded) return;
+        if (timerInterval) clearInterval(timerInterval);
         overlay.remove();
-        resolve({ success: true }); // Count as success (user viewed ad)
+        resolve({ success: true });
       };
 
-      modal.appendChild(adLabel);
-      modal.appendChild(closeBtn);
+      bottomBar.appendChild(rewardInfo);
+      bottomBar.appendChild(skipBtn);
+
+      modal.appendChild(headerBar);
       modal.appendChild(adContainer);
+      modal.appendChild(bottomBar);
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
+
+      // Add CSS animation for loading text
+      const style = document.createElement('style');
+      style.textContent = `
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; }
+          50% { opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
 
       // Push AdSense ad to the container
       try {
         const adScript = document.createElement('ins');
         adScript.className = 'adsbygoogle';
-        adScript.style.cssText = `display: block; width: 100%;`;
+        adScript.style.cssText = `display: block; width: 336px; height: 280px; margin: 0 auto;`;
         adScript.setAttribute('data-ad-client', AD_NETWORKS_CONFIG.adsense.publisherId);
         adScript.setAttribute('data-ad-slot', AD_NETWORKS_CONFIG.adsense.adSlotId);
-        adScript.setAttribute('data-ad-format', 'auto');
-        adScript.setAttribute('data-full-width-responsive', 'true');
+        adScript.setAttribute('data-ad-format', 'rectangle');
         
         adContainer.appendChild(adScript);
 
         // Trigger AdSense to render the ad
         if ((window as any).adsbygoogle) {
-          (window as any).adsbygoogle.push({});
+          (window as any).adsbygoogle.push({}, () => {
+            // Callback fired when ad is rendered
+            adLoaded = true;
+            loadingText.style.display = 'none';
+            timerBox.style.cssText = `
+              font-size: 10px; letter-spacing: 1px;
+              color: #00f5ff; padding: 2px 8px; 
+              border: 1px solid #00f5ff33;
+              background: #00f5ff0a;
+            `;
+            
+            // NOW start the timer since ad loaded
+            startTimer();
+          });
+          
+          // Fallback: if no callback after 4 seconds, assume ad loaded or failed
+          setTimeout(() => {
+            if (!adLoaded) {
+              adLoaded = true;
+              loadingText.style.display = 'none';
+              loadingText.textContent = 'AD READY';
+              timerBox.style.cssText = `
+                font-size: 10px; letter-spacing: 1px;
+                color: #00f5ff; padding: 2px 8px; 
+                border: 1px solid #00f5ff33;
+                background: #00f5ff0a;
+              `;
+              startTimer();
+            }
+          }, 4000);
         }
       } catch (error) {
         console.error('[AdService] Failed to load AdSense:', error);
+        adLoaded = true;
+        loadingText.textContent = 'AD UNAVAILABLE';
+        startTimer();
       }
 
-      // Auto-close after duration
-      setTimeout(() => {
-        if (overlay.parentNode) {
-          overlay.remove();
-        }
-        resolve({ success: true });
-      }, adDuration);
+      // Timer only starts after ad loads
+      const startTimer = () => {
+        const totalSec = adDuration / 1000;
+        let elapsed = 0;
+        
+        timerInterval = setInterval(() => {
+          elapsed += 0.1;
+          timeLeft = totalSec - elapsed;
+
+          const remaining = Math.max(0, Math.ceil(timeLeft));
+          timerBox.textContent = `${remaining}s`;
+
+          const skipRemaining = Math.max(0, Math.ceil(skipAfterSec - elapsed));
+          if (skipRemaining > 0) {
+            skipBtn.textContent = `SKIP IN ${skipRemaining}s`;
+          } else if (!canSkip) {
+            canSkip = true;
+            skipBtn.disabled = false;
+            skipBtn.style.cssText = `
+              font-size: 10px; letter-spacing: 1px; cursor: pointer;
+              color: #00f5ff; background: none; border: 1px solid #00f5ff44;
+              padding: 6px 14px; font-family: inherit;
+              transition: all 0.2s;
+            `;
+            skipBtn.textContent = 'COLLECT REWARD';
+          }
+
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            overlay.remove();
+            style.remove();
+            resolve({ success: true });
+          }
+        }, 100);
+      };
     });
   }
 
