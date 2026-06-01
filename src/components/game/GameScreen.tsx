@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu } from 'lucide-react';
+import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -572,6 +572,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               </button>
             </Tooltip>
           )}
+
+          {/* Community Discord */}
+          <Tooltip content={<><TooltipLabel label="DISCORD" color="#5865F2" /><TooltipText>Join our community Discord server.</TooltipText></>} position="left">
+            <a
+              href="https://discord.gg/JpxH7NGayc"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                width: '100%', background: '#080815', border: '1px solid #1a0a3a', color: '#2a1a5a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'all 0.15s', textDecoration: 'none',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#5865F2'; e.currentTarget.style.color = '#5865F2'; e.currentTarget.style.boxShadow = '0 0 14px rgba(88,101,242,0.2)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#1a0a3a'; e.currentTarget.style.color = '#2a1a5a'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <MessageCircle size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>DISCORD</div>
+            </a>
+          </Tooltip>
         </div>
       </div>
     </div>
