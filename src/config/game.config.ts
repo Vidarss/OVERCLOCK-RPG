@@ -163,16 +163,17 @@ export const TAP_CONFIG = {
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
 //
 // BALANCE NOTES:
-// - TAP POWER: Main progression curve. Cost grows exponentially (1.15^level).
-//   At level 100: cost ~1.17M gold, +100 tap damage
-//   At level 500: cost ~1.4T gold, +500 tap damage
-//   At level 1000: cost ~3.6e29 gold, +1000 tap damage
+// - TAP POWER: Main progression curve. Cost grows exponentially (1.18^level).
+//   At level 50: cost ~3.9K gold, +50 tap damage
+//   At level 100: cost ~15M gold, +100 tap damage
+//   At level 200: cost ~59T gold, +200 tap damage
+//   Diminishing returns via cost scaling keeps progression in check
 //
-// - CRIT CHANCE: Caps at 60% total (10% base + 50 levels * 1%)
-//   Expensive early, but essential for scaling damage.
+// - CRIT CHANCE: Caps at 50% total (10% base + 40 levels * 1%)
+//   Expensive, strategic investment for burst damage
 //
-// - CRIT DAMAGE: Caps at 15x total (5x base + 100 levels * 0.1x)
-//   Multiplicative scaling makes this very powerful late game.
+// - CRIT DAMAGE: Caps at 10x total (5x base + 50 levels * 0.1x)
+//   Multiplicative scaling - powerful but capped to prevent infinite scaling
 //
 // FORMULA: upgradeCost(level) = baseCost * costMultiplier^level
 // ─────────────────────────────────────────────────────────────────────────────
@@ -209,11 +210,11 @@ export const HERO_CONFIG = {
       id: 'hero_tap_power',
       name: 'TAP POWER',
       description: 'Increase base tap damage',
-      baseCost: 10,
-      costMultiplier: 1.15,        // ~7x cost every 15 levels
-      maxLevel: 9999,
+      baseCost: 15,
+      costMultiplier: 1.18,        // Steeper cost curve for balance
+      maxLevel: 500,               // Capped to prevent infinite scaling
       modifierType: 'tap_damage',
-      valuePerLevel: 2,            // +2 tap damage per level (additive before multipliers)
+      valuePerLevel: 1,            // +1 tap damage per level (reduced from 2)
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
@@ -223,8 +224,8 @@ export const HERO_CONFIG = {
       name: 'CRIT CHANCE',
       description: 'Increase critical hit chance',
       baseCost: 500,
-      costMultiplier: 1.25,        // ~9.3x cost every 10 levels
-      maxLevel: 50,                // Caps at +50% crit chance (60% total)
+      costMultiplier: 1.28,        // Steeper cost curve
+      maxLevel: 40,                // Caps at +40% crit chance (50% total)
       modifierType: 'crit_chance',
       valuePerLevel: 0.01,         // +1% crit chance per level
       isMultiplier: false,
@@ -236,8 +237,8 @@ export const HERO_CONFIG = {
       name: 'CRIT DAMAGE',
       description: 'Increase critical damage multiplier',
       baseCost: 1000,
-      costMultiplier: 1.30,        // ~13.8x cost every 10 levels
-      maxLevel: 100,               // Caps at +10x crit damage (15x total)
+      costMultiplier: 1.32,        // Steeper cost curve
+      maxLevel: 50,                // Caps at +5x crit damage (10x total)
       modifierType: 'crit_multiplier',
       valuePerLevel: 0.10,         // +10% crit damage per level
       isMultiplier: false,
@@ -417,11 +418,11 @@ export const ENEMY_CONFIG = {
   //   stage ≤ 500 : base * (1 + (stage - 1) * linearGrowth) * scalingExponentEarly ^ ((stage - 1) / 50)
   //   stage > 500 : hp500 * scalingExponentLate ^ ((stage - 500) / 10)
   // This creates a smooth curve up to 500, then steep exponential requiring skills/combos
-  normalHpBase: 15,
-  bossHpBase: 100,
-  linearGrowth: 0.25,              // Linear growth factor per stage (gentle)
-  scalingExponentEarly: 1.08,      // Mild exponential every 50 stages (stages 1-500)
-  scalingExponentLate: 1.15,       // Steep exponential every 10 stages (stages 500+)
+  normalHpBase: 8,
+  bossHpBase: 50,
+  linearGrowth: 0.35,              // Linear growth factor per stage (higher = tankier enemies)
+  scalingExponentEarly: 1.12,      // Exponential every 50 stages (stages 1-500)
+  scalingExponentLate: 1.18,       // Steep exponential every 10 stages (stages 500+)
   hardModeStage: 500,              // Stage where difficulty ramps up significantly
 
   /** Enemy name pools, indexed by tier (one tier = 50 stages). */
@@ -617,38 +618,38 @@ export const STATIC_DISCHARGE_BURST = 500;
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
 
 export const INITIAL_COMPONENTS: ComponentDef[] = [
-  { id: 'gpu',            name: 'GPU_UNIT',            description: 'Parallel damage processor',          baseDps: 0.5,                           baseCost: 10,                                    costMultiplier: 1.15, level: 0, unlocked: true,  color: 'cyan'  },
-  { id: 'ram',            name: 'RAM_BANK',            description: 'Buffer overflow exploit',             baseDps: 2,                             baseCost: 100,                                   costMultiplier: 1.18, level: 0, unlocked: false, color: 'green' },
-  { id: 'cpu_cooler',     name: 'CPU_COOLER',          description: 'Thermal attack array',                baseDps: 8,                             baseCost: 1_000,                                 costMultiplier: 1.20, level: 0, unlocked: false, color: 'amber' },
-  { id: 'ssd',            name: 'SSD_DRIVE',           description: 'High-speed data injection',           baseDps: 40,                            baseCost: 10_000,                                costMultiplier: 1.22, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'psu',            name: 'PSU_CORE',            description: 'Power surge devastator',              baseDps: 200,                           baseCost: 100_000,                               costMultiplier: 1.25, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'liquid_cool',    name: 'LIQUID_COOL',         description: 'Thermal dissipation overcharge',      baseDps: 1_200,                         baseCost: 1_000_000,                             costMultiplier: 1.28, level: 0, unlocked: false, color: 'green' },
-  { id: 'fpga',           name: 'FPGA_ARRAY',          description: 'Reconfigurable logic attack grid',    baseDps: 8_000,                         baseCost: 10_000_000,                            costMultiplier: 1.30, level: 0, unlocked: false, color: 'amber' },
-  { id: 'tensor',         name: 'TENSOR_CORE',         description: 'Neural matrix decimator',             baseDps: 60_000,                        baseCost: 100_000_000,                           costMultiplier: 1.32, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'quantum',        name: 'QUANTUM_BIT',         description: 'Superposition damage state',          baseDps: 500_000,                       baseCost: 1_000_000_000,                         costMultiplier: 1.35, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'singularity',    name: 'SINGULARITY_ENGINE',  description: 'The end of all computation',          baseDps: 5_000_000,                     baseCost: 10_000_000_000,                        costMultiplier: 1.38, level: 0, unlocked: false, color: 'green' },
-  { id: 'darknet',        name: 'DARKNET_NODE',        description: 'Hidden relay packet flood',           baseDps: 40_000_000,                    baseCost: 100_000_000_000,                       costMultiplier: 1.38, level: 0, unlocked: false, color: 'amber' },
-  { id: 'bytestorm',      name: 'BYTESTORM_GEN',       description: 'Recursive payload detonator',         baseDps: 300_000_000,                   baseCost: 1_000_000_000_000,                     costMultiplier: 1.39, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'exploit_kit',    name: 'EXPLOIT_KIT',         description: 'Zero-day vulnerability swarm',        baseDps: 2_500_000_000,                 baseCost: 10_000_000_000_000,                    costMultiplier: 1.39, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'rootkit',        name: 'ROOTKIT_OMEGA',       description: 'Deep kernel privilege escalation',    baseDps: 20_000_000_000,                baseCost: 100_000_000_000_000,                   costMultiplier: 1.40, level: 0, unlocked: false, color: 'green' },
-  { id: 'botnet',         name: 'BOTNET_SWARM',        description: 'Distributed DDoS annihilator',        baseDps: 160_000_000_000,               baseCost: 1_000_000_000_000_000,                 costMultiplier: 1.40, level: 0, unlocked: false, color: 'amber' },
-  { id: 'cipher_engine',  name: 'CIPHER_ENGINE',       description: 'Cryptographic brute force array',     baseDps: 1_300_000_000_000,             baseCost: 10_000_000_000_000_000,                costMultiplier: 1.41, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'memcrash',       name: 'MEMCRASH_UNIT',       description: 'Heap fragmentation disruptor',        baseDps: 10_000_000_000_000,            baseCost: 100_000_000_000_000_000,               costMultiplier: 1.41, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'proxy_chain',    name: 'PROXY_CHAIN',         description: 'Layered anonymity strike vector',     baseDps: 80_000_000_000_000,            baseCost: 1_000_000_000_000_000_000,             costMultiplier: 1.42, level: 0, unlocked: false, color: 'green' },
-  { id: 'neural_hack',    name: 'NEURAL_HACK',         description: 'Synthetic synapse override',          baseDps: 650_000_000_000_000,           baseCost: 10_000_000_000_000_000_000,            costMultiplier: 1.42, level: 0, unlocked: false, color: 'amber' },
-  { id: 'data_leech',     name: 'DATA_LEECH',          description: 'Exfiltration pipeline maximizer',     baseDps: 5_000_000_000_000_000,         baseCost: 100_000_000_000_000_000_000,           costMultiplier: 1.42, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'vortex_node',    name: 'VORTEX_NODE',         description: 'Traffic singularity collapse',        baseDps: 4e16,                          baseCost: 1e21,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'pulse_bomb',     name: 'PULSE_BOMB',          description: 'Electromagnetic burst disabler',      baseDps: 3.2e17,                        baseCost: 1e22,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'green' },
-  { id: 'ghost_proc',     name: 'GHOST_PROC',          description: 'Invisible process execution fork',    baseDps: 2.5e18,                        baseCost: 1e23,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'amber' },
-  { id: 'syscall_storm',  name: 'SYSCALL_STORM',       description: 'Kernel interrupt cascade flood',      baseDps: 2e19,                          baseCost: 1e24,                                  costMultiplier: 1.44, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'entropy_sink',   name: 'ENTROPY_SINK',        description: 'Randomness harvester weapon',         baseDps: 1.6e20,                        baseCost: 1e25,                                  costMultiplier: 1.44, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'parity_blitz',   name: 'PARITY_BLITZ',        description: 'Error correction obliterator',        baseDps: 1.3e21,                        baseCost: 1e26,                                  costMultiplier: 1.44, level: 0, unlocked: false, color: 'green' },
-  { id: 'null_pointer',   name: 'NULL_POINTER',        description: 'Dereferenced void strike',            baseDps: 1e22,                          baseCost: 1e27,                                  costMultiplier: 1.45, level: 0, unlocked: false, color: 'amber' },
-  { id: 'stack_overflow', name: 'STACK_OVERFLOW',      description: 'Recursive crash amplifier',           baseDps: 8e22,                          baseCost: 1e28,                                  costMultiplier: 1.45, level: 0, unlocked: false, color: 'pink'  },
-  { id: 'cryptoworm',     name: 'CRYPTOWORM',          description: 'Self-replicating ransom payload',     baseDps: 6.5e23,                        baseCost: 1e29,                                  costMultiplier: 1.45, level: 0, unlocked: false, color: 'cyan'  },
-  { id: 'hashcracker',    name: 'HASHCRACKER',         description: 'Rainbow table obliteration rig',      baseDps: 5e24,                          baseCost: 1e30,                                  costMultiplier: 1.45, level: 0, unlocked: false, color: 'green' },
-  { id: 'spinlock',       name: 'SPINLOCK_MAZE',       description: 'CPU starvation loop generator',       baseDps: 4e25,                          baseCost: 1e31,                                  costMultiplier: 1.46, level: 0, unlocked: false, color: 'amber' },
-  { id: 'firmware_burn',  name: 'FIRMWARE_BURN',       description: 'Persistent flash memory corruptor',   baseDps: 3.2e26,                        baseCost: 1e32,                                  costMultiplier: 1.46, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'gpu',            name: 'GPU_UNIT',            description: 'Parallel damage processor',          baseDps: 0.2,                           baseCost: 10,                                    costMultiplier: 1.18, level: 0, unlocked: true,  color: 'cyan'  },
+  { id: 'ram',            name: 'RAM_BANK',            description: 'Buffer overflow exploit',             baseDps: 0.8,                           baseCost: 100,                                   costMultiplier: 1.20, level: 0, unlocked: false, color: 'green' },
+  { id: 'cpu_cooler',     name: 'CPU_COOLER',          description: 'Thermal attack array',                baseDps: 3,                             baseCost: 1_000,                                 costMultiplier: 1.22, level: 0, unlocked: false, color: 'amber' },
+  { id: 'ssd',            name: 'SSD_DRIVE',           description: 'High-speed data injection',           baseDps: 12,                            baseCost: 10_000,                                costMultiplier: 1.24, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'psu',            name: 'PSU_CORE',            description: 'Power surge devastator',              baseDps: 50,                            baseCost: 100_000,                               costMultiplier: 1.26, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'liquid_cool',    name: 'LIQUID_COOL',         description: 'Thermal dissipation overcharge',      baseDps: 200,                           baseCost: 1_000_000,                             costMultiplier: 1.28, level: 0, unlocked: false, color: 'green' },
+  { id: 'fpga',           name: 'FPGA_ARRAY',          description: 'Reconfigurable logic attack grid',    baseDps: 800,                           baseCost: 10_000_000,                            costMultiplier: 1.30, level: 0, unlocked: false, color: 'amber' },
+  { id: 'tensor',         name: 'TENSOR_CORE',         description: 'Neural matrix decimator',             baseDps: 3_500,                         baseCost: 100_000_000,                           costMultiplier: 1.32, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'quantum',        name: 'QUANTUM_BIT',         description: 'Superposition damage state',          baseDps: 15_000,                        baseCost: 1_000_000_000,                         costMultiplier: 1.34, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'singularity',    name: 'SINGULARITY_ENGINE',  description: 'The end of all computation',          baseDps: 70_000,                        baseCost: 10_000_000_000,                        costMultiplier: 1.36, level: 0, unlocked: false, color: 'green' },
+  { id: 'darknet',        name: 'DARKNET_NODE',        description: 'Hidden relay packet flood',           baseDps: 320_000,                       baseCost: 100_000_000_000,                       costMultiplier: 1.36, level: 0, unlocked: false, color: 'amber' },
+  { id: 'bytestorm',      name: 'BYTESTORM_GEN',       description: 'Recursive payload detonator',         baseDps: 1_500_000,                     baseCost: 1_000_000_000_000,                     costMultiplier: 1.37, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'exploit_kit',    name: 'EXPLOIT_KIT',         description: 'Zero-day vulnerability swarm',        baseDps: 7_000_000,                     baseCost: 10_000_000_000_000,                    costMultiplier: 1.37, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'rootkit',        name: 'ROOTKIT_OMEGA',       description: 'Deep kernel privilege escalation',    baseDps: 35_000_000,                    baseCost: 100_000_000_000_000,                   costMultiplier: 1.38, level: 0, unlocked: false, color: 'green' },
+  { id: 'botnet',         name: 'BOTNET_SWARM',        description: 'Distributed DDoS annihilator',        baseDps: 170_000_000,                   baseCost: 1_000_000_000_000_000,                 costMultiplier: 1.38, level: 0, unlocked: false, color: 'amber' },
+  { id: 'cipher_engine',  name: 'CIPHER_ENGINE',       description: 'Cryptographic brute force array',     baseDps: 850_000_000,                   baseCost: 10_000_000_000_000_000,                costMultiplier: 1.39, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'memcrash',       name: 'MEMCRASH_UNIT',       description: 'Heap fragmentation disruptor',        baseDps: 4_000_000_000,                 baseCost: 100_000_000_000_000_000,               costMultiplier: 1.39, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'proxy_chain',    name: 'PROXY_CHAIN',         description: 'Layered anonymity strike vector',     baseDps: 20_000_000_000,                baseCost: 1_000_000_000_000_000_000,             costMultiplier: 1.40, level: 0, unlocked: false, color: 'green' },
+  { id: 'neural_hack',    name: 'NEURAL_HACK',         description: 'Synthetic synapse override',          baseDps: 100_000_000_000,               baseCost: 10_000_000_000_000_000_000,            costMultiplier: 1.40, level: 0, unlocked: false, color: 'amber' },
+  { id: 'data_leech',     name: 'DATA_LEECH',          description: 'Exfiltration pipeline maximizer',     baseDps: 500_000_000_000,               baseCost: 100_000_000_000_000_000_000,           costMultiplier: 1.40, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'vortex_node',    name: 'VORTEX_NODE',         description: 'Traffic singularity collapse',        baseDps: 2.5e12,                        baseCost: 1e21,                                  costMultiplier: 1.41, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'pulse_bomb',     name: 'PULSE_BOMB',          description: 'Electromagnetic burst disabler',      baseDps: 1.2e13,                        baseCost: 1e22,                                  costMultiplier: 1.41, level: 0, unlocked: false, color: 'green' },
+  { id: 'ghost_proc',     name: 'GHOST_PROC',          description: 'Invisible process execution fork',    baseDps: 6e13,                          baseCost: 1e23,                                  costMultiplier: 1.41, level: 0, unlocked: false, color: 'amber' },
+  { id: 'syscall_storm',  name: 'SYSCALL_STORM',       description: 'Kernel interrupt cascade flood',      baseDps: 3e14,                          baseCost: 1e24,                                  costMultiplier: 1.42, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'entropy_sink',   name: 'ENTROPY_SINK',        description: 'Randomness harvester weapon',         baseDps: 1.5e15,                        baseCost: 1e25,                                  costMultiplier: 1.42, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'parity_blitz',   name: 'PARITY_BLITZ',        description: 'Error correction obliterator',        baseDps: 7.5e15,                        baseCost: 1e26,                                  costMultiplier: 1.42, level: 0, unlocked: false, color: 'green' },
+  { id: 'null_pointer',   name: 'NULL_POINTER',        description: 'Dereferenced void strike',            baseDps: 4e16,                          baseCost: 1e27,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'amber' },
+  { id: 'stack_overflow', name: 'STACK_OVERFLOW',      description: 'Recursive crash amplifier',           baseDps: 2e17,                          baseCost: 1e28,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'pink'  },
+  { id: 'cryptoworm',     name: 'CRYPTOWORM',          description: 'Self-replicating ransom payload',     baseDps: 1e18,                          baseCost: 1e29,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'cyan'  },
+  { id: 'hashcracker',    name: 'HASHCRACKER',         description: 'Rainbow table obliteration rig',      baseDps: 5e18,                          baseCost: 1e30,                                  costMultiplier: 1.43, level: 0, unlocked: false, color: 'green' },
+  { id: 'spinlock',       name: 'SPINLOCK_MAZE',       description: 'CPU starvation loop generator',       baseDps: 2.5e19,                        baseCost: 1e31,                                  costMultiplier: 1.44, level: 0, unlocked: false, color: 'amber' },
+  { id: 'firmware_burn',  name: 'FIRMWARE_BURN',       description: 'Persistent flash memory corruptor',   baseDps: 1.2e20,                        baseCost: 1e32,                                  costMultiplier: 1.44, level: 0, unlocked: false, color: 'pink'  },
   { id: 'sector_wipe',    name: 'SECTOR_WIPE',         description: 'Block device annihilation pulse',     baseDps: 2.5e27,                        baseCost: 1e33,                                  costMultiplier: 1.46, level: 0, unlocked: false, color: 'cyan'  },
   { id: 'signal_jammer',  name: 'SIGNAL_JAMMER',       description: 'Frequency disruption emitter',        baseDps: 2e28,                          baseCost: 1e34,                                  costMultiplier: 1.46, level: 0, unlocked: false, color: 'green' },
   { id: 'arp_spoof',      name: 'ARP_SPOOF',           description: 'Network identity forger',             baseDps: 1.6e29,                        baseCost: 1e35,                                  costMultiplier: 1.47, level: 0, unlocked: false, color: 'amber' },
