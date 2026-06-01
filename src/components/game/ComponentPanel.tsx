@@ -51,7 +51,7 @@ const ComponentCard: React.FC<{
   const [levelUpQty, setLevelUpQty] = useState(0);
   const [showLevelUpText, setShowLevelUpText] = useState(false);
 
-  const nextMilestone = useMemo(() => 
+  const nextMilestone = useMemo(() =>
     COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level),
     [comp.level]
   );
@@ -118,7 +118,7 @@ const ComponentCard: React.FC<{
           style={{
             position: 'absolute',
             top: 4,
-            right: 8,
+            right: 4,
             color: colors.text,
             fontSize: '7px',
             textShadow: `0 0 8px ${colors.text}`,
@@ -211,9 +211,9 @@ const ComponentCard: React.FC<{
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       >
         {purchaseMode === 'max' ? (
-          maxQty > 0 ? <>x{maxQty}<br/>{formatNumber(cost)}</> : <>MAX<br/>--</>
+          maxQty > 0 ? <>x{maxQty}<br />{formatNumber(cost)}</> : <>MAX<br />--</>
         ) : (
-          <>x{qty}<br/>{formatNumber(cost)}</>
+          <>x{qty}<br />{formatNumber(cost)}</>
         )}
       </button>
     </div>
