@@ -99,7 +99,7 @@ const ComponentCard: React.FC<{
       style={{
         background: colors.bg,
         borderColor: colors.border,
-        padding: '6px',
+        padding: '12px',
         boxShadow: `0 0 8px ${colors.glow}`,
         position: 'relative',
         overflow: 'hidden',
@@ -107,7 +107,8 @@ const ComponentCard: React.FC<{
         transition: 'box-shadow 0.1s',
         display: 'flex',
         alignItems: 'center',
-        gap: '8px',
+        gap: '16px',
+        minHeight: 140,
       }}
     >
       {/* Level up floating text */}
@@ -134,8 +135,8 @@ const ComponentCard: React.FC<{
       <Tooltip position="right" content={tooltipContent}>
         <div
           style={{
-            width: 64,
-            height: 64,
+            width: 120,
+            height: 120,
             flexShrink: 0,
             background: '#050508',
             border: `1px solid ${colors.border}`,
@@ -164,7 +165,7 @@ const ComponentCard: React.FC<{
               className="font-pixel"
               style={{
                 color: colors.text,
-                fontSize: '8px',
+                fontSize: '14px',
                 textAlign: 'center',
                 padding: 4,
                 opacity: 0.6,
@@ -178,12 +179,12 @@ const ComponentCard: React.FC<{
             className="font-pixel"
             style={{
               position: 'absolute',
-              bottom: 2,
-              right: 2,
+              bottom: 4,
+              right: 4,
               background: 'rgba(0,0,0,0.85)',
               color: colors.text,
-              fontSize: '6px',
-              padding: '1px 3px',
+              fontSize: '10px',
+              padding: '2px 6px',
               borderRadius: 2,
             }}
           >
@@ -198,8 +199,8 @@ const ComponentCard: React.FC<{
           className="font-pixel"
           style={{
             color: colors.text,
-            fontSize: '7px',
-            marginBottom: 2,
+            fontSize: '11px',
+            marginBottom: 6,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -210,7 +211,7 @@ const ComponentCard: React.FC<{
         <div
           style={{
             fontFamily: 'var(--font-mono)',
-            fontSize: '9px',
+            fontSize: '13px',
             color: '#5a6a7a',
           }}
         >
@@ -227,14 +228,14 @@ const ComponentCard: React.FC<{
           background: canAfford ? colors.bg : '#0a0a0f',
           borderColor: canAfford ? colors.text : '#1a2a3a',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '6px 8px',
-          fontSize: '6px',
+          padding: '10px 12px',
+          fontSize: '9px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
           boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
           whiteSpace: 'nowrap',
           transition: 'transform 0.08s, box-shadow 0.08s',
           flexShrink: 0,
-          lineHeight: 1.3,
+          lineHeight: 1.4,
           textAlign: 'center',
         }}
         onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
