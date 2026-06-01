@@ -30,6 +30,8 @@ export const UpgradeScreen: React.FC<UpgradeScreenProps> = ({ engine, onClose })
   const heroUpgrades = useGameState(engine, s => s.heroUpgrades);
   const skillUpgrades = useGameState(engine, s => s.skillUpgrades);
 
+  const heroPlugin = engine.getPlugin<HeroPlugin>('hero');
+
   // Derive computed lists from reactive state so they re-render on every upgrade
   const heroUpgradesList = heroPlugin?.getHeroUpgrades() ?? [];
   const skillUpgradesList = heroPlugin?.getSkillUpgrades() ?? [];
