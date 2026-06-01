@@ -108,7 +108,7 @@ const ComponentCard: React.FC<{
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        minHeight: 140,
+        minHeight: 260,
       }}
     >
       {/* Level up floating text */}
@@ -135,18 +135,16 @@ const ComponentCard: React.FC<{
       <Tooltip position="right" content={tooltipContent}>
         <div
           style={{
-            width: 120,
-            height: 120,
+            width: 240,
+            height: 240,
             flexShrink: 0,
-            background: '#050508',
-            border: `1px solid ${colors.border}`,
-            borderRadius: 4,
+            background: 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'help',
             position: 'relative',
-            overflow: 'hidden',
+            overflow: 'visible',
           }}
         >
           {spriteImage ? (
@@ -165,7 +163,7 @@ const ComponentCard: React.FC<{
               className="font-pixel"
               style={{
                 color: colors.text,
-                fontSize: '14px',
+                fontSize: '28px',
                 textAlign: 'center',
                 padding: 4,
                 opacity: 0.6,
@@ -179,16 +177,17 @@ const ComponentCard: React.FC<{
             className="font-pixel"
             style={{
               position: 'absolute',
-              bottom: 4,
-              right: 4,
+              bottom: 8,
+              right: 8,
               background: 'rgba(0,0,0,0.85)',
               color: colors.text,
-              fontSize: '10px',
-              padding: '2px 6px',
+              fontSize: '12px',
+              padding: '4px 8px',
               borderRadius: 2,
+              border: `1px solid ${colors.border}`,
             }}
           >
-            {comp.level}
+            LV {comp.level}
           </div>
         </div>
       </Tooltip>
