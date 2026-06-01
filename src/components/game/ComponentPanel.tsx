@@ -175,51 +175,12 @@ const ComponentCard: React.FC<{
               {comp.name.slice(0, 3)}
             </div>
           )}
-          {/* Level badge */}
-          <div
-            className="font-pixel"
-            style={{
-              position: 'absolute',
-              bottom: 8,
-              right: 8,
-              background: 'rgba(0,0,0,0.85)',
-              color: colors.text,
-              fontSize: '12px',
-              padding: '4px 8px',
-              borderRadius: 2,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            LV {comp.level}
-          </div>
+          {/* Level badge - hidden, info in tooltip only */}
+        
         </div>
       </Tooltip>
 
-      {/* Info column */}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div
-          className="font-pixel"
-          style={{
-            color: colors.text,
-            fontSize: '11px',
-            marginBottom: 6,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}
-        >
-          {comp.name}
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '13px',
-            color: '#5a6a7a',
-          }}
-        >
-          <span style={{ color: colors.text }}>{formatNumber(dps)}</span>/s
-        </div>
-      </div>
+      {/* Info column - hidden, all info in tooltip */}
 
       {/* Buy button - positioned on top of image */}
       <button
@@ -230,14 +191,14 @@ const ComponentCard: React.FC<{
           background: canAfford ? colors.bg : '#0a0a0f',
           borderColor: canAfford ? colors.text : '#1a2a3a',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '10px 12px',
-          fontSize: '9px',
+          padding: '14px 16px',
+          fontSize: '11px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
           boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
           whiteSpace: 'nowrap',
           transition: 'transform 0.08s, box-shadow 0.08s',
           flexShrink: 0,
-          lineHeight: 1.4,
+          lineHeight: 1.5,
           textAlign: 'center',
           position: 'absolute',
           top: 12,
