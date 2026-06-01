@@ -47,8 +47,12 @@ export const ENEMY_SPRITES: EnemyTierSprites[] = [
     tier: 0,
     sprites: [
       { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 2.0 },
-      // Add more tier 0 sprites here:
-      // { id: 'malware', name: 'MALWARE.BAT', src: '/assets/enemies/malware.png', scale: 1.0 },
+      { id: 'null_ptr', name: 'null_ptr', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 },
+      { id: 'rootkit', name: 'ROOTKIT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 },
+      { id: 'malware_bat', name: 'MALWARE.BAT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 },
+      { id: 'spam_bot', name: 'SPAM_BOT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 },
+      { id: 'corrupt_proc', name: 'CORRUPT_PROC', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 },
+      { id: 'stackoverflow', name: 'STACKOVERFLOW', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 },
     ],
     // bossSprite: { id: 'firewall_boss', name: 'THE_FIREWALL', src: '/assets/enemies/firewall-boss.png', scale: 1.2 },
   },
