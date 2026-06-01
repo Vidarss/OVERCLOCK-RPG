@@ -134,7 +134,7 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Module Image — centered in panel */}
+      {/* Module Image — visible inside card */}
       {spriteImage && (
         <img
           src={spriteImage}
@@ -142,13 +142,14 @@ const ComponentCard: React.FC<{
           style={{
             position: 'absolute',
             top: '50%',
-            left: '-70px',
-            transform: 'translateY(-50%)',
-            height: '130%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            height: '140%',
             width: 'auto',
             objectFit: 'contain',
             imageRendering: 'pixelated',
             zIndex: 1,
+            opacity: 0.9,
           }}
         />
       )}
@@ -161,8 +162,8 @@ const ComponentCard: React.FC<{
             left: '50%',
             transform: 'translate(-50%, -50%)',
             color: colors.text,
-            fontSize: '20px',
-            opacity: 0.4,
+            fontSize: '24px',
+            opacity: 0.5,
             zIndex: 1,
           }}
         >
@@ -175,29 +176,26 @@ const ComponentCard: React.FC<{
         disabled={!canAfford}
         className="font-pixel pixel-border"
         style={{
-          background: canAfford ? `linear-gradient(135deg, ${colors.bg}99, rgba(0,0,0,0.5))` : 'transparent',
+          background: canAfford ? colors.bg : '#050508',
           borderColor: canAfford ? colors.text : '#1a2a3a',
-          borderWidth: canAfford ? '2px' : '1px',
+          borderWidth: '2px',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '8px 12px',
-          fontSize: '10px',
+          padding: '12px 20px',
+          fontSize: '14px',
           fontWeight: 'bold',
-          letterSpacing: '0.5px',
+          letterSpacing: '1px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
-          boxShadow: canAfford ? `0 0 12px ${colors.glow}dd, inset 0 0 8px rgba(255,255,255,0.15), 0 0 14px ${colors.glow}55` : 'none',
+          boxShadow: canAfford ? `0 0 16px ${colors.glow}, 0 0 24px ${colors.glow}` : 'none',
           whiteSpace: 'nowrap',
-          transition: 'transform 0.1s ease-out, box-shadow 0.1s ease-out, filter 0.1s ease-out',
-          lineHeight: 1.4,
+          transition: 'transform 0.1s ease-out',
           textAlign: 'center',
           position: 'absolute',
-          bottom: 12,
-          right: 12,
+          bottom: 8,
+          right: 8,
           zIndex: 20,
-          textShadow: canAfford ? `0 0 6px ${colors.glow}, 0 0 3px rgba(0,0,0,0.8)` : 'none',
-          filter: canAfford ? 'drop-shadow(0 0 4px rgba(0,0,0,0.8)) brightness(1.08)' : 'opacity(0.6)',
-          backdropFilter: 'blur(1px)',
+          textShadow: canAfford ? `0 0 8px ${colors.text}` : 'none',
         }}
-        onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.88)'; }}
+        onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.9)'; }}
         onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       >
