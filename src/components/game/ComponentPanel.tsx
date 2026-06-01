@@ -136,10 +136,16 @@ const ComponentCard: React.FC<{
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
             cursor: 'help',
             zIndex: 1,
             overflow: 'visible',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           {spriteImage ? (
@@ -147,13 +153,10 @@ const ComponentCard: React.FC<{
               src={spriteImage}
               alt={comp.name}
               style={{
-                position: 'absolute',
-                inset: 0,
-                width: '100%',
-                height: '100%',
+                maxWidth: '100%',
+                maxHeight: '100%',
                 objectFit: 'contain',
                 imageRendering: 'pixelated',
-                overflow: 'visible',
               }}
             />
           ) : (
