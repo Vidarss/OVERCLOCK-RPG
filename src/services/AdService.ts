@@ -293,7 +293,6 @@ class AdServiceImpl {
         adContainer.appendChild(adScript);
 
         // Trigger AdSense to render the ad
-        // Note: adsbygoogle.push() does NOT support callbacks
         if ((window as any).adsbygoogle) {
           console.log('[v0] AdService: adsbygoogle found, pushing ad');
           (window as any).adsbygoogle.push({});
@@ -301,12 +300,43 @@ class AdServiceImpl {
           console.warn('[v0] AdService: adsbygoogle not available');
         }
         
-        // Since AdSense has no callback, use a timeout to start the timer
-        // This gives AdSense time to render, then starts the countdown
+        // Check if ad actually rendered after 1.5 seconds
+        let adRendered = false;
+        const checkAdRendered = () => {
+          const iframeCount = adContainer.querySelectorAll('iframe').length;
+          if (iframeCount > 0) {
+            adRendered = true;
+            console.log('[v0] AdService: Ad iframe detected');
+          }
+        };
+        
+        setTimeout(checkAdRendered, 1500);
+        
+        // After 3 seconds, if ad didn't render, show placeholder and start timer
         setTimeout(() => {
-          console.log('[v0] AdService: 2s timeout - starting timer');
+          console.log('[v0] AdService: 3s timeout - ad rendered:', adRendered);
           if (!adLoaded) {
             adLoaded = true;
+            
+            // If no actual ad rendered, show a fallback placeholder
+            if (!adRendered) {
+              loadingText.textContent = '';
+              const placeholder = document.createElement('div');
+              placeholder.style.cssText = `
+                width: 100%; height: 100%;
+                display: flex; flex-direction: column;
+                align-items: center; justify-content: center;
+                background: linear-gradient(135deg, #1a2a3a 0%, #0a1a2a 100%);
+                gap: 8px;
+              `;
+              placeholder.innerHTML = `
+                <div style="font-size: 12px; color: #2a4a6a; letter-spacing: 2px;">ADVERTISEMENT</div>
+                <div style="font-size: 24px;">📱</div>
+                <div style="font-size: 10px; color: #3a5a7a; text-align: center; max-width: 80%;">Check back soon for exclusive offers</div>
+              `;
+              adContainer.appendChild(placeholder);
+            }
+            
             loadingText.style.display = 'none';
             timerBox.style.cssText = `
               font-size: 10px; letter-spacing: 1px;
@@ -316,13 +346,13 @@ class AdServiceImpl {
             `;
             startTimer();
           }
-        }, 2000); // 2 second delay for ad to load
+        }, 3000); // 3 second total wait for AdSense to load
         
       } catch (error) {
         console.error('[AdService] Failed to load AdSense:', error);
         adLoaded = true;
-        loadingText.textContent = 'AD UNAVAILABLE';
-        startTimer();
+        loadingText.textContent = 'AD ERROR';
+        setTimeout(() => startTimer(), 500);
       }
 
       // Timer only starts after ad loads
