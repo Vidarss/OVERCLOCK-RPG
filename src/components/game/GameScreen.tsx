@@ -340,7 +340,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
         {/* Left sidebar: Components */}
         <div
           style={{
-            width: 260, flexShrink: 0,
+            width: 234, flexShrink: 0,
             background: '#0a0a0f',
             borderRight: '1px solid #1a2a3a',
             overflow: 'hidden',
