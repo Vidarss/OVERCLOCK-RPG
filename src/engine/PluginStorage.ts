@@ -106,4 +106,14 @@ export class PluginStorage {
   ): Promise<{ error: string | null }> {
     return db.remove(table, filters);
   }
+
+  /**
+   * Call a database RPC function.
+   */
+  async rpc<T = unknown>(
+    functionName: string,
+    params?: Record<string, unknown>
+  ): Promise<{ data: T | null; error: string | null }> {
+    return db.rpc<T>(functionName, params);
+  }
 }

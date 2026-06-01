@@ -75,6 +75,9 @@ export class TournamentPlugin implements IPlugin {
   }
 
   private async loadTournaments(): Promise<void> {
+    // Ensure tournaments exist in DB by calling the function
+    await this.ensureActiveTournaments();
+    
     // Load all non-ended tournaments (upcoming + active)
     const { data } = await this.engine.storage.loadMany<Tournament>(
       'tournaments',
@@ -82,78 +85,19 @@ export class TournamentPlugin implements IPlugin {
       'id, name, template_name, bracket_number, starts_at, ends_at, join_closes_at, prize_diamonds, entry_fee_diamonds, player_cap, status'
     );
     // Filter client-side: exclude ended, sort by starts_at
-    const fromDb = data
+    this.tournaments = data
       .filter(t => t.status !== 'ended')
       .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
-
-    // If the DB has no tournaments, generate rotating ones locally
-    this.tournaments = fromDb.length > 0 ? fromDb : this.generateLocalTournaments();
   }
 
-  /**
-   * Generate a set of always-available rotating tournaments based on the
-   * config templates. Each tournament cycles based on its durationHours.
-   */
-  private generateLocalTournaments(): Tournament[] {
-    const now = Date.now();
-    const hourMs = 60 * 60 * 1000;
-
-    const templates = TOURNAMENT_CONFIG.localTemplates;
-    const results: Tournament[] = [];
-
-    for (let i = 0; i < templates.length; i++) {
-      const template = templates[i];
-      const durationMs = template.durationHours * hourMs;
-      
-      // Stagger tournaments by offsetting each by a fraction of the duration
-      // so they don't all start/end at the same time
-      const offsetMs = (i * durationMs) / templates.length;
-      
-      // Calculate the current cycle start based on duration
-      const cycleNumber = Math.floor((now - offsetMs) / durationMs);
-      const starts = (cycleNumber * durationMs) + offsetMs;
-      const ends = starts + durationMs;
-      const joinCloses = starts + (template.joinWindowHours * hourMs);
-
-      const status: Tournament['status'] =
-        now >= starts && now < ends ? 'active' :
-        now < starts ? 'upcoming' : 'ended';
-
-      if (status !== 'ended') {
-        results.push({
-          id: `local-${template.id}-${cycleNumber}`,
-          name: template.name,
-          template_name: template.templateName,
-          bracket_number: cycleNumber % 100,
-          starts_at: new Date(starts).toISOString(),
-          ends_at: new Date(ends).toISOString(),
-          join_closes_at: new Date(joinCloses).toISOString(),
-          prize_diamonds: template.prizeDiamonds,
-          entry_fee_diamonds: template.entryFeeDiamonds,
-          player_cap: template.playerCap,
-          status,
-        });
-      }
-
-      // Add the next upcoming tournament
-      const nextStarts = starts + durationMs;
-      const nextEnds = nextStarts + durationMs;
-      results.push({
-        id: `local-${template.id}-${cycleNumber + 1}`,
-        name: `${template.name} II`,
-        template_name: template.templateName,
-        bracket_number: (cycleNumber + 1) % 100,
-        starts_at: new Date(nextStarts).toISOString(),
-        ends_at: new Date(nextEnds).toISOString(),
-        join_closes_at: null,
-        prize_diamonds: template.prizeDiamonds,
-        entry_fee_diamonds: template.entryFeeDiamonds,
-        player_cap: template.playerCap,
-        status: 'upcoming',
-      });
+  /** Call database function to ensure rotating tournaments exist */
+  private async ensureActiveTournaments(): Promise<void> {
+    try {
+      await this.engine.storage.rpc('ensure_active_tournaments');
+    } catch (e) {
+      // Function may not exist yet, ignore
+      console.warn('[TournamentPlugin] Could not ensure tournaments:', e);
     }
-
-    return results;
   }
 
   private async loadMyEntries(): Promise<void> {
@@ -176,14 +120,6 @@ export class TournamentPlugin implements IPlugin {
   }
 
   private async loadLeaderboard(tournamentId: string): Promise<void> {
-    if (this.isLocalTournament(tournamentId)) {
-      // Local tournaments: leaderboard is in-memory only
-      const existing = this.leaderboards[tournamentId] ?? [];
-      const sorted = [...existing].sort((a, b) => b.score - a.score).slice(0, TOURNAMENT_CONFIG.leaderboardLimit);
-      this.leaderboards[tournamentId] = sorted;
-      this.participantCounts[tournamentId] = sorted.length;
-      return;
-    }
     const { data } = await this.engine.storage.loadMany<TournamentEntry>(
       'tournament_entries',
       { tournament_id: tournamentId },
@@ -192,11 +128,6 @@ export class TournamentPlugin implements IPlugin {
     const sorted = data.sort((a, b) => b.score - a.score).slice(0, TOURNAMENT_CONFIG.leaderboardLimit);
     this.leaderboards[tournamentId] = sorted;
     this.participantCounts[tournamentId] = data.length;
-  }
-
-  /** True when a tournament is locally generated (not stored in the DB). */
-  private isLocalTournament(tournamentId: string): boolean {
-    return tournamentId.startsWith('local-');
   }
 
   async joinTournament(tournamentId: string): Promise<{ success: boolean; error?: string }> {
@@ -216,7 +147,7 @@ export class TournamentPlugin implements IPlugin {
 
     if (t.entry_fee_diamonds > 0) {
       if (this.engine.state.diamonds < t.entry_fee_diamonds) {
-        return { success: false, error: `Need ${t.entry_fee_diamonds} ◈ to enter` };
+        return { success: false, error: `Need ${t.entry_fee_diamonds} diamonds to enter` };
       }
       this.engine.updateState({ diamonds: this.engine.state.diamonds - t.entry_fee_diamonds });
     }
@@ -224,49 +155,29 @@ export class TournamentPlugin implements IPlugin {
     const currentMaxStage = this.engine.state.maxStage ?? 1;
     const sessionId = `${tournamentId}-${this.userId}-${Date.now()}`;
 
-    let entry: TournamentEntry;
-
-    if (this.isLocalTournament(tournamentId)) {
-      // Local tournament — store entry in memory only
-      entry = {
-        id: `local-entry-${Date.now()}`,
+    // Always save to database for real multiplayer
+    const { data, error } = await this.engine.storage.insert<TournamentEntry>(
+      'tournament_entries',
+      {
         tournament_id: tournamentId,
         user_id: this.userId,
         handle: this.handle,
         score: this.engine.state.highestStage,
         rank: null,
-        joined_at: new Date().toISOString(),
         start_max_stage: currentMaxStage,
-      };
-    } else {
-      const { data, error } = await this.engine.storage.insert<TournamentEntry>(
-        'tournament_entries',
-        {
-          tournament_id: tournamentId,
-          user_id: this.userId,
-          handle: this.handle,
-          score: this.engine.state.highestStage,
-          rank: null,
-          start_max_stage: currentMaxStage,
-        },
-        'id, tournament_id, user_id, handle, score, rank, joined_at, start_max_stage'
-      );
+      },
+      'id, tournament_id, user_id, handle, score, rank, joined_at, start_max_stage'
+    );
 
-      if (error || !data) {
-        if (t.entry_fee_diamonds > 0) {
-          this.engine.updateState({ diamonds: this.engine.state.diamonds + t.entry_fee_diamonds });
-        }
-        return { success: false, error: 'Failed to join' };
+    if (error || !data) {
+      if (t.entry_fee_diamonds > 0) {
+        this.engine.updateState({ diamonds: this.engine.state.diamonds + t.entry_fee_diamonds });
       }
-      entry = data;
+      return { success: false, error: 'Failed to join' };
     }
 
-    this.myEntries[tournamentId] = entry;
+    this.myEntries[tournamentId] = data;
     this.participantCounts[tournamentId] = participantCount + 1;
-    // For local tournaments seed the leaderboard with this entry
-    if (this.isLocalTournament(tournamentId)) {
-      this.leaderboards[tournamentId] = [entry, ...(this.leaderboards[tournamentId] ?? [])];
-    }
     this.engine.updateState({ tournamentSessionId: sessionId, tournamentMaxStage: currentMaxStage });
     await this.loadLeaderboard(tournamentId);
     this.engine.emit('tournament_joined', { tournament: t });
@@ -279,18 +190,12 @@ export class TournamentPlugin implements IPlugin {
     for (const [tid, entry] of Object.entries(this.myEntries)) {
       if (newScore <= entry.score) continue;
       entry.score = newScore;
-      if (this.isLocalTournament(tid)) {
-        // Update in-memory leaderboard entry
-        const lb = this.leaderboards[tid] ?? [];
-        const idx = lb.findIndex(e => e.id === entry.id);
-        if (idx >= 0) lb[idx].score = newScore;
-      } else {
-        await this.engine.storage.save(
-          'tournament_entries',
-          { id: entry.id, score: newScore },
-          'id'
-        );
-      }
+      // Update in database for real multiplayer
+      await this.engine.storage.save(
+        'tournament_entries',
+        { id: entry.id, score: newScore },
+        'id'
+      );
       this.engine.emit('tournament_score_update', { tournamentId: tid, score: newScore });
       await this.loadLeaderboard(tid);
     }
