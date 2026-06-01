@@ -111,7 +111,7 @@ export class EnemyPlugin implements IPlugin {
     this.spawnForStage(bossStage);
   }
 
-  applyDamage(amount: number): void {
+  applyDamage(amount: number, isCrit?: boolean): void {
     const state = this.engine.state;
     if (!state.enemy) return;
 
@@ -134,7 +134,7 @@ export class EnemyPlugin implements IPlugin {
       totalDamageDealt: state.totalDamageDealt + effectiveDamage,
     });
 
-    this.engine.emit('enemy_hit', { damage: effectiveDamage, hp: newHp, maxHp: state.enemy.maxHp });
+    this.engine.emit('enemy_hit', { damage: effectiveDamage, hp: newHp, maxHp: state.enemy.maxHp, isCrit: isCrit ?? false });
 
     if (newHp <= 0) {
       this.handleEnemyDeath();

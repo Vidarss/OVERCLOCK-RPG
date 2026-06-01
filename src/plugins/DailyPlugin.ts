@@ -87,6 +87,8 @@ export class DailyPlugin implements IPlugin {
   private listeners: Array<() => void> = [];
   private unsubs: Array<() => void> = [];
   private userId: string | null = null;
+  private currentDate: string | null = null; // Track loaded date to prevent resets
+  private isLoading = false; // Prevent concurrent loads
   private killCount = 0;
   private goldEarned = 0;
   private tapDamage = 0;
@@ -153,8 +155,6 @@ export class DailyPlugin implements IPlugin {
         this.incrementChallenge('earn_gold', event.payload.goldReward);
         this.incrementChallenge('earn_gold_fast', event.payload.goldReward);
         this.incrementChallenge('clear_stages', 1);
-        const currentStage = this.engine.state.stage;
-        this.updateMaxChallenge('reach_stage', currentStage);
         // Reset per-stage counters
         this.tapDamage = 0;
       })
@@ -198,8 +198,11 @@ export class DailyPlugin implements IPlugin {
     );
 
     this.unsubs.push(
-      engine.on('gold_earned', (event: GameEvent<{ amount: number }>) => {
-        this.incrementChallenge('gold_hoard', event.payload.amount);
+      engine.on('gold_changed', (event: GameEvent<{ delta: number }>) => {
+        // gold_changed with positive delta means gold earned
+        if (event.payload.delta > 0) {
+          this.incrementChallenge('gold_hoard', event.payload.delta);
+        }
       })
     );
 
@@ -211,50 +214,56 @@ export class DailyPlugin implements IPlugin {
   }
 
   private async loadOrGenerateChallenges(): Promise<void> {
-    if (!this.userId) {
-      console.log('[v0] DailyPlugin: No userId, skipping loadOrGenerateChallenges');
-      return;
-    }
+    if (!this.userId) return;
+    if (this.isLoading) return; // Prevent concurrent loads
 
     const today = getLondonDateString();
-    console.log('[v0] DailyPlugin: Loading challenges for', today);
     
-    // Try to load from DB first
-    const { data, error } = await this.engine.storage.loadMany('daily_challenges', {
-      user_id: this.userId,
-      challenge_date: today,
-    });
-
-    if (error) {
-      console.log('[v0] DailyPlugin: DB error, generating local challenges:', error);
-      this.generateLocalChallenges(today);
-      this.notify();
+    // If already loaded challenges for today, don't reload (prevents resets)
+    if (this.currentDate === today && this.challenges.length > 0) {
       return;
     }
 
-    console.log('[v0] DailyPlugin: Loaded', data?.length ?? 0, 'challenges from DB');
+    this.isLoading = true;
+    
+    try {
+      // Try to load from DB first
+      const { data, error } = await this.engine.storage.loadMany('daily_challenges', {
+        user_id: this.userId,
+        challenge_date: today,
+      });
 
-    if (data && data.length >= DAILY_CONFIG.challengesPerDay) {
-      this.challenges = data as DailyChallenge[];
-      console.log('[v0] DailyPlugin: Using DB challenges');
-    } else if (data && data.length > 0) {
-      // Has some but not enough - use what we have
-      this.challenges = data as DailyChallenge[];
-      console.log('[v0] DailyPlugin: Using partial DB challenges');
-    } else {
-      // No data - try to insert to DB, fall back to local
-      console.log('[v0] DailyPlugin: No DB data, generating challenges');
-      await this.generateChallenges(today);
+      if (error) {
+        this.generateLocalChallenges(today);
+        this.currentDate = today;
+        this.notify();
+        return;
+      }
+
+      if (data && data.length >= DAILY_CONFIG.challengesPerDay) {
+        // Use existing challenges from DB
+        this.challenges = data as DailyChallenge[];
+        this.currentDate = today;
+      } else if (data && data.length > 0) {
+        // Has some but not enough - use what we have (don't generate more to avoid duplicates)
+        this.challenges = data as DailyChallenge[];
+        this.currentDate = today;
+      } else {
+        // No data - generate new challenges
+        await this.generateChallenges(today);
+        this.currentDate = today;
+      }
+      
+      // Final fallback: if still no challenges, generate locally
+      if (this.challenges.length === 0) {
+        this.generateLocalChallenges(today);
+        this.currentDate = today;
+      }
+      
+      this.notify();
+    } finally {
+      this.isLoading = false;
     }
-    
-    // Final fallback: if still no challenges, generate locally
-    if (this.challenges.length === 0) {
-      console.log('[v0] DailyPlugin: No challenges after generation, forcing local');
-      this.generateLocalChallenges(today);
-    }
-    
-    console.log('[v0] DailyPlugin: Final challenge count:', this.challenges.length);
-    this.notify();
   }
 
   /**

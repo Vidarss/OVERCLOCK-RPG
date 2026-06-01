@@ -45,7 +45,7 @@ export class TapPlugin implements IPlugin {
     this.engine.emit('damage_number', dmgEvent);
 
     const enemyPlugin = this.engine.getPlugin<EnemyPlugin>('enemy');
-    enemyPlugin?.applyDamage(damage);
+    enemyPlugin?.applyDamage(damage, isCrit);
   }
 
   onTick(_delta: number, _state: GameState): void {}
