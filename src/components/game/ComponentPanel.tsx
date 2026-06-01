@@ -265,8 +265,7 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
                   }}
                 >
                   {m.label}
-      </button>
-    </Tooltip>
+                  </button>
               );
             })}
           </div>
