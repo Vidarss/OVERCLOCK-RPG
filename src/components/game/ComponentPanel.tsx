@@ -21,7 +21,7 @@ const COMPONENT_IMAGES: Record<string, string> = {
   gpu: '/images/components/gpu_unit.png',
   ram: '/images/components/ram_bank.png',
   cpu_cooler: '/images/components/cpu_cooler.png',
-  // ssd:         '/images/components/ssd_drive.png',
+  ssd: '/images/components/ssd_drive.png',
   // psu:         '/images/components/psu_core.png',
   // liquid_cool: '/images/components/liquid_cool.png',
   // fpga:        '/images/components/fpga_array.png',

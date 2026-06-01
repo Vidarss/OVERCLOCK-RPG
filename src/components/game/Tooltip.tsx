@@ -75,7 +75,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         onMouseLeave={hide}
         onFocus={show}
         onBlur={hide}
-        style={{ position: 'relative', display: 'inline-flex' }}
+        style={{ position: 'relative', display: 'contents' }}
       >
         {children}
       </div>
