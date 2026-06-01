@@ -258,7 +258,7 @@ function MemberRow({
         {isMe && <span style={{ color: '#00f5ff44', fontSize: '8px', marginLeft: 4 }}>(you)</span>}
       </span>
       <span className="font-pixel" style={{ color: '#ffaa00', fontSize: '7px', marginRight: 4 }}>
-        STG {member.max_stage}
+        STG {member.highest_stage ?? 0}
       </span>
       <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '7px', minWidth: 50, textAlign: 'right' }}>
         {getRoleLabel(member.role)}
