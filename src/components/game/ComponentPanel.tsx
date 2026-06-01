@@ -139,8 +139,8 @@ const ComponentCard: React.FC<{
           style={{
             position: 'absolute',
             top: '50%',
-            left: '60%',
-            transform: 'translate(-50%, -50%)',
+            right: '-60px',
+            transform: 'translateY(-50%)',
             height: '100%',
             width: 'auto',
             objectFit: 'contain',
