@@ -56,6 +56,10 @@ const ComponentCard: React.FC<{
     [comp.level]
   );
 
+  const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
+  const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
+  const canAfford = qty > 0 && gold >= cost;
+
   const tooltipContent = useMemo(() => (
     <>
       <TooltipLabel label={comp.name} color={colors.text} />
@@ -71,11 +75,7 @@ const ComponentCard: React.FC<{
       )}
       <TooltipStat label="Cost" value={qty > 0 ? `${formatNumber(cost)}` : '--'} color={canAfford ? '#ffcc00' : '#aa4444'} />
     </>
-  ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone]);
-
-  const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
-  const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
-  const canAfford = qty > 0 && gold >= cost;
+  ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone, qty, cost, canAfford]);
 
   if (!comp.unlocked) return null;
 
