@@ -52,7 +52,7 @@ export default defineConfig(({ mode }) => {
       exclude: ['lucide-react'],
     },
     server: {
-      allowedHosts: ['sb-tt1rt6utlu6m.vercel.run', 'localhost', '127.0.0.1'],
+      allowedHosts: true,
     },
     define: {
       // Expose both VITE_* and NEXT_PUBLIC_* variants so the app code can use either
