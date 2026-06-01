@@ -151,7 +151,7 @@ export const TAP_CONFIG = {
   /** Base crit chance (0–1). Additive with modifier stack. */
   baseCritChance: 0.1,
   /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
-  baseCritMultiplier: 5,
+  baseCritMultiplier: 1.5,
   /** Window (ms) within which rapid taps build a combo. */
   comboWindowMs: 800,
   /** Number of taps within the window required to activate combo bonus. */
@@ -169,11 +169,12 @@ export const TAP_CONFIG = {
 //   At level 200: cost ~59T gold, +200 tap damage
 //   Diminishing returns via cost scaling keeps progression in check
 //
-// - CRIT CHANCE: Caps at 50% total (10% base + 40 levels * 1%)
-//   Expensive, strategic investment for burst damage
+// - CRIT CHANCE: Caps at 30% total (10% base + 20 levels * 1%)
+//   Strategic choice, but not overpowered on its own
 //
-// - CRIT DAMAGE: Caps at 10x total (5x base + 50 levels * 0.1x)
-//   Multiplicative scaling - powerful but capped to prevent infinite scaling
+// - CRIT DAMAGE: Caps at 2.5x total (1.5x base + 20 levels * 0.05x)
+//   Crit is a multiplier, not a game-changer. Requires skill combos for real power.
+//   20 clicks/sec with 2.5x crit is manageable, not instant-kill.
 //
 // FORMULA: upgradeCost(level) = baseCost * costMultiplier^level
 // ─────────────────────────────────────────────────────────────────────────────
@@ -225,7 +226,7 @@ export const HERO_CONFIG = {
       description: 'Increase critical hit chance',
       baseCost: 500,
       costMultiplier: 1.28,        // Steeper cost curve
-      maxLevel: 40,                // Caps at +40% crit chance (50% total)
+      maxLevel: 20,                // Caps at +20% crit chance (30% total)
       modifierType: 'crit_chance',
       valuePerLevel: 0.01,         // +1% crit chance per level
       isMultiplier: false,
@@ -238,9 +239,9 @@ export const HERO_CONFIG = {
       description: 'Increase critical damage multiplier',
       baseCost: 1000,
       costMultiplier: 1.32,        // Steeper cost curve
-      maxLevel: 50,                // Caps at +5x crit damage (10x total)
+      maxLevel: 20,                // Caps at +1x crit damage (2.5x total)
       modifierType: 'crit_multiplier',
-      valuePerLevel: 0.10,         // +10% crit damage per level
+      valuePerLevel: 0.05,         // +5% crit damage per level (reduced from 10%)
       isMultiplier: false,
       color: '#ffaa00',
       icon: '💥',
