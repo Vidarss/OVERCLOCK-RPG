@@ -146,6 +146,7 @@ class AdServiceImpl {
    * Then this will display a real AdSense display ad in a modal
    */
   private async showAdSenseAd(): Promise<AdResult> {
+    console.log('[v0] AdService: showAdSenseAd called');
     return new Promise((resolve) => {
       const adDuration = 8_000; // Show ad for 8 seconds minimum AFTER it loads
       const skipAfterSec = 5; // Allow skip after 5 seconds of watching
@@ -153,6 +154,8 @@ class AdServiceImpl {
       let canSkip = false;
       let adLoaded = false; // Track if ad has actually loaded
       let timerInterval: any = null;
+      
+      console.log('[v0] AdService: Creating modal overlay');
       
       // Create overlay
       const overlay = document.createElement('div');
@@ -265,6 +268,8 @@ class AdServiceImpl {
       modal.appendChild(bottomBar);
       overlay.appendChild(modal);
       document.body.appendChild(overlay);
+      
+      console.log('[v0] AdService: Modal appended to body');
 
       // Add CSS animation for loading text
       const style = document.createElement('style');
@@ -290,12 +295,16 @@ class AdServiceImpl {
         // Trigger AdSense to render the ad
         // Note: adsbygoogle.push() does NOT support callbacks
         if ((window as any).adsbygoogle) {
+          console.log('[v0] AdService: adsbygoogle found, pushing ad');
           (window as any).adsbygoogle.push({});
+        } else {
+          console.warn('[v0] AdService: adsbygoogle not available');
         }
         
         // Since AdSense has no callback, use a timeout to start the timer
         // This gives AdSense time to render, then starts the countdown
         setTimeout(() => {
+          console.log('[v0] AdService: 2s timeout - starting timer');
           if (!adLoaded) {
             adLoaded = true;
             loadingText.style.display = 'none';
