@@ -131,53 +131,47 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Module Image — fills the panel exactly, overflows transparently */}
-      <Tooltip position="right" content={tooltipContent}>
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            cursor: 'help',
-            zIndex: 1,
-            overflow: 'visible',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          {spriteImage ? (
-            <img
-              src={spriteImage}
-              alt={comp.name}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '100%',
-                objectFit: 'contain',
-                imageRendering: 'pixelated',
-              }}
-            />
-          ) : (
-            <div
-              className="font-pixel"
-              style={{
-                position: 'absolute',
-                inset: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.text,
-                fontSize: '20px',
-                opacity: 0.4,
-              }}
-            >
-              {comp.name.slice(0, 3)}
-            </div>
-          )}
-        </div>
-      </Tooltip>
+      {/* Module Image — fills the panel, can overflow */}
+      {spriteImage && (
+        <Tooltip position="right" content={tooltipContent}>
+          <img
+            src={spriteImage}
+            alt={comp.name}
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              height: '100%',
+              width: 'auto',
+              objectFit: 'contain',
+              imageRendering: 'pixelated',
+              cursor: 'help',
+              zIndex: 1,
+            }}
+          />
+        </Tooltip>
+      )}
+      {!spriteImage && (
+        <Tooltip position="right" content={tooltipContent}>
+          <div
+            className="font-pixel"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: colors.text,
+              fontSize: '20px',
+              opacity: 0.4,
+              cursor: 'help',
+              zIndex: 1,
+            }}
+          >
+            {comp.name.slice(0, 3)}
+          </div>
+        </Tooltip>
+      )}
 
       {/* Info column - hidden, all info in tooltip */}
 
