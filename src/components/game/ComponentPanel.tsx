@@ -92,13 +92,12 @@ const ComponentCard: React.FC<{
           style={{
             background: colors.bg,
             borderColor: colors.border,
-            padding: '12px',
             boxShadow: `0 0 8px ${colors.glow}`,
             position: 'relative',
-            overflow: 'visible',
+            overflow: 'hidden',
             ['--luf-color' as string]: colors.text,
             transition: 'box-shadow 0.1s',
-            minHeight: 120,
+            height: 80,
             cursor: 'help',
           }}
         >
@@ -122,7 +121,7 @@ const ComponentCard: React.FC<{
             </div>
           )}
 
-          {/* Module sprite */}
+          {/* Module sprite — left side, fills card height */}
           {spriteImage ? (
             <img
               src={spriteImage}
@@ -130,9 +129,9 @@ const ComponentCard: React.FC<{
               style={{
                 position: 'absolute',
                 top: '50%',
-                left: '-70px',
+                left: 0,
                 transform: 'translateY(-50%)',
-                height: '130%',
+                height: '160%',
                 width: 'auto',
                 objectFit: 'contain',
                 imageRendering: 'pixelated',
@@ -146,8 +145,8 @@ const ComponentCard: React.FC<{
               style={{
                 position: 'absolute',
                 top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
+                left: 16,
+                transform: 'translateY(-50%)',
                 color: colors.text,
                 fontSize: '20px',
                 opacity: 0.4,
@@ -159,37 +158,36 @@ const ComponentCard: React.FC<{
             </div>
           )}
 
-          {/* Buy button */}
+          {/* Buy button — bottom right, always visible */}
           <button
             onClick={e => { e.stopPropagation(); handleBuyClick(); }}
             disabled={!canAfford}
             className="font-pixel pixel-border"
             style={{
-              background: canAfford ? `linear-gradient(135deg, ${colors.bg}99, rgba(0,0,0,0.5))` : 'transparent',
+              background: canAfford ? colors.bg : '#050508',
               borderColor: canAfford ? colors.text : '#1a2a3a',
-              borderWidth: canAfford ? '2px' : '1px',
               color: canAfford ? colors.text : '#2a3a4a',
-              padding: '8px 12px',
-              fontSize: '10px',
+              padding: '10px 16px',
+              fontSize: '11px',
               fontWeight: 'bold',
-              letterSpacing: '0.5px',
               cursor: canAfford ? 'pointer' : 'not-allowed',
-              boxShadow: canAfford ? `0 0 12px ${colors.glow}dd, inset 0 0 8px rgba(255,255,255,0.15)` : 'none',
+              boxShadow: canAfford ? `0 0 14px ${colors.glow}, inset 0 0 6px rgba(255,255,255,0.08)` : 'none',
               whiteSpace: 'nowrap',
-              transition: 'transform 0.1s ease-out, box-shadow 0.1s ease-out',
+              transition: 'transform 0.1s ease-out',
               lineHeight: 1.4,
               textAlign: 'center',
               position: 'absolute',
-              bottom: 12,
-              right: 12,
+              bottom: 10,
+              right: 10,
               zIndex: 20,
-              textShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+              textShadow: canAfford ? `0 0 8px ${colors.text}` : 'none',
+              letterSpacing: '1px',
             }}
             onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.88)'; }}
             onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
             onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
           >
-            {purchaseMode === 'max' ? (maxQty > 0 ? <>x{maxQty}</> : <>MAX</>) : <>x{qty}</>}
+            {purchaseMode === 'max' ? (maxQty > 0 ? `x${maxQty}` : 'MAX') : `x${qty}`}
           </button>
         </div>
       </Tooltip>
