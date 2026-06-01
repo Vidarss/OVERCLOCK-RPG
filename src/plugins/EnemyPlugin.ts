@@ -3,17 +3,39 @@ import type { SkillPlugin } from './SkillPlugin';
 import { ENEMY_CONFIG } from '../config/game.config';
 
 export function getEnemyHp(stage: number): number {
-  const { normalHpBase: base, scalingExponentEarly: expE, scalingExponentLate: expL } = ENEMY_CONFIG;
-  if (stage <= 100) return Math.floor(base * Math.pow(expE, stage - 1));
-  const base100 = Math.floor(base * Math.pow(expE, 99));
-  return Math.floor(base100 * Math.pow(expL, stage - 100));
+  const { normalHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage } = ENEMY_CONFIG;
+  
+  if (stage <= hardModeStage) {
+    // Stages 1-500: Smooth scaling - linear growth with mild exponential every 50 stages
+    const linearFactor = 1 + (stage - 1) * linearGrowth;
+    const expFactor = Math.pow(expE, (stage - 1) / 50);
+    return Math.floor(base * linearFactor * expFactor);
+  }
+  
+  // Stages 500+: Steep exponential scaling requiring skills/combos
+  const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
+  const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
+  const hp500 = base * hp500Linear * hp500Exp;
+  const lateExpFactor = Math.pow(expL, (stage - hardModeStage) / 10);
+  return Math.floor(hp500 * lateExpFactor);
 }
 
 export function getBossHp(stage: number): number {
-  const { bossHpBase: base, scalingExponentEarly: expE, scalingExponentLate: expL } = ENEMY_CONFIG;
-  if (stage <= 100) return Math.floor(base * Math.pow(expE, stage - 1));
-  const base100 = Math.floor(base * Math.pow(expE, 99));
-  return Math.floor(base100 * Math.pow(expL, stage - 100));
+  const { bossHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage } = ENEMY_CONFIG;
+  
+  if (stage <= hardModeStage) {
+    // Stages 1-500: Smooth scaling - linear growth with mild exponential every 50 stages
+    const linearFactor = 1 + (stage - 1) * linearGrowth;
+    const expFactor = Math.pow(expE, (stage - 1) / 50);
+    return Math.floor(base * linearFactor * expFactor);
+  }
+  
+  // Stages 500+: Steep exponential scaling requiring skills/combos
+  const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
+  const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
+  const hp500 = base * hp500Linear * hp500Exp;
+  const lateExpFactor = Math.pow(expL, (stage - hardModeStage) / 10);
+  return Math.floor(hp500 * lateExpFactor);
 }
 
 export function getEnemyTier(stage: number): number {
