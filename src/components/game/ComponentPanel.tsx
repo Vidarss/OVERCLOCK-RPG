@@ -14,6 +14,22 @@ interface ComponentPanelProps {
   engine: GameEngine;
 }
 
+// ── Component sprite images ───────────────────────────────────────────────────
+// To add a new image: just add the component id as key and the path as value.
+// If no image exists for a component, no background is shown.
+const COMPONENT_IMAGES: Record<string, string> = {
+  gpu: '/images/components/gpu_unit.png',
+  // ram:         '/images/components/ram_bank.png',
+  // cpu_cooler:  '/images/components/cpu_cooler.png',
+  // ssd:         '/images/components/ssd_drive.png',
+  // psu:         '/images/components/psu_core.png',
+  // liquid_cool: '/images/components/liquid_cool.png',
+  // fpga:        '/images/components/fpga_array.png',
+  // tensor:      '/images/components/tensor_core.png',
+  // quantum:     '/images/components/quantum_bit.png',
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const COLOR_MAP = {
   cyan: { text: '#00f5ff', border: '#003d42', bg: '#0a1f22', glow: 'rgba(0,245,255,0.3)' },
   green: { text: '#39ff14', border: '#0a3d02', bg: '#0a1a02', glow: 'rgba(57,255,20,0.3)' },
@@ -35,13 +51,11 @@ const ComponentCard: React.FC<{
   const [levelUpQty, setLevelUpQty] = useState(0);
   const [showLevelUpText, setShowLevelUpText] = useState(false);
 
-  // Calculate next milestone - memoized to update when level changes
   const nextMilestone = useMemo(() => 
     COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level),
     [comp.level]
   );
 
-  // Memoize tooltip content so it updates when comp data changes
   const tooltipContent = useMemo(() => (
     <>
       <TooltipLabel label={comp.name} color={colors.text} />
@@ -64,10 +78,7 @@ const ComponentCard: React.FC<{
 
   if (!comp.unlocked) return null;
 
-  const label =
-    purchaseMode === 'max'
-      ? maxQty > 0 ? `MAX x${maxQty} ◆${formatNumber(cost)}` : 'MAX ◆--'
-      : `x${qty} ◆${formatNumber(cost)}`;
+  const spriteImage = COMPONENT_IMAGES[comp.id];
 
   const handleBuyClick = () => {
     if (!canAfford) return;
@@ -88,13 +99,19 @@ const ComponentCard: React.FC<{
       style={{
         background: colors.bg,
         borderColor: colors.border,
-        padding: '10px',
+        padding: '12px',
         boxShadow: `0 0 8px ${colors.glow}`,
         position: 'relative',
+        overflow: 'hidden',
         ['--luf-color' as string]: colors.text,
         transition: 'box-shadow 0.1s',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '16px',
+        minHeight: 140,
       }}
     >
+      {/* Level up floating text */}
       {showLevelUpText && (
         <div
           className="animate-level-up-text font-pixel"
@@ -114,53 +131,123 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      <div className="flex justify-between items-start mb-1">
-        <Tooltip
-          position="right"
-          content={tooltipContent}
-        >
-          <div>
-            <div className="font-pixel" style={{ color: colors.text, fontSize: '8px', marginBottom: 3, cursor: 'help' }}>
-              {comp.name}
-            </div>
-            <div style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-              {comp.description}
-            </div>
-          </div>
-        </Tooltip>
-        <div className="font-pixel" style={{ color: '#5a6a7a', fontSize: '7px', textAlign: 'right' }}>
-          LVL<br />
-          <span style={{ color: colors.text, fontSize: '9px' }}>{comp.level}</span>
-        </div>
-      </div>
-
-      <div className="flex justify-between items-center mt-2">
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: '#5a6a7a' }}>
-          DPS: <span style={{ color: colors.text }}>{formatNumber(dps)}/s</span>
-        </div>
-
-        <button
-          onClick={handleBuyClick}
-          disabled={!canAfford}
-          className="font-pixel pixel-border"
+      {/* Module Image (main visual) */}
+      <Tooltip position="right" content={tooltipContent}>
+        <div
           style={{
-            background: canAfford ? colors.bg : '#0a0a0f',
-            borderColor: canAfford ? colors.text : '#1a2a3a',
-            color: canAfford ? colors.text : '#2a3a4a',
-            padding: '5px 8px',
-            fontSize: '7px',
-            cursor: canAfford ? 'pointer' : 'not-allowed',
-            boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
-            whiteSpace: 'nowrap',
-            transition: 'transform 0.08s, box-shadow 0.08s',
+            width: 120,
+            height: 120,
+            flexShrink: 0,
+            background: '#050508',
+            border: `1px solid ${colors.border}`,
+            borderRadius: 4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'help',
+            position: 'relative',
+            overflow: 'hidden',
           }}
-          onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
-          onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         >
-          {label}
-        </button>
+          {spriteImage ? (
+            <img
+              src={spriteImage}
+              alt={comp.name}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                imageRendering: 'pixelated',
+              }}
+            />
+          ) : (
+            <div
+              className="font-pixel"
+              style={{
+                color: colors.text,
+                fontSize: '14px',
+                textAlign: 'center',
+                padding: 4,
+                opacity: 0.6,
+              }}
+            >
+              {comp.name.slice(0, 3)}
+            </div>
+          )}
+          {/* Level badge */}
+          <div
+            className="font-pixel"
+            style={{
+              position: 'absolute',
+              bottom: 4,
+              right: 4,
+              background: 'rgba(0,0,0,0.85)',
+              color: colors.text,
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: 2,
+            }}
+          >
+            {comp.level}
+          </div>
+        </div>
+      </Tooltip>
+
+      {/* Info column */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div
+          className="font-pixel"
+          style={{
+            color: colors.text,
+            fontSize: '11px',
+            marginBottom: 6,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {comp.name}
+        </div>
+        <div
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: '13px',
+            color: '#5a6a7a',
+          }}
+        >
+          <span style={{ color: colors.text }}>{formatNumber(dps)}</span>/s
+        </div>
       </div>
+
+      {/* Buy button */}
+      <button
+        onClick={handleBuyClick}
+        disabled={!canAfford}
+        className="font-pixel pixel-border"
+        style={{
+          background: canAfford ? colors.bg : '#0a0a0f',
+          borderColor: canAfford ? colors.text : '#1a2a3a',
+          color: canAfford ? colors.text : '#2a3a4a',
+          padding: '10px 12px',
+          fontSize: '9px',
+          cursor: canAfford ? 'pointer' : 'not-allowed',
+          boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+          whiteSpace: 'nowrap',
+          transition: 'transform 0.08s, box-shadow 0.08s',
+          flexShrink: 0,
+          lineHeight: 1.4,
+          textAlign: 'center',
+        }}
+        onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
+        onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
+      >
+        {purchaseMode === 'max' ? (
+          maxQty > 0 ? <>x{maxQty}<br/>{formatNumber(cost)}</> : <>MAX<br/>--</>
+        ) : (
+          <>x{qty}<br/>{formatNumber(cost)}</>
+        )}
+      </button>
     </div>
   );
 };

@@ -51,6 +51,9 @@ export default defineConfig(({ mode }) => {
     optimizeDeps: {
       exclude: ['lucide-react'],
     },
+    server: {
+      allowedHosts: true,
+    },
     define: {
       // Expose both VITE_* and NEXT_PUBLIC_* variants so the app code can use either
       'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(supabaseUrl),
