@@ -288,9 +288,15 @@ class AdServiceImpl {
         adContainer.appendChild(adScript);
 
         // Trigger AdSense to render the ad
+        // Note: adsbygoogle.push() does NOT support callbacks
         if ((window as any).adsbygoogle) {
-          (window as any).adsbygoogle.push({}, () => {
-            // Callback fired when ad is rendered
+          (window as any).adsbygoogle.push({});
+        }
+        
+        // Since AdSense has no callback, use a timeout to start the timer
+        // This gives AdSense time to render, then starts the countdown
+        setTimeout(() => {
+          if (!adLoaded) {
             adLoaded = true;
             loadingText.style.display = 'none';
             timerBox.style.cssText = `
@@ -299,27 +305,10 @@ class AdServiceImpl {
               border: 1px solid #00f5ff33;
               background: #00f5ff0a;
             `;
-            
-            // NOW start the timer since ad loaded
             startTimer();
-          });
-          
-          // Fallback: if no callback after 4 seconds, assume ad loaded or failed
-          setTimeout(() => {
-            if (!adLoaded) {
-              adLoaded = true;
-              loadingText.style.display = 'none';
-              loadingText.textContent = 'AD READY';
-              timerBox.style.cssText = `
-                font-size: 10px; letter-spacing: 1px;
-                color: #00f5ff; padding: 2px 8px; 
-                border: 1px solid #00f5ff33;
-                background: #00f5ff0a;
-              `;
-              startTimer();
-            }
-          }, 4000);
-        }
+          }
+        }, 2000); // 2 second delay for ad to load
+        
       } catch (error) {
         console.error('[AdService] Failed to load AdSense:', error);
         adLoaded = true;
