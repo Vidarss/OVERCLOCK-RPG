@@ -41,7 +41,7 @@ export const BootScreen: React.FC<BootScreenProps> = ({ engine, onComplete }) =>
     <div
       className="min-h-screen flex flex-col items-center justify-between"
       style={{
-        backgroundImage: 'url(/overclock-character.png)',
+        backgroundImage: 'url(/images/overclock-character.png)',
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
