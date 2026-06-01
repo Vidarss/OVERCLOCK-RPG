@@ -126,6 +126,8 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
   if (customSprite) {
     const scale = customSprite.scale ?? 1;
     const offsetY = customSprite.offsetY ?? 0;
+    // Use responsive sizing - clamp between min/max for consistent appearance
+    const responsiveWidth = Math.max(140, Math.min(280, window.innerWidth * 0.18)) * scale;
     
     return (
       <div style={{ position: 'relative', display: 'inline-block' }}>
@@ -185,7 +187,7 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
             src={customSprite.src}
             alt={enemy.name}
             style={{
-              width: `${200 * scale}px`,
+              width: `${responsiveWidth}px`,
               height: 'auto',
               imageRendering: 'pixelated',
               pointerEvents: 'none',
