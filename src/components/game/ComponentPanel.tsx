@@ -139,7 +139,7 @@ const ComponentCard: React.FC<{
           style={{
             position: 'absolute',
             top: '50%',
-            left: '50%',
+            left: '60%',
             transform: 'translate(-50%, -50%)',
             height: '100%',
             width: 'auto',
@@ -186,21 +186,25 @@ const ComponentCard: React.FC<{
         disabled={!canAfford}
         className="font-pixel pixel-border"
         style={{
-          background: 'transparent',
+          background: canAfford ? `linear-gradient(135deg, ${colors.bg}, rgba(0,0,0,0.3))` : 'transparent',
           borderColor: canAfford ? colors.text : '#1a2a3a',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '10px 14px',
-          fontSize: '11px',
+          padding: '12px 16px',
+          fontSize: '12px',
+          fontWeight: 'bold',
+          letterSpacing: '0.5px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
-          boxShadow: canAfford ? `0 0 8px ${colors.glow}` : 'none',
+          boxShadow: canAfford ? `0 0 12px ${colors.glow}, inset 0 0 8px rgba(255,255,255,0.1)` : 'none',
           whiteSpace: 'nowrap',
-          transition: 'transform 0.08s, box-shadow 0.08s',
-          lineHeight: 1.5,
+          transition: 'transform 0.08s, box-shadow 0.08s, filter 0.08s',
+          lineHeight: 1.6,
           textAlign: 'center',
           position: 'absolute',
           bottom: 10,
           right: 10,
           zIndex: 20,
+          textShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+          filter: canAfford ? 'drop-shadow(0 0 4px rgba(0,0,0,0.6))' : 'none',
         }}
         onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
         onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
