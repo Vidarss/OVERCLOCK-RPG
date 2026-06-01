@@ -140,7 +140,7 @@ const ComponentCard: React.FC<{
           style={{
             position: 'absolute',
             top: '50%',
-            left: '-40px',
+            left: '-70px',
             transform: 'translateY(-50%)',
             height: '130%',
             width: 'auto',
@@ -179,6 +179,7 @@ const ComponentCard: React.FC<{
             bottom: 0,
             zIndex: 2,
             cursor: 'help',
+            pointerEvents: 'auto',
           }}
         />
       </Tooltip>
