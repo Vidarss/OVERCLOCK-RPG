@@ -413,13 +413,16 @@ export const ENEMY_CONFIG = {
   /** Number of stages per enemy tier bracket. */
   stagesPerTier: 50,
 
-  // HP scaling formula:
-  //   stage ≤ 100 : base * scalingExponentEarly ^ (stage - 1)
-  //   stage > 100 : base100 * scalingExponentLate ^ (stage - 100)
-  normalHpBase: 10,
-  bossHpBase: 50,
-  scalingExponentEarly: 1.5,
-  scalingExponentLate: 1.12,
+  // HP scaling formula (see EnemyPlugin.ts for implementation):
+  //   stage ≤ 500 : base * (1 + (stage - 1) * linearGrowth) * scalingExponentEarly ^ ((stage - 1) / 50)
+  //   stage > 500 : hp500 * scalingExponentLate ^ ((stage - 500) / 10)
+  // This creates a smooth curve up to 500, then steep exponential requiring skills/combos
+  normalHpBase: 15,
+  bossHpBase: 100,
+  linearGrowth: 0.25,              // Linear growth factor per stage (gentle)
+  scalingExponentEarly: 1.08,      // Mild exponential every 50 stages (stages 1-500)
+  scalingExponentLate: 1.15,       // Steep exponential every 10 stages (stages 500+)
+  hardModeStage: 500,              // Stage where difficulty ramps up significantly
 
   /** Enemy name pools, indexed by tier (one tier = 50 stages). */
   enemyNamesByTier: [
@@ -887,7 +890,7 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ────────────────────────────────────────────────────────────────
+  // ── Basic ───────────────────────────────────────────────────────��────────
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
   { type: 'use_skills',      label: 'Use skills {n} times',            targetFn: () => 5,                      rewardFn: s => 40  + s * 10  },
@@ -1046,7 +1049,7 @@ export const ZONE_CONFIG = {
   ] as ZoneDef[],
 } as const;
 
-// ── TOURNAMENTS ───────────────────────────────────────────────────────────────
+// ── TOURNAMENTS ────────��──────────────────────────────────────────────────────
 
 export interface TournamentTemplateDef {
   id: string;
