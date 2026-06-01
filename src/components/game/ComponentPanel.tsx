@@ -168,21 +168,12 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Tooltip overlay - wraps entire card for hover detection */}
-      <Tooltip position="right" content={tooltipContent}>
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 2,
-            cursor: 'help',
-            pointerEvents: 'auto',
-          }}
-        />
-      </Tooltip>
+      {/* Tooltip overlay - positioned to fill card */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2 }}>
+        <Tooltip position="right" content={tooltipContent}>
+          <div style={{ width: '100%', height: '100%', cursor: 'help' }} />
+        </Tooltip>
+      </div>
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
