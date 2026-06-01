@@ -41,6 +41,7 @@ export class TournamentPlugin implements IPlugin {
   private participantCounts: Record<string, number> = {};
   private listeners: Array<() => void> = [];
   private unsubs: Array<() => void> = [];
+  private refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -64,6 +65,24 @@ export class TournamentPlugin implements IPlugin {
     }
 
     this.unsubs.push(engine.on('stage_clear', () => { void this.updateAllScores(); }));
+
+    // Periodic refresh every 30 seconds to catch ended tournaments and new ones
+    this.refreshInterval = setInterval(() => {
+      void this.checkAndRefreshTournaments();
+    }, 30000);
+  }
+
+  /** Check if any tournaments ended and reload if needed */
+  private async checkAndRefreshTournaments(): Promise<void> {
+    const now = Date.now();
+    const hadEnded = this.tournaments.some(t => 
+      t.status === 'active' && new Date(t.ends_at).getTime() <= now
+    );
+    
+    if (hadEnded || this.tournaments.length === 0) {
+      console.log('[TournamentPlugin] Refreshing tournaments - detected ended or empty');
+      await this.load();
+    }
   }
 
   private async load(): Promise<void> {
@@ -242,6 +261,10 @@ export class TournamentPlugin implements IPlugin {
   private notify(): void { for (const l of this.listeners) l(); }
 
   cleanup(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
     for (const unsub of this.unsubs) unsub();
     this.unsubs = [];
   }
