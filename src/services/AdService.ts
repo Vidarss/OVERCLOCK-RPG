@@ -147,10 +147,12 @@ class AdServiceImpl {
    */
   private async showAdSenseAd(): Promise<AdResult> {
     return new Promise((resolve) => {
-      const adDuration = 8_000; // Show ad for 8 seconds minimum
-      const skipAfterSec = 5; // Allow skip after 5 seconds
+      const adDuration = 8_000; // Show ad for 8 seconds minimum AFTER it loads
+      const skipAfterSec = 5; // Allow skip after 5 seconds of watching
       let timeLeft = adDuration / 1000;
       let canSkip = false;
+      let adLoaded = false; // Track if ad has actually loaded
+      let timerInterval: any = null;
       
       // Create overlay
       const overlay = document.createElement('div');
@@ -193,11 +195,11 @@ class AdServiceImpl {
       const timerBox = document.createElement('div');
       timerBox.style.cssText = `
         font-size: 10px; letter-spacing: 1px;
-        color: #00f5ff; padding: 2px 8px; 
-        border: 1px solid #00f5ff33;
-        background: #00f5ff0a;
+        color: #2a4a5a; padding: 2px 8px; 
+        border: 1px solid #1a3a4a33;
+        background: #0a1a2a0a;
       `;
-      timerBox.textContent = `${Math.ceil(timeLeft)}s`;
+      timerBox.textContent = `LOADING...`;
 
       headerBar.appendChild(adLabel);
       headerBar.appendChild(timerBox);
@@ -246,11 +248,11 @@ class AdServiceImpl {
         padding: 6px 14px; font-family: inherit;
         transition: all 0.2s;
       `;
-      skipBtn.textContent = `SKIP IN ${skipAfterSec}s`;
+      skipBtn.textContent = `LOADING...`;
       skipBtn.disabled = true;
       skipBtn.onclick = () => {
-        if (!canSkip) return;
-        clearInterval(timerInterval);
+        if (!canSkip || !adLoaded) return;
+        if (timerInterval) clearInterval(timerInterval);
         overlay.remove();
         resolve({ success: true });
       };
@@ -287,48 +289,79 @@ class AdServiceImpl {
 
         // Trigger AdSense to render the ad
         if ((window as any).adsbygoogle) {
-          (window as any).adsbygoogle.push({});
-          // Hide loading text once ad is pushed
-          setTimeout(() => {
+          (window as any).adsbygoogle.push({}, () => {
+            // Callback fired when ad is rendered
+            adLoaded = true;
             loadingText.style.display = 'none';
-          }, 1000);
+            timerBox.style.cssText = `
+              font-size: 10px; letter-spacing: 1px;
+              color: #00f5ff; padding: 2px 8px; 
+              border: 1px solid #00f5ff33;
+              background: #00f5ff0a;
+            `;
+            
+            // NOW start the timer since ad loaded
+            startTimer();
+          });
+          
+          // Fallback: if no callback after 4 seconds, assume ad loaded or failed
+          setTimeout(() => {
+            if (!adLoaded) {
+              adLoaded = true;
+              loadingText.style.display = 'none';
+              loadingText.textContent = 'AD READY';
+              timerBox.style.cssText = `
+                font-size: 10px; letter-spacing: 1px;
+                color: #00f5ff; padding: 2px 8px; 
+                border: 1px solid #00f5ff33;
+                background: #00f5ff0a;
+              `;
+              startTimer();
+            }
+          }, 4000);
         }
       } catch (error) {
         console.error('[AdService] Failed to load AdSense:', error);
+        adLoaded = true;
         loadingText.textContent = 'AD UNAVAILABLE';
+        startTimer();
       }
 
-      // Timer tick
-      const totalSec = adDuration / 1000;
-      const timerInterval = setInterval(() => {
-        timeLeft -= 0.1;
-        const elapsed = totalSec - timeLeft;
+      // Timer only starts after ad loads
+      const startTimer = () => {
+        const totalSec = adDuration / 1000;
+        let elapsed = 0;
+        
+        timerInterval = setInterval(() => {
+          elapsed += 0.1;
+          timeLeft = totalSec - elapsed;
 
-        const remaining = Math.max(0, Math.ceil(timeLeft));
-        timerBox.textContent = `${remaining}s`;
+          const remaining = Math.max(0, Math.ceil(timeLeft));
+          timerBox.textContent = `${remaining}s`;
 
-        const skipRemaining = Math.max(0, Math.ceil(skipAfterSec - elapsed));
-        if (skipRemaining > 0) {
-          skipBtn.textContent = `SKIP IN ${skipRemaining}s`;
-        } else if (!canSkip) {
-          canSkip = true;
-          skipBtn.disabled = false;
-          skipBtn.style.cssText = `
-            font-size: 10px; letter-spacing: 1px; cursor: pointer;
-            color: #00f5ff; background: none; border: 1px solid #00f5ff44;
-            padding: 6px 14px; font-family: inherit;
-            transition: all 0.2s;
-          `;
-          skipBtn.textContent = 'COLLECT REWARD';
-        }
+          const skipRemaining = Math.max(0, Math.ceil(skipAfterSec - elapsed));
+          if (skipRemaining > 0) {
+            skipBtn.textContent = `SKIP IN ${skipRemaining}s`;
+          } else if (!canSkip) {
+            canSkip = true;
+            skipBtn.disabled = false;
+            skipBtn.style.cssText = `
+              font-size: 10px; letter-spacing: 1px; cursor: pointer;
+              color: #00f5ff; background: none; border: 1px solid #00f5ff44;
+              padding: 6px 14px; font-family: inherit;
+              transition: all 0.2s;
+            `;
+            skipBtn.textContent = 'COLLECT REWARD';
+          }
 
-        if (timeLeft <= 0) {
-          clearInterval(timerInterval);
-          overlay.remove();
-          style.remove();
-          resolve({ success: true });
-        }
-      }, 100);
+          if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            overlay.remove();
+            style.remove();
+            resolve({ success: true });
+          }
+        }, 100);
+      };
     });
   }
 
