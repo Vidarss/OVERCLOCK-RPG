@@ -69,6 +69,7 @@ const ComponentCard: React.FC<{
       {nextMilestone && (
         <TooltipStat label="Next Bonus" value={`Lv${nextMilestone.level} (+${Math.round(nextMilestone.bonus * 100)}%)`} color="#3a5a6a" />
       )}
+      <TooltipStat label="Cost" value={qty > 0 ? `${formatNumber(cost)}` : '--'} color={canAfford ? '#ffcc00' : '#aa4444'} />
     </>
   ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone]);
 
@@ -213,9 +214,9 @@ const ComponentCard: React.FC<{
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       >
         {purchaseMode === 'max' ? (
-          maxQty > 0 ? <>x{maxQty}<br />{formatNumber(cost)}</> : <>MAX<br />--</>
+          maxQty > 0 ? <>x{maxQty}</> : <>MAX</>
         ) : (
-          <>x{qty}<br />{formatNumber(cost)}</>
+          <>x{qty}</>
         )}
       </button>
     </div>
