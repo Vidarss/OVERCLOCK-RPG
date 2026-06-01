@@ -102,13 +102,13 @@ const ComponentCard: React.FC<{
         padding: '12px',
         boxShadow: `0 0 8px ${colors.glow}`,
         position: 'relative',
-        overflow: 'hidden',
+        overflow: 'visible',
         ['--luf-color' as string]: colors.text,
         transition: 'box-shadow 0.1s',
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        minHeight: 260,
+        minHeight: 120,
       }}
     >
       {/* Level up floating text */}
@@ -135,15 +135,18 @@ const ComponentCard: React.FC<{
       <Tooltip position="right" content={tooltipContent}>
         <div
           style={{
-            width: 240,
-            height: 240,
+            width: 320,
+            height: 320,
             flexShrink: 0,
             background: 'transparent',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'help',
-            position: 'relative',
+            position: 'absolute',
+            left: -80,
+            top: '50%',
+            transform: 'translateY(-50%)',
             overflow: 'visible',
           }}
         >
@@ -218,7 +221,7 @@ const ComponentCard: React.FC<{
         </div>
       </div>
 
-      {/* Buy button */}
+      {/* Buy button - positioned on top of image */}
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
@@ -236,6 +239,10 @@ const ComponentCard: React.FC<{
           flexShrink: 0,
           lineHeight: 1.4,
           textAlign: 'center',
+          position: 'absolute',
+          top: 12,
+          left: 12,
+          zIndex: 20,
         }}
         onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
         onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
