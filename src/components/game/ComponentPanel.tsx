@@ -20,7 +20,7 @@ interface ComponentPanelProps {
 const COMPONENT_IMAGES: Record<string, string> = {
   gpu: '/images/components/gpu_unit.png',
   ram: '/images/components/ram_bank.png',
-  // cpu_cooler:  '/images/components/cpu_cooler.png',
+  cpu_cooler: '/images/components/cpu_cooler.png',
   // ssd:         '/images/components/ssd_drive.png',
   // psu:         '/images/components/psu_core.png',
   // liquid_cool: '/images/components/liquid_cool.png',
@@ -168,7 +168,7 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Tooltip overlay */}
+      {/* Tooltip overlay - wraps entire card for hover detection */}
       <Tooltip position="right" content={tooltipContent}>
         <div
           style={{
