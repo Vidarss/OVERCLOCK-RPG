@@ -131,51 +131,56 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Module Image — fills the panel, can overflow */}
+      {/* Module Image — centered in panel */}
       {spriteImage && (
-        <Tooltip position="right" content={tooltipContent}>
-          <img
-            src={spriteImage}
-            alt={comp.name}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              height: '100%',
-              width: 'auto',
-              objectFit: 'contain',
-              imageRendering: 'pixelated',
-              cursor: 'help',
-              zIndex: 1,
-            }}
-          />
-        </Tooltip>
+        <img
+          src={spriteImage}
+          alt={comp.name}
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            height: '100%',
+            width: 'auto',
+            objectFit: 'contain',
+            imageRendering: 'pixelated',
+            zIndex: 1,
+          }}
+        />
       )}
       {!spriteImage && (
-        <Tooltip position="right" content={tooltipContent}>
-          <div
-            className="font-pixel"
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: colors.text,
-              fontSize: '20px',
-              opacity: 0.4,
-              cursor: 'help',
-              zIndex: 1,
-            }}
-          >
-            {comp.name.slice(0, 3)}
-          </div>
-        </Tooltip>
+        <div
+          className="font-pixel"
+          style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: colors.text,
+            fontSize: '20px',
+            opacity: 0.4,
+            zIndex: 1,
+          }}
+        >
+          {comp.name.slice(0, 3)}
+        </div>
       )}
 
-      {/* Info column - hidden, all info in tooltip */}
-
-      {/* Buy button — bottom-right, transparent background */}
+      {/* Tooltip overlay */}
+      <Tooltip position="right" content={tooltipContent}>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 2,
+            cursor: 'help',
+          }}
+        />
+      </Tooltip>
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
