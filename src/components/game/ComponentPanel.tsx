@@ -94,24 +94,26 @@ const ComponentCard: React.FC<{
   };
 
   return (
-    <div
-      key={levelUpKey > 0 ? `flash-${levelUpKey}` : comp.id}
-      className={`pixel-border mb-2${levelUpKey > 0 ? ' animate-level-up-flash' : ''}`}
-      style={{
-        background: colors.bg,
-        borderColor: colors.border,
-        padding: '12px',
-        boxShadow: `0 0 8px ${colors.glow}`,
-        position: 'relative',
-        overflow: 'visible',
-        ['--luf-color' as string]: colors.text,
-        transition: 'box-shadow 0.1s',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        minHeight: 120,
-      }}
-    >
+    <Tooltip position="right" content={tooltipContent}>
+      <div
+        key={levelUpKey > 0 ? `flash-${levelUpKey}` : comp.id}
+        className={`pixel-border mb-2${levelUpKey > 0 ? ' animate-level-up-flash' : ''}`}
+        style={{
+          background: colors.bg,
+          borderColor: colors.border,
+          padding: '12px',
+          boxShadow: `0 0 8px ${colors.glow}`,
+          position: 'relative',
+          overflow: 'visible',
+          ['--luf-color' as string]: colors.text,
+          transition: 'box-shadow 0.1s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          minHeight: 120,
+          cursor: 'help',
+        }}
+      >
       {/* Level up floating text */}
       {showLevelUpText && (
         <div
@@ -168,12 +170,6 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Tooltip overlay - positioned to fill card */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 2 }}>
-        <Tooltip position="right" content={tooltipContent}>
-          <div style={{ width: '100%', height: '100%', cursor: 'help' }} />
-        </Tooltip>
-      </div>
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
@@ -211,7 +207,6 @@ const ComponentCard: React.FC<{
           <>x{qty}</>
         )}
       </button>
-    </div>
   );
 };
 
@@ -268,7 +263,8 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
                   }}
                 >
                   {m.label}
-                </button>
+      </button>
+    </Tooltip>
               );
             })}
           </div>
