@@ -14,6 +14,22 @@ interface ComponentPanelProps {
   engine: GameEngine;
 }
 
+// ── Component sprite images ───────────────────────────────────────────────────
+// To add a new image: just add the component id as key and the path as value.
+// If no image exists for a component, no background is shown.
+const COMPONENT_IMAGES: Record<string, string> = {
+  gpu: '/images/components/gpu_unit.png',
+  // ram:         '/images/components/ram_bank.png',
+  // cpu_cooler:  '/images/components/cpu_cooler.png',
+  // ssd:         '/images/components/ssd_drive.png',
+  // psu:         '/images/components/psu_core.png',
+  // liquid_cool: '/images/components/liquid_cool.png',
+  // fpga:        '/images/components/fpga_array.png',
+  // tensor:      '/images/components/tensor_core.png',
+  // quantum:     '/images/components/quantum_bit.png',
+};
+// ─────────────────────────────────────────────────────────────────────────────
+
 const COLOR_MAP = {
   cyan: { text: '#00f5ff', border: '#003d42', bg: '#0a1f22', glow: 'rgba(0,245,255,0.3)' },
   green: { text: '#39ff14', border: '#0a3d02', bg: '#0a1a02', glow: 'rgba(57,255,20,0.3)' },
@@ -64,6 +80,8 @@ const ComponentCard: React.FC<{
 
   if (!comp.unlocked) return null;
 
+  const spriteImage = COMPONENT_IMAGES[comp.id];
+
   const label =
     purchaseMode === 'max'
       ? maxQty > 0 ? `MAX x${maxQty} ◆${formatNumber(cost)}` : 'MAX ◆--'
@@ -91,10 +109,29 @@ const ComponentCard: React.FC<{
         padding: '10px',
         boxShadow: `0 0 8px ${colors.glow}`,
         position: 'relative',
+        overflow: 'hidden',
         ['--luf-color' as string]: colors.text,
         transition: 'box-shadow 0.1s',
       }}
     >
+      {/* Sprite background image */}
+      {spriteImage && (
+        <div
+          style={{
+            position: 'absolute',
+            right: -10,
+            bottom: -10,
+            width: 90,
+            height: 90,
+            backgroundImage: `url(${spriteImage})`,
+            backgroundSize: 'contain',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'bottom right',
+            opacity: 0.18,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       {showLevelUpText && (
         <div
           className="animate-level-up-text font-pixel"
