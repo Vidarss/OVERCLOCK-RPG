@@ -869,7 +869,6 @@ export const DAILY_CONFIG = {
     tap_damage:      1.5,
     use_skills:      1.5,
     defeat_bosses:   3,
-    reach_stage:     2,
     kill_streak:     2,
     earn_gold_fast:  2,
     overclock_tap:   1.5,
@@ -888,10 +887,9 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ───────────────────────────────────────────────���─────────────────
+  // ── Basic ────────────────────────────────────────────────────────────────
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
-  { type: 'reach_stage',     label: 'Reach stage {n}',                 targetFn: s => Math.max(s + 3, 5),     rewardFn: s => 80  + s * 30  },
   { type: 'use_skills',      label: 'Use skills {n} times',            targetFn: () => 5,                      rewardFn: s => 40  + s * 10  },
   { type: 'defeat_bosses',   label: 'Defeat {n} boss(es)',             targetFn: () => 2,                      rewardFn: s => 100 + s * 40  },
   { type: 'tap_damage',      label: 'Deal {n} tap damage',             targetFn: s => 200 + s * 100,           rewardFn: s => 60  + s * 25  },
@@ -975,7 +973,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'stage_5000',  name: 'THE FINAL STAGE',  description: 'Reach stage 5,000',  icon: 'TrendingUp', color: '#aa0000', type: 'stage', threshold: 5000  },
     { id: 'stage_10000', name: 'INFINITY',         description: 'Reach stage 10,000', icon: 'TrendingUp', color: '#880000', type: 'stage', threshold: 10000 },
 
-    // ── Overclock Achievements ───────────────────────────────────────
+    // ── Overclock Achievements ───────────────────────────────────���───
     { id: 'first_reboot',     name: 'FIRST REBOOT',      description: 'Perform your first Overclock', icon: 'RefreshCw', color: '#ff0080', type: 'overclocks', threshold: 1   },
     { id: 'reboot_10',        name: 'CYCLE MASTER',      description: 'Perform 10 Overclocks',        icon: 'RefreshCw', color: '#ff0080', type: 'overclocks', threshold: 10  },
     { id: 'reboot_25',        name: 'LOOP VETERAN',      description: 'Perform 25 Overclocks',        icon: 'RefreshCw', color: '#ff4444', type: 'overclocks', threshold: 25  },
