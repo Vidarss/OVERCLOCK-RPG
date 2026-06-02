@@ -19,6 +19,7 @@ import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
+import { SettingsScreen } from './SettingsScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
@@ -31,6 +32,8 @@ interface GameScreenProps {
 }
 
 type MobileDrawer = 'components' | 'overclock' | null;
+
+const [showSettings, setShowSettings] = useState(false);
 
 const MobileDrawerOverlay: React.FC<{
   open: boolean;
@@ -181,6 +184,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
+      {showSettings && <SettingsScreen engine={engine} onClose={() => setShowSettings(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
     </>
@@ -190,7 +194,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
     return (
       <div style={{ height: '100dvh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {modals}
-        <CyberHUD engine={engine} playerHandle={player.handle} />
+        <CyberHUD engine={engine} playerHandle={player.handle} onSettingsClick={() => setShowSettings(true)} />
 
         {offlineMsg && (
           <div
