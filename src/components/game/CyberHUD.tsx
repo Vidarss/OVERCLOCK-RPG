@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Wifi } from 'lucide-react';
+import { Wifi, Settings } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
 import { getTotalIdleDps } from '../../plugins/ComponentPlugin';
@@ -10,9 +10,10 @@ import type { LeaderboardPlugin } from '../../plugins/LeaderboardPlugin';
 interface CyberHUDProps {
   engine: GameEngine;
   playerHandle: string;
+  onSettingsClick?: () => void;
 }
 
-export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
+export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSettingsClick }) => {
   const stage = useGameState(engine, s => s.stage);
   const gold = useGameState(engine, s => s.gold);
   const diamonds = useGameState(engine, s => s.diamonds);
@@ -89,7 +90,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
         </div>
       )}
 
-      {/* Player + Logout — pushed to the right */}
+      {/* Player + Settings + Logout — pushed to the right */}
       <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
         <span
           style={{
@@ -104,6 +105,32 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
         >
           {playerHandle}
         </span>
+
+        <button
+          onClick={onSettingsClick}
+          style={{
+            background: 'none',
+            border: '1px solid #1a2a3a',
+            color: '#3a4a5a',
+            padding: '4px 6px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            transition: 'all 0.1s steps(2)',
+          }}
+          onMouseEnter={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = '#00f5ff';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#00f5ff';
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLButtonElement).style.color = '#3a4a5a';
+            (e.currentTarget as HTMLButtonElement).style.borderColor = '#1a2a3a';
+          }}
+          title="Settings"
+        >
+          <Settings size={14} />
+        </button>
 
         {confirming ? (
           <div className="flex items-center gap-1">
