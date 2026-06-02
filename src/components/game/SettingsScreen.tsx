@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Settings as SettingsIcon, X, Volume2, Zap } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { SettingsPlugin, SettingsState } from '../../plugins/SettingsPlugin';
+import { audioManager } from '../../systems/AudioManager';
 
 interface SettingsScreenProps {
   engine: GameEngine;
@@ -29,11 +30,15 @@ export const SettingsScreen: React.FC<SettingsScreenProps> = ({ engine, onClose 
   const handleMusicVolume = (v: number) => {
     settingsPlugin?.setMusicVolume(v);
     setSettings(settingsPlugin?.getSettings() ?? settings);
+    // Apply to audio manager
+    audioManager.setBGMVolume(v);
   };
 
   const handleSFXVolume = (v: number) => {
     settingsPlugin?.setSFXVolume(v);
     setSettings(settingsPlugin?.getSettings() ?? settings);
+    // Apply to audio manager
+    audioManager.setVolume(v);
   };
 
   const handleScreenShake = () => {

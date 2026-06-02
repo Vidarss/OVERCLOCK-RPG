@@ -1,4 +1,5 @@
 import type { IPlugin, IEngine } from '../engine/types';
+import { audioManager } from '../systems/AudioManager';
 
 export interface SettingsState {
   musicVolume: number;
@@ -9,7 +10,7 @@ export interface SettingsState {
 }
 
 export class SettingsPlugin implements IPlugin {
-  name = 'settings';
+  id = 'settings';
   private engine!: IEngine;
   private settings: SettingsState = {
     musicVolume: 0.7,
@@ -20,7 +21,7 @@ export class SettingsPlugin implements IPlugin {
   };
   private listeners: Array<() => void> = [];
 
-  initialize(engine: IEngine): void {
+  async init(engine: IEngine): Promise<void> {
     this.engine = engine;
     // Load settings from localStorage
     const saved = localStorage.getItem('overclock_settings');
@@ -31,6 +32,9 @@ export class SettingsPlugin implements IPlugin {
         console.log('[SettingsPlugin] Failed to load saved settings');
       }
     }
+    // Apply saved settings to audio manager
+    audioManager.setVolume(this.settings.sfxVolume);
+    audioManager.setBGMVolume(this.settings.musicVolume);
   }
 
   getSettings(): SettingsState {

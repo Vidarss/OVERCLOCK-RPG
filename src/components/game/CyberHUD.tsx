@@ -90,7 +90,7 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
         </div>
       )}
 
-      {/* Player + Logout — pushed to the right */}
+      {/* Player + Settings + Logout — pushed to the right */}
       <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
         <span
           style={{
@@ -106,7 +106,6 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
           {playerHandle}
         </span>
 
-      <div className="flex items-center gap-1 ml-auto">
         <button
           onClick={onSettingsClick}
           style={{
