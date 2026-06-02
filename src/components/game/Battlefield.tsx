@@ -157,9 +157,43 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         />
       )}
 
-      {/* Content above background */}
+      {/* Content above background — HP bar always at top */}
       <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: 320 }}>
-        <BossTimer engine={engine} />
+        {enemy && (
+          <div
+            className="pixel-border"
+            style={{
+              background: isBoss ? '#1a0010' : '#0a0f1a',
+              borderColor: isBoss ? '#ff0080' : zone.accentColor,
+              padding: '5px 10px',
+              marginBottom: 6,
+            }}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-pixel" style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontSize: '7px' }}>
+                {isBoss ? 'BOSS HP' : 'HP'}
+              </span>
+              <div className="flex items-center gap-2">
+                <span style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                  {formatNumber(enemy.hp)} / {formatNumber(enemy.maxHp)}
+                </span>
+                {isBoss && <BossTimer engine={engine} />}
+              </div>
+            </div>
+            <div style={{ background: isBoss ? '#3d0024' : '#0a0a0f', height: 6, position: 'relative' }}>
+              <div
+                className="hp-bar-fill"
+                style={{
+                  position: 'absolute',
+                  left: 0, top: 0, height: '100%',
+                  width: `${hpPct}%`,
+                  background: isBoss ? '#ff0080' : zone.accentColor,
+                  boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stage indicator */}
@@ -271,32 +305,6 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
           >
             {'[!] RETURN TO BOSS — STG '}{pendingBossStage}{' [!]'}
           </button>
-        </div>
-      )}
-
-      {/* HP Bar */}
-      {enemy && (
-        <div style={{ width: '100%', maxWidth: 320, position: 'relative', zIndex: 3 }}>
-          <div className="flex justify-between mb-1" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
-            <span style={{ color: '#5a6a7a' }}>HP</span>
-            <span style={{ color: isBoss ? '#ff0080' : zone.accentColor }}>
-              {formatNumber(enemy.hp)} / {formatNumber(enemy.maxHp)}
-            </span>
-          </div>
-          <div style={{ background: '#0a0a0f', height: 8, position: 'relative', border: `1px solid ${zone.accentColor}33` }}>
-            <div
-              className="hp-bar-fill"
-              style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                height: '100%',
-                width: `${hpPct}%`,
-                background: isBoss ? '#ff0080' : zone.accentColor,
-                boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
-              }}
-            />
-          </div>
         </div>
       )}
 

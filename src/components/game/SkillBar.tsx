@@ -199,7 +199,8 @@ export const SkillBar: React.FC<SkillBarProps> = ({ engine }) => {
   return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-      padding: '6px 8px', background: '#05050a', borderTop: '1px solid #0a1a2a',
+      padding: '6px 8px',
+      background: 'transparent',
       overflowX: 'auto', WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
       scrollbarWidth: 'none' as React.CSSProperties['scrollbarWidth'],
     }}>

@@ -698,7 +698,9 @@ export const MOBO_TIERS: MoboTierDef[] = [
 
 export const ITEM_CONFIG = {
   /** Maximum items in the player's inventory before oldest are trimmed. */
-  inventoryMax: 40,
+  inventoryMax: 500,
+  /** Inventory warning threshold (0.9 = 90%). Show warning to scrap items. */
+  inventoryWarningThreshold: 0.9,
 
   /** Base drop chance: 0.15 + tier * 0.05, capped at 0.60 (0.95 for bosses). */
   baseDropChance: 0.15,
@@ -795,7 +797,7 @@ export const ITEM_CONFIG = {
   tierScrapBonus: 3,
 } as const;
 
-// ── SHOP ──────────────────────────────────────────────────────────────────────
+// ── SHOP ──────────────────────────────────────────────────────────��───────────
 
 export interface ShopItemDef {
   id: string;
