@@ -30,6 +30,7 @@ const COMPONENT_IMAGES: Record<string, string> = {
   singularity_engine: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SINGULARITY_ENGINE-EUfcLgZkQzSUwmYgJ72R5qgUTQ1orZ.png',
   exploit_kit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EXPLOIT_KIT-haEG45xoSfchRa7g0gERreppyqQZER.png',
   quantum_bit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/QUANTUM_BIT-QmsMbZKEPlGiPBpXlNi1yix9Yhi5XM.png',
+  psu: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/PSU_CORE-RJq6qjCmVFthEjMclnuktbedGrnNxO.png',
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
