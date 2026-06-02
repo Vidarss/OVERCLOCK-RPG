@@ -12,6 +12,8 @@ class AudioManager {
   private masterGain: GainNode | null = null;
   private enabled: boolean = true;
   private volume: number = 0.5;
+  private bgmAudio: HTMLAudioElement | null = null;
+  private bgmGain: GainNode | null = null;
 
   private getContext(): AudioContext {
     if (!this.ctx) {
@@ -38,6 +40,37 @@ class AudioManager {
 
   setEnabled(e: boolean) {
     this.enabled = e;
+    if (this.bgmAudio) {
+      this.bgmAudio.volume = e ? this.volume : 0;
+    }
+  }
+
+  // ── Background Music ────────────────────────────────────────────────────────
+
+  playBGM(src: string = '/audio/bgm-main.mp3') {
+    if (!this.enabled) return;
+    
+    if (!this.bgmAudio) {
+      this.bgmAudio = new Audio();
+      this.bgmAudio.loop = true;
+      this.bgmAudio.volume = this.volume * 0.7; // Slightly quieter to allow SFX to stand out
+    }
+    
+    this.bgmAudio.src = src;
+    this.bgmAudio.play().catch(e => console.log('[AudioManager] BGM play failed:', e.message));
+  }
+
+  stopBGM() {
+    if (this.bgmAudio) {
+      this.bgmAudio.pause();
+      this.bgmAudio.currentTime = 0;
+    }
+  }
+
+  setBGMVolume(v: number) {
+    if (this.bgmAudio) {
+      this.bgmAudio.volume = Math.max(0, Math.min(1, v)) * this.volume;
+    }
   }
 
   // ── Synthesizer helpers ─────────────────────────────────────────────────────

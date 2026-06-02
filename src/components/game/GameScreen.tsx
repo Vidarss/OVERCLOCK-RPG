@@ -3,6 +3,7 @@ import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swor
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
+import { audioManager } from '../../systems/AudioManager';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
@@ -152,6 +153,8 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   useEffect(() => {
     const handler = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handler);
+    // Start background music
+    audioManager.playBGM();
     return () => window.removeEventListener('resize', handler);
   }, []);
 
