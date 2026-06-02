@@ -7,6 +7,7 @@ import type { ComponentDef } from '../../engine/types';
 import { Tooltip, TooltipLabel, TooltipText, TooltipStat } from './Tooltip';
 import { COMPONENT_MILESTONE_CONFIG } from '../../config/game.config';
 import { formatNumber } from '../../utils/format';
+import { playSFX } from '../../hooks/useAudio';
 
 type PurchaseMode = 1 | 10 | 100 | 'max';
 
@@ -223,7 +224,13 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
 
   const handleBuy = (id: string, qty: number): boolean => {
     if (qty <= 0) return false;
-    return plugin?.purchaseBulk(id, qty) ?? false;
+    const success = plugin?.purchaseBulk(id, qty) ?? false;
+    if (success) {
+      playSFX.purchase();
+    } else {
+      playSFX.error();
+    }
+    return success;
   };
 
   const unlockedComponents = Object.values(components).filter(c => c.unlocked);

@@ -12,6 +12,7 @@ import type { ZoneConfig } from './ZoneScene';
 import type { TapPlugin } from '../../plugins/TapPlugin';
 import type { EnemyPlugin } from '../../plugins/EnemyPlugin';
 import { UI_CONFIG, ENEMY_CONFIG } from '../../config/game.config';
+import { playSFX } from '../../hooks/useAudio';
 
 interface BattlefieldProps {
   engine: GameEngine;
@@ -47,6 +48,12 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
     const unsub1 = engine.on<DamageNumberEvent>('damage_number', event => {
       if (event.payload.type === 'idle') return;
       setDamageNumbers(prev => [...prev.slice(-(UI_CONFIG.maxDamageNumbers - 1)), event.payload]);
+      // Play sound based on damage type
+      if (event.payload.type === 'crit') {
+        playSFX.critical();
+      } else if (event.payload.type === 'tap') {
+        playSFX.click();
+      }
     });
 
     const unsub2 = engine.on('enemy_hit', () => {
@@ -61,6 +68,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       const cleared = event.payload?.stage ?? 1;
       setStageClearText(`STAGE ${cleared} CLEAR`);
       setShowStageClear(true);
+      playSFX.stageClear();
       setTimeout(() => {
         setIsDying(false);
         setShowStageClear(false);
@@ -70,10 +78,19 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
     const unsub4 = engine.on<{ zone: ZoneConfig }>('zone_changed', event => {
       setZoneTransitionLabel(event.payload.zone.label);
       setShowZoneTransition(true);
+      playSFX.levelUp();
       setTimeout(() => setShowZoneTransition(false), UI_CONFIG.zoneTransitionMs);
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
+    const unsub5 = engine.on('enemy_death', () => {
+      playSFX.enemyDeath();
+    });
+
+    const unsub6 = engine.on('boss_spawn', () => {
+      playSFX.bossSpawn();
+    });
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); };
   }, [engine]);
 
   const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
