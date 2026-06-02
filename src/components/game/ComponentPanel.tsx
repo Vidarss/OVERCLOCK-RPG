@@ -18,15 +18,18 @@ interface ComponentPanelProps {
 // To add a new image: just add the component id as key and the path as value.
 // If no image exists for a component, no background is shown.
 const COMPONENT_IMAGES: Record<string, string> = {
-  gpu: '/images/components/gpu_unit.png',
-  ram: '/images/components/ram_bank.png',
-  cpu_cooler: '/images/components/cpu_cooler.png',
-  ssd: '/images/components/ssd_drive.png',
-  // psu:         '/images/components/psu_core.png',
-  // liquid_cool: '/images/components/liquid_cool.png',
-  // fpga:        '/images/components/fpga_array.png',
-  // tensor:      '/images/components/tensor_core.png',
-  // quantum:     '/images/components/quantum_bit.png',
+  gpu: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/GPU_UNIT-sJO5wq8l4K9cS4KloxZdTlqDuths8Q.png',
+  ram: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/RAM_BANK-QOIDpjY182AeKDcek01QQDSvshFwr7.png',
+  cpu_cooler: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/CPU_COOLER-UGZaX8srCEpBcFLvsRqmcQC1VLXTFH.png',
+  ssd: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SSD_DRIVE-HPYK0BQTyoWccrbZYEPweSKpH7csfS.png',
+  liquid_cool: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LIQUID_COOL-3CR3DyVuXTOpS2EglVp2cA6b7nOPRR.png',
+  fpga: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/FPGA_ARRAY-O0dCGowXWAr6LDxFzLpjiBJW3BKDkn.png',
+  tensor_core: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/TENSOR_CORE-mqLwjKxlr06uT6uikbqEvLvAOUSi2K.png',
+  darknet_node: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/DARKNET_NODE-f9aphz4NIng0w1evOdR0HH4uEKiyg2.png',
+  bytestorm_gen: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/BYTESTORM_GEN-0gY2H8MqAoZjy2t0pLLgcud82ISpXT.png',
+  singularity_engine: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SINGULARITY_ENGINE-EUfcLgZkQzSUwmYgJ72R5qgUTQ1orZ.png',
+  exploit_kit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EXPLOIT_KIT-haEG45xoSfchRa7g0gERreppyqQZER.png',
+  quantum_bit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/QUANTUM_BIT-QmsMbZKEPlGiPBpXlNi1yix9Yhi5XM.png',
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
