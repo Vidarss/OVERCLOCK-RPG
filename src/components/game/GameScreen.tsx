@@ -47,13 +47,14 @@ const MobileDrawerOverlay: React.FC<{
     )}
     <div
       style={{
-        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 50,
+        position: 'fixed', left: '50%', bottom: 0, zIndex: 50,
+        width: 260,
+        transform: `translateX(-50%) translateY(${open ? 0 : '100%'})`,
+        transition: 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
         height: '85dvh',
         background: '#0a0a0f',
         border: `1px solid ${accentColor}33`,
         borderBottom: 'none',
-        transform: open ? 'translateY(0)' : 'translateY(100%)',
-        transition: 'transform 0.32s cubic-bezier(0.32,0.72,0,1)',
         display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}
     >
@@ -339,7 +340,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
         {/* Left sidebar: Components */}
         <div
           style={{
-            width: 260, flexShrink: 0,
+            width: 234, flexShrink: 0,
             background: '#0a0a0f',
             borderRight: '1px solid #1a2a3a',
             overflow: 'hidden',

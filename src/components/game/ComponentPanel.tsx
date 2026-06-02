@@ -18,15 +18,18 @@ interface ComponentPanelProps {
 // To add a new image: just add the component id as key and the path as value.
 // If no image exists for a component, no background is shown.
 const COMPONENT_IMAGES: Record<string, string> = {
-  gpu: '/images/components/gpu_unit.png',
-  // ram:         '/images/components/ram_bank.png',
-  // cpu_cooler:  '/images/components/cpu_cooler.png',
-  // ssd:         '/images/components/ssd_drive.png',
-  // psu:         '/images/components/psu_core.png',
-  // liquid_cool: '/images/components/liquid_cool.png',
-  // fpga:        '/images/components/fpga_array.png',
-  // tensor:      '/images/components/tensor_core.png',
-  // quantum:     '/images/components/quantum_bit.png',
+  gpu: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/GPU_UNIT-sJO5wq8l4K9cS4KloxZdTlqDuths8Q.png',
+  ram: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/RAM_BANK-QOIDpjY182AeKDcek01QQDSvshFwr7.png',
+  cpu_cooler: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/CPU_COOLER-UGZaX8srCEpBcFLvsRqmcQC1VLXTFH.png',
+  ssd: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SSD_DRIVE-HPYK0BQTyoWccrbZYEPweSKpH7csfS.png',
+  liquid_cool: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/LIQUID_COOL-3CR3DyVuXTOpS2EglVp2cA6b7nOPRR.png',
+  fpga: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/FPGA_ARRAY-O0dCGowXWAr6LDxFzLpjiBJW3BKDkn.png',
+  tensor_core: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/TENSOR_CORE-mqLwjKxlr06uT6uikbqEvLvAOUSi2K.png',
+  darknet_node: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/DARKNET_NODE-f9aphz4NIng0w1evOdR0HH4uEKiyg2.png',
+  bytestorm_gen: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/BYTESTORM_GEN-0gY2H8MqAoZjy2t0pLLgcud82ISpXT.png',
+  singularity_engine: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SINGULARITY_ENGINE-EUfcLgZkQzSUwmYgJ72R5qgUTQ1orZ.png',
+  exploit_kit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EXPLOIT_KIT-haEG45xoSfchRa7g0gERreppyqQZER.png',
+  quantum_bit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/QUANTUM_BIT-QmsMbZKEPlGiPBpXlNi1yix9Yhi5XM.png',
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -51,10 +54,14 @@ const ComponentCard: React.FC<{
   const [levelUpQty, setLevelUpQty] = useState(0);
   const [showLevelUpText, setShowLevelUpText] = useState(false);
 
-  const nextMilestone = useMemo(() => 
+  const nextMilestone = useMemo(() =>
     COMPONENT_MILESTONE_CONFIG.customMilestones.find(m => m.level > comp.level),
     [comp.level]
   );
+
+  const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
+  const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
+  const canAfford = qty > 0 && gold >= cost;
 
   const tooltipContent = useMemo(() => (
     <>
@@ -69,12 +76,9 @@ const ComponentCard: React.FC<{
       {nextMilestone && (
         <TooltipStat label="Next Bonus" value={`Lv${nextMilestone.level} (+${Math.round(nextMilestone.bonus * 100)}%)`} color="#3a5a6a" />
       )}
+      <TooltipStat label="Cost" value={qty > 0 ? `${formatNumber(cost)}` : '--'} color={canAfford ? '#ffcc00' : '#aa4444'} />
     </>
-  ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone]);
-
-  const qty = purchaseMode === 'max' ? maxQty : purchaseMode;
-  const cost = qty > 0 ? getComponentBulkCost(comp, qty) : 0;
-  const canAfford = qty > 0 && gold >= cost;
+  ), [comp.name, comp.description, comp.level, comp.baseDps, colors.text, dps, milestoneBonus, nextMilestone, qty, cost, canAfford]);
 
   if (!comp.unlocked) return null;
 
@@ -93,24 +97,26 @@ const ComponentCard: React.FC<{
   };
 
   return (
-    <div
-      key={levelUpKey > 0 ? `flash-${levelUpKey}` : comp.id}
-      className={`pixel-border mb-2${levelUpKey > 0 ? ' animate-level-up-flash' : ''}`}
-      style={{
-        background: colors.bg,
-        borderColor: colors.border,
-        padding: '12px',
-        boxShadow: `0 0 8px ${colors.glow}`,
-        position: 'relative',
-        overflow: 'hidden',
-        ['--luf-color' as string]: colors.text,
-        transition: 'box-shadow 0.1s',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '16px',
-        minHeight: 140,
-      }}
-    >
+    <Tooltip position="right" content={tooltipContent}>
+      <div
+        key={levelUpKey > 0 ? `flash-${levelUpKey}` : comp.id}
+        className={`pixel-border mb-2${levelUpKey > 0 ? ' animate-level-up-flash' : ''}`}
+        style={{
+          background: colors.bg,
+          borderColor: colors.border,
+          padding: '12px',
+          boxShadow: `0 0 8px ${colors.glow}`,
+          position: 'relative',
+          overflow: 'visible',
+          ['--luf-color' as string]: colors.text,
+          transition: 'box-shadow 0.1s',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '16px',
+          minHeight: 120,
+          cursor: 'help',
+        }}
+      >
       {/* Level up floating text */}
       {showLevelUpText && (
         <div
@@ -131,124 +137,79 @@ const ComponentCard: React.FC<{
         </div>
       )}
 
-      {/* Module Image (main visual) */}
-      <Tooltip position="right" content={tooltipContent}>
-        <div
+      {/* Module Image — visible inside card */}
+      {spriteImage && (
+        <img
+          src={spriteImage}
+          alt={comp.name}
           style={{
-            width: 120,
-            height: 120,
-            flexShrink: 0,
-            background: '#050508',
-            border: `1px solid ${colors.border}`,
-            borderRadius: 4,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'help',
-            position: 'relative',
-            overflow: 'hidden',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            height: '140%',
+            width: 'auto',
+            objectFit: 'contain',
+            imageRendering: 'pixelated',
+            zIndex: 1,
+            opacity: 0.9,
           }}
-        >
-          {spriteImage ? (
-            <img
-              src={spriteImage}
-              alt={comp.name}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'contain',
-                imageRendering: 'pixelated',
-              }}
-            />
-          ) : (
-            <div
-              className="font-pixel"
-              style={{
-                color: colors.text,
-                fontSize: '14px',
-                textAlign: 'center',
-                padding: 4,
-                opacity: 0.6,
-              }}
-            >
-              {comp.name.slice(0, 3)}
-            </div>
-          )}
-          {/* Level badge */}
-          <div
-            className="font-pixel"
-            style={{
-              position: 'absolute',
-              bottom: 4,
-              right: 4,
-              background: 'rgba(0,0,0,0.85)',
-              color: colors.text,
-              fontSize: '10px',
-              padding: '2px 6px',
-              borderRadius: 2,
-            }}
-          >
-            {comp.level}
-          </div>
-        </div>
-      </Tooltip>
-
-      {/* Info column */}
-      <div style={{ flex: 1, minWidth: 0 }}>
+        />
+      )}
+      {!spriteImage && (
         <div
           className="font-pixel"
           style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
             color: colors.text,
-            fontSize: '11px',
-            marginBottom: 6,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            fontSize: '24px',
+            opacity: 0.5,
+            zIndex: 1,
           }}
         >
-          {comp.name}
+          {comp.name.slice(0, 3)}
         </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: '13px',
-            color: '#5a6a7a',
-          }}
-        >
-          <span style={{ color: colors.text }}>{formatNumber(dps)}</span>/s
-        </div>
-      </div>
+      )}
 
-      {/* Buy button */}
       <button
         onClick={handleBuyClick}
         disabled={!canAfford}
         className="font-pixel pixel-border"
         style={{
-          background: canAfford ? colors.bg : '#0a0a0f',
+          background: canAfford ? colors.bg : '#050508',
           borderColor: canAfford ? colors.text : '#1a2a3a',
+          borderWidth: '2px',
           color: canAfford ? colors.text : '#2a3a4a',
-          padding: '10px 12px',
-          fontSize: '9px',
+          padding: '12px 20px',
+          fontSize: '14px',
+          fontWeight: 'bold',
+          letterSpacing: '1px',
           cursor: canAfford ? 'pointer' : 'not-allowed',
-          boxShadow: canAfford ? `0 0 6px ${colors.glow}` : 'none',
+          boxShadow: canAfford ? `0 0 16px ${colors.glow}, 0 0 24px ${colors.glow}` : 'none',
           whiteSpace: 'nowrap',
-          transition: 'transform 0.08s, box-shadow 0.08s',
-          flexShrink: 0,
-          lineHeight: 1.4,
+          transition: 'transform 0.1s ease-out',
           textAlign: 'center',
+          position: 'absolute',
+          bottom: 8,
+          right: 8,
+          zIndex: 20,
+          textShadow: canAfford ? `0 0 8px ${colors.text}` : 'none',
         }}
-        onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.93)'; }}
+        onMouseDown={e => { if (canAfford) (e.currentTarget as HTMLButtonElement).style.transform = 'scale(0.9)'; }}
         onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
         onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'scale(1)'; }}
       >
         {purchaseMode === 'max' ? (
-          maxQty > 0 ? <>x{maxQty}<br/>{formatNumber(cost)}</> : <>MAX<br/>--</>
+          maxQty > 0 ? <>x{maxQty}</> : <>MAX</>
         ) : (
-          <>x{qty}<br/>{formatNumber(cost)}</>
+          <>x{qty}</>
         )}
       </button>
     </div>
+    </Tooltip>
   );
 };
 
@@ -305,7 +266,7 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
                   }}
                 >
                   {m.label}
-                </button>
+                  </button>
               );
             })}
           </div>

@@ -42,7 +42,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
     <div
       className="min-h-screen flex items-center justify-center"
       style={{
-        backgroundImage: 'url(/overclock-character.png)',
+        backgroundImage: 'url(/images/overclock-character.png)',
         backgroundSize: 'contain',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',

@@ -41,6 +41,7 @@ export class TournamentPlugin implements IPlugin {
   private participantCounts: Record<string, number> = {};
   private listeners: Array<() => void> = [];
   private unsubs: Array<() => void> = [];
+  private refreshInterval: ReturnType<typeof setInterval> | null = null;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -64,6 +65,24 @@ export class TournamentPlugin implements IPlugin {
     }
 
     this.unsubs.push(engine.on('stage_clear', () => { void this.updateAllScores(); }));
+
+    // Periodic refresh every 30 seconds to catch ended tournaments and new ones
+    this.refreshInterval = setInterval(() => {
+      void this.checkAndRefreshTournaments();
+    }, 30000);
+  }
+
+  /** Check if any tournaments ended and reload if needed */
+  private async checkAndRefreshTournaments(): Promise<void> {
+    const now = Date.now();
+    const hadEnded = this.tournaments.some(t => 
+      t.status === 'active' && new Date(t.ends_at).getTime() <= now
+    );
+    
+    if (hadEnded || this.tournaments.length === 0) {
+      console.log('[TournamentPlugin] Refreshing tournaments - detected ended or empty');
+      await this.load();
+    }
   }
 
   private async load(): Promise<void> {
@@ -84,9 +103,10 @@ export class TournamentPlugin implements IPlugin {
       {},
       'id, name, template_name, bracket_number, starts_at, ends_at, join_closes_at, prize_diamonds, entry_fee_diamonds, player_cap, status'
     );
-    // Filter client-side: exclude ended, sort by starts_at
+    const now = Date.now();
+    // Filter client-side: exclude tournaments that have actually ended (by comparing ends_at to now), sort by starts_at
     this.tournaments = data
-      .filter(t => t.status !== 'ended')
+      .filter(t => new Date(t.ends_at).getTime() > now)
       .sort((a, b) => new Date(a.starts_at).getTime() - new Date(b.starts_at).getTime());
   }
 
@@ -207,7 +227,12 @@ export class TournamentPlugin implements IPlugin {
   }
 
   getAll(): Tournament[] { return this.tournaments; }
-  getActive(): Tournament[] { return this.tournaments.filter(t => t.status === 'active'); }
+  getActive(): Tournament[] { 
+    const now = Date.now();
+    return this.tournaments.filter(t => 
+      new Date(t.starts_at).getTime() <= now && new Date(t.ends_at).getTime() > now
+    );
+  }
   getUpcoming(): Tournament[] { return this.tournaments.filter(t => t.status === 'upcoming'); }
   getMyEntry(tournamentId: string): TournamentEntry | null { return this.myEntries[tournamentId] ?? null; }
   getLeaderboard(tournamentId: string): TournamentEntry[] { return this.leaderboards[tournamentId] ?? []; }
@@ -242,6 +267,10 @@ export class TournamentPlugin implements IPlugin {
   private notify(): void { for (const l of this.listeners) l(); }
 
   cleanup(): void {
+    if (this.refreshInterval) {
+      clearInterval(this.refreshInterval);
+      this.refreshInterval = null;
+    }
     for (const unsub of this.unsubs) unsub();
     this.unsubs = [];
   }

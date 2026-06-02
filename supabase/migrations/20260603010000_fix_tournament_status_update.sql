@@ -1,24 +1,4 @@
--- Add missing columns to tournaments table for multiplayer support
-ALTER TABLE tournaments 
-  ADD COLUMN IF NOT EXISTS template_name text DEFAULT 'quick_clash',
-  ADD COLUMN IF NOT EXISTS bracket_number integer DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS prize_diamonds integer DEFAULT 50,
-  ADD COLUMN IF NOT EXISTS entry_fee_diamonds integer DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS player_cap integer DEFAULT 100;
-
--- Allow join_closes_at to be nullable
-ALTER TABLE tournaments ALTER COLUMN join_closes_at DROP NOT NULL;
-
--- Add missing columns to tournament_entries table  
-ALTER TABLE tournament_entries
-  ADD COLUMN IF NOT EXISTS rank integer,
-  ADD COLUMN IF NOT EXISTS start_max_stage integer DEFAULT 1;
-
--- Create index for faster leaderboard queries
-CREATE INDEX IF NOT EXISTS idx_tournament_entries_score ON tournament_entries(tournament_id, score DESC);
-
--- Function to get or create current tournaments based on templates
--- This runs server-side to ensure all players see the same tournaments
+-- Fix: ensure_active_tournaments should also update tournament statuses
 CREATE OR REPLACE FUNCTION ensure_active_tournaments()
 RETURNS void AS $$
 DECLARE
@@ -101,7 +81,7 @@ BEGIN
     END IF;
   END LOOP;
   
-  -- Update statuses of existing tournaments based on current time
+  -- Update statuses of all tournaments based on current time
   UPDATE tournaments SET status = 
     CASE 
       WHEN NOW() < starts_at THEN 'upcoming'
@@ -111,15 +91,3 @@ BEGIN
   WHERE status != 'ended' OR NOW() < ends_at;
 END;
 $$ LANGUAGE plpgsql;
-
--- Run immediately to seed tournaments
-SELECT ensure_active_tournaments();
-
--- Update statuses of existing tournaments based on current time
-UPDATE tournaments SET status = 
-  CASE 
-    WHEN NOW() < starts_at THEN 'upcoming'
-    WHEN NOW() >= starts_at AND NOW() < ends_at THEN 'active'
-    ELSE 'ended'
-  END
-WHERE status != 'ended' OR NOW() < ends_at;
