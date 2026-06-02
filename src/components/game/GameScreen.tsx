@@ -33,8 +33,6 @@ interface GameScreenProps {
 
 type MobileDrawer = 'components' | 'overclock' | null;
 
-const [showSettings, setShowSettings] = useState(false);
-
 const MobileDrawerOverlay: React.FC<{
   open: boolean;
   onClose: () => void;
@@ -147,6 +145,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showClan, setShowClan] = useState(false);
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);

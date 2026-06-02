@@ -52,37 +52,31 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
         minHeight: 38,
       }}
     >
-      {/* Stage */}
       <div className="flex items-center gap-1">
         <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>STG</span>
         <span className="font-pixel glow-cyan" style={{ color: '#00f5ff', fontSize: '10px' }}>{stage}</span>
       </div>
 
-      {/* DPS */}
       <div className="flex items-center gap-1">
         <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>DPS</span>
         <span className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px' }}>{formatNumber(idleDps)}</span>
       </div>
 
-      {/* Gold */}
       <div className="flex items-center gap-1">
-        <span style={{ color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>◆</span>
+        <span style={{ color: '#ffaa00', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>{'◆'}</span>
         <span className="font-pixel glow-amber" style={{ color: '#ffaa00', fontSize: '10px' }}>{formatNumber(gold)}</span>
       </div>
 
-      {/* Diamonds - always show */}
       <div className="flex items-center gap-1">
-        <span style={{ color: '#00e5ff', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>◈</span>
+        <span style={{ color: '#00e5ff', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>{'◈'}</span>
         <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '10px' }}>{diamonds}</span>
       </div>
 
-      {/* Overclocks */}
       <div className="flex items-center gap-1">
         <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>OC</span>
         <span className="font-pixel glow-pink" style={{ color: '#ff0080', fontSize: '10px' }}>{overclocks}</span>
       </div>
 
-      {/* Online */}
       {onlineCount > 0 && (
         <div className="flex items-center gap-1">
           <Wifi size={9} color="#39ff14" />
@@ -90,7 +84,6 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
         </div>
       )}
 
-      {/* Player + Settings + Logout — pushed to the right */}
       <div className="flex items-center gap-2" style={{ marginLeft: 'auto' }}>
         <span
           style={{
@@ -117,15 +110,6 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
             display: 'flex',
             alignItems: 'center',
             gap: '4px',
-            transition: 'all 0.1s steps(2)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.color = '#00f5ff';
-            (e.currentTarget as HTMLButtonElement).style.borderColor = '#00f5ff';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.color = '#3a4a5a';
-            (e.currentTarget as HTMLButtonElement).style.borderColor = '#1a2a3a';
           }}
           title="Settings"
         >
@@ -174,15 +158,6 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle, onSett
               padding: '2px 6px',
               fontSize: '7px',
               cursor: 'pointer',
-              transition: 'color 0.1s steps(2), border-color 0.1s steps(2)',
-            }}
-            onMouseEnter={e => {
-              (e.target as HTMLButtonElement).style.color = '#ff2222';
-              (e.target as HTMLButtonElement).style.borderColor = '#ff2222';
-            }}
-            onMouseLeave={e => {
-              (e.target as HTMLButtonElement).style.color = '#3a4a5a';
-              (e.target as HTMLButtonElement).style.borderColor = '#1a2a3a';
             }}
           >
             EXIT
