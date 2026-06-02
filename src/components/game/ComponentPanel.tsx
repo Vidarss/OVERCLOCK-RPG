@@ -7,6 +7,7 @@ import type { ComponentDef } from '../../engine/types';
 import { Tooltip, TooltipLabel, TooltipText, TooltipStat } from './Tooltip';
 import { COMPONENT_MILESTONE_CONFIG } from '../../config/game.config';
 import { formatNumber } from '../../utils/format';
+import { playSFX } from '../../hooks/useAudio';
 
 type PurchaseMode = 1 | 10 | 100 | 'max';
 
@@ -30,6 +31,7 @@ const COMPONENT_IMAGES: Record<string, string> = {
   singularity_engine: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/SINGULARITY_ENGINE-EUfcLgZkQzSUwmYgJ72R5qgUTQ1orZ.png',
   exploit_kit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/EXPLOIT_KIT-haEG45xoSfchRa7g0gERreppyqQZER.png',
   quantum_bit: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/QUANTUM_BIT-QmsMbZKEPlGiPBpXlNi1yix9Yhi5XM.png',
+  psu: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/PSU_CORE-RJq6qjCmVFthEjMclnuktbedGrnNxO.png',
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -222,7 +224,13 @@ export const ComponentPanel: React.FC<ComponentPanelProps> = ({ engine }) => {
 
   const handleBuy = (id: string, qty: number): boolean => {
     if (qty <= 0) return false;
-    return plugin?.purchaseBulk(id, qty) ?? false;
+    const success = plugin?.purchaseBulk(id, qty) ?? false;
+    if (success) {
+      playSFX.purchase();
+    } else {
+      playSFX.error();
+    }
+    return success;
   };
 
   const unlockedComponents = Object.values(components).filter(c => c.unlocked);
