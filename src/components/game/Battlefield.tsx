@@ -159,7 +159,44 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
 
       {/* Content above background */}
       <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: 320 }}>
-        <BossTimer engine={engine} />
+        {/* Boss HP Bar at top (only when boss is active) */}
+        {isBoss && enemy && (
+          <div 
+            className="pixel-border"
+            style={{ 
+              background: '#1a0010', 
+              borderColor: '#ff0080', 
+              padding: '6px 10px',
+              marginBottom: 8,
+            }}
+          >
+            <div className="flex justify-between items-center mb-1">
+              <span className="font-pixel glow-pink" style={{ color: '#ff0080', fontSize: '7px' }}>
+                BOSS HP
+              </span>
+              <div className="flex items-center gap-2">
+                <span style={{ color: '#ff0080', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
+                  {formatNumber(enemy.hp)} / {formatNumber(enemy.maxHp)}
+                </span>
+                <BossTimer engine={engine} />
+              </div>
+            </div>
+            <div style={{ background: '#3d0024', height: 8, position: 'relative' }}>
+              <div
+                className="hp-bar-fill"
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  top: 0,
+                  height: '100%',
+                  width: `${hpPct}%`,
+                  background: '#ff0080',
+                  boxShadow: '0 0 8px rgba(255,0,128,0.6)',
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Stage indicator */}
@@ -274,8 +311,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         </div>
       )}
 
-      {/* HP Bar */}
-      {enemy && (
+      {/* HP Bar (only for non-boss enemies - boss HP is at the top) */}
+      {enemy && !isBoss && (
         <div style={{ width: '100%', maxWidth: 320, position: 'relative', zIndex: 3 }}>
           <div className="flex justify-between mb-1" style={{ fontFamily: 'var(--font-mono)', fontSize: '10px' }}>
             <span style={{ color: '#5a6a7a' }}>HP</span>
@@ -292,8 +329,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
                 top: 0,
                 height: '100%',
                 width: `${hpPct}%`,
-                background: isBoss ? '#ff0080' : zone.accentColor,
-                boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
+                background: zone.accentColor,
+                boxShadow: `0 0 8px ${zone.accentColor}99`,
               }}
             />
           </div>

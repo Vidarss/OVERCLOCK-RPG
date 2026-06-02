@@ -4,6 +4,7 @@ import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
 import { audioManager } from '../../systems/AudioManager';
+import { ITEM_CONFIG } from '../../config/game.config';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
@@ -147,6 +148,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  const inventoryMax = ITEM_CONFIG.inventoryMax;
+  const inventoryWarningThreshold = ITEM_CONFIG.inventoryWarningThreshold;
+  const inventoryNearFull = inventoryCount >= inventoryMax * inventoryWarningThreshold;
+  const inventoryFull = inventoryCount >= inventoryMax;
   const overclockCount = useGameState(engine, s => s.overclockCount);
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
 
@@ -198,6 +203,26 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             style={{ background: '#0a1a02', color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #27b00e', flexShrink: 0 }}
           >
             {offlineMsg}
+          </div>
+        )}
+
+        {/* Inventory warning banner */}
+        {inventoryNearFull && (
+          <div
+            className="font-pixel text-center py-2 cursor-pointer"
+            style={{ 
+              background: inventoryFull ? '#2a0505' : '#2a1a05', 
+              color: inventoryFull ? '#ff2222' : '#ffaa00', 
+              fontSize: '8px', 
+              borderBottom: `1px solid ${inventoryFull ? '#ff2222' : '#ffaa00'}`, 
+              flexShrink: 0,
+            }}
+            onClick={() => setShowScrap(true)}
+          >
+            {inventoryFull 
+              ? `[!] STORAGE FULL (${inventoryCount}/${inventoryMax}) - SCRAP ITEMS OR LOSE LOOT [!]`
+              : `[!] STORAGE ${Math.floor((inventoryCount / inventoryMax) * 100)}% FULL (${inventoryCount}/${inventoryMax}) - TAP TO SCRAP [!]`
+            }
           </div>
         )}
 
@@ -336,6 +361,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           style={{ background: '#0a1a02', color: '#39ff14', fontSize: '8px', borderBottom: '1px solid #27b00e' }}
         >
           {offlineMsg}
+        </div>
+      )}
+
+      {/* Inventory warning banner - Desktop */}
+      {inventoryNearFull && (
+        <div
+          className="font-pixel text-center py-2 cursor-pointer"
+          style={{ 
+            background: inventoryFull ? '#2a0505' : '#2a1a05', 
+            color: inventoryFull ? '#ff2222' : '#ffaa00', 
+            fontSize: '8px', 
+            borderBottom: `1px solid ${inventoryFull ? '#ff2222' : '#ffaa00'}`,
+          }}
+          onClick={() => setShowScrap(true)}
+        >
+          {inventoryFull 
+            ? `[!] STORAGE FULL (${inventoryCount}/${inventoryMax}) - SCRAP ITEMS OR LOSE LOOT [!]`
+            : `[!] STORAGE ${Math.floor((inventoryCount / inventoryMax) * 100)}% FULL (${inventoryCount}/${inventoryMax}) - CLICK TO SCRAP [!]`
+          }
         </div>
       )}
 
