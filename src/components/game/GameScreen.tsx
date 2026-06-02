@@ -19,7 +19,6 @@ import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
-import { SettingsScreen } from './SettingsScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
@@ -145,7 +144,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showClan, setShowClan] = useState(false);
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
@@ -183,7 +181,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
-      {showSettings && <SettingsScreen engine={engine} onClose={() => setShowSettings(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
     </>
@@ -193,7 +190,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
     return (
       <div style={{ height: '100dvh', background: '#0a0a0f', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
         {modals}
-        <CyberHUD engine={engine} playerHandle={player.handle} onSettingsClick={() => setShowSettings(true)} />
+        <CyberHUD engine={engine} playerHandle={player.handle} />
 
         {offlineMsg && (
           <div
