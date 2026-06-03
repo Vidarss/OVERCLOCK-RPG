@@ -147,26 +147,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
-  // Update isMobile on window resize
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
+    audioManager.playBGM();
     return () => window.removeEventListener('resize', handleResize);
-  }, []);  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  }, []);
+
+  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
   const inventoryMax = ITEM_CONFIG.inventoryMax;
   const inventoryWarningThreshold = ITEM_CONFIG.inventoryWarningThreshold;
   const inventoryNearFull = inventoryCount >= inventoryMax * inventoryWarningThreshold;
   const inventoryFull = inventoryCount >= inventoryMax;
   const overclockCount = useGameState(engine, s => s.overclockCount);
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
-
-  useEffect(() => {
-    const handler = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handler);
-    // Start background music
-    audioManager.playBGM();
-    return () => window.removeEventListener('resize', handler);
-  }, []);
 
   useEffect(() => {
     const unsub = engine.on<{ goldEarned: number }>('offline_progress', event => {
@@ -327,6 +321,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               onClick={() => setShowAchievements(true)}
             />
           )}
+          <MobileTab
+            icon={<MessageCircle size={15} color="#3a4a5a" />}
+            label="DISCORD"
+            activeColor="#5865F2"
+            onClick={() => window.open('https://discord.gg/JpxH7NGayc', '_blank')}
+          />
         </div>
 
         {/* Components drawer */}
