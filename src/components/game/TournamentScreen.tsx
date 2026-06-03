@@ -441,7 +441,7 @@ export const TournamentScreen: React.FC<TournamentScreenProps> = ({ engine, onCl
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        width: '100%', maxWidth: 480, maxHeight: '92vh', background: '#0a0a12',
+        width: '100%', maxWidth: 480, maxHeight: '90vh', background: '#0a0a12',
         border: '1px solid #1a2a3a', display: 'flex', flexDirection: 'column',
         margin: '0 12px', boxShadow: '0 0 40px rgba(255,170,0,0.06)',
       }}>
