@@ -1073,19 +1073,31 @@ export const TOURNAMENT_CONFIG = {
   leaderboardLimit: 50,
 
   /**
+   * Entry fee formula: entryFee = Math.floor(prize * entryFeeRatio)
+   * Set entryFeeRatio to 0 for free tournaments, or use per-template override.
+   * Default ratio applies when a template has no explicit entryFeeDiamonds set.
+   */
+  entryFeeRatio: 0.1, // 10% of prize by default
+
+  /**
    * Weekly template pool — 7 templates, one per day of the week.
    * Each week the order is shuffled randomly (seed = week number).
    * Each slot is 20h long with a 4h gap between tournaments.
-   * Week resets every Monday 00:00 UTC.
+   *
+   * To balance:
+   *  - prizeDiamonds: reward for 1st place
+   *  - entryFeeDiamonds: set explicitly OR leave as 0 to auto-calc from entryFeeRatio
+   *  - playerCap: max players in bracket (lower = more exclusive)
+   *  - joinWindowHours: how long players can join before lock
    */
   localTemplates: [
-    { id: 'byte_rush',  name: 'BYTE RUSH',  templateName: 'byte_rush',  durationHours: 20, joinWindowHours: 4, prizeDiamonds: 100, entryFeeDiamonds: 0,  playerCap: 128 },
-    { id: 'null_storm', name: 'NULL STORM', templateName: 'null_storm', durationHours: 20, joinWindowHours: 6, prizeDiamonds: 250, entryFeeDiamonds: 10, playerCap: 64  },
-    { id: 'packet_war', name: 'PACKET WAR', templateName: 'packet_war', durationHours: 20, joinWindowHours: 4, prizeDiamonds: 150, entryFeeDiamonds: 0,  playerCap: 100 },
-    { id: 'core_siege', name: 'CORE SIEGE', templateName: 'core_siege', durationHours: 20, joinWindowHours: 8, prizeDiamonds: 500, entryFeeDiamonds: 25, playerCap: 32  },
-    { id: 'signal_run', name: 'SIGNAL RUN', templateName: 'signal_run', durationHours: 20, joinWindowHours: 4, prizeDiamonds: 200, entryFeeDiamonds: 0,  playerCap: 100 },
-    { id: 'data_blitz', name: 'DATA BLITZ', templateName: 'data_blitz', durationHours: 20, joinWindowHours: 3, prizeDiamonds: 75,  entryFeeDiamonds: 0,  playerCap: 64  },
-    { id: 'void_clash', name: 'VOID CLASH', templateName: 'void_clash', durationHours: 20, joinWindowHours: 6, prizeDiamonds: 350, entryFeeDiamonds: 10, playerCap: 50  },
+    { id: 'byte_rush',  name: 'BYTE RUSH',  templateName: 'byte_rush',  durationHours: 20, joinWindowHours: 4, prizeDiamonds: 100, entryFeeDiamonds: 0,   playerCap: 128 },
+    { id: 'null_storm', name: 'NULL STORM', templateName: 'null_storm', durationHours: 20, joinWindowHours: 6, prizeDiamonds: 250, entryFeeDiamonds: 25,  playerCap: 64  },
+    { id: 'packet_war', name: 'PACKET WAR', templateName: 'packet_war', durationHours: 20, joinWindowHours: 4, prizeDiamonds: 150, entryFeeDiamonds: 0,   playerCap: 100 },
+    { id: 'core_siege', name: 'CORE SIEGE', templateName: 'core_siege', durationHours: 20, joinWindowHours: 8, prizeDiamonds: 500, entryFeeDiamonds: 50,  playerCap: 32  },
+    { id: 'signal_run', name: 'SIGNAL RUN', templateName: 'signal_run', durationHours: 20, joinWindowHours: 4, prizeDiamonds: 200, entryFeeDiamonds: 20,  playerCap: 100 },
+    { id: 'data_blitz', name: 'DATA BLITZ', templateName: 'data_blitz', durationHours: 20, joinWindowHours: 3, prizeDiamonds: 75,  entryFeeDiamonds: 0,   playerCap: 64  },
+    { id: 'void_clash', name: 'VOID CLASH', templateName: 'void_clash', durationHours: 20, joinWindowHours: 6, prizeDiamonds: 350, entryFeeDiamonds: 35,  playerCap: 50  },
   ] as TournamentTemplateDef[],
 } as const;
 
