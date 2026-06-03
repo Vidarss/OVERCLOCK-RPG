@@ -57,6 +57,12 @@ function getEnvVar(nextPublicKey: string, viteKey: string): string {
   return '';
 }
 
+// Debug: log env vars on load
+const _supabaseUrl = getEnvVar('NEXT_PUBLIC_SUPABASE_URL', 'VITE_SUPABASE_URL');
+const _supabaseKey = getEnvVar('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'VITE_SUPABASE_ANON_KEY');
+console.log('[v0] Supabase URL:', _supabaseUrl ? `${_supabaseUrl.substring(0, 30)}...` : 'NOT SET');
+console.log('[v0] Supabase Key:', _supabaseKey ? `${_supabaseKey.substring(0, 20)}...` : 'NOT SET');
+
 /**
  * Default database configuration.
  * Override specific values by passing a partial config to createDatabaseConfig().
