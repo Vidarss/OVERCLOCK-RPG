@@ -197,11 +197,16 @@ export class AuthPlugin implements IPlugin {
   async signIn(emailOrHandle: string, password: string): Promise<{ error: string | null }> {
     let email = emailOrHandle;
 
+    console.log('[v0] AuthPlugin.signIn called with:', emailOrHandle);
+
     // If input doesn't contain @, assume it's a handle and look up the email
     if (!emailOrHandle.includes('@')) {
+      console.log('[v0] Looking up email for handle:', emailOrHandle.toUpperCase());
       const { data: profile, error: lookupError } = await this.engine.storage.load<{
         email: string;
       }>('profiles', { handle: emailOrHandle.toUpperCase() }, 'email');
+
+      console.log('[v0] Profile lookup result:', profile, lookupError);
 
       if (lookupError || !profile?.email) {
         return { error: 'User not found. Check your username.' };
@@ -209,7 +214,9 @@ export class AuthPlugin implements IPlugin {
       email = profile.email;
     }
 
+    console.log('[v0] Attempting Supabase signIn with email:', email);
     const { error } = await auth.signIn(email, password);
+    console.log('[v0] Supabase signIn result:', error ? `Error: ${error}` : 'Success');
     if (error) return { error };
     return { error: null };
   }
