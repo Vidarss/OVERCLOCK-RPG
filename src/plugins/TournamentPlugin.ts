@@ -72,15 +72,22 @@ export class TournamentPlugin implements IPlugin {
     }, 30000);
   }
 
-  /** Check if any tournaments ended and reload if needed */
+  /** Check if any tournaments changed status and reload if needed */
   private async checkAndRefreshTournaments(): Promise<void> {
     const now = Date.now();
+    
+    // Check if any active tournament ended
     const hadEnded = this.tournaments.some(t => 
       t.status === 'active' && new Date(t.ends_at).getTime() <= now
     );
     
-    if (hadEnded || this.tournaments.length === 0) {
-      console.log('[TournamentPlugin] Refreshing tournaments - detected ended or empty');
+    // Check if any upcoming tournament should now be active
+    const upcomingNowActive = this.tournaments.some(t => 
+      t.status === 'upcoming' && new Date(t.starts_at).getTime() <= now
+    );
+    
+    if (hadEnded || upcomingNowActive || this.tournaments.length === 0) {
+      console.log('[TournamentPlugin] Refreshing tournaments - status change detected');
       await this.load();
     }
   }
@@ -227,13 +234,18 @@ export class TournamentPlugin implements IPlugin {
   }
 
   getAll(): Tournament[] { return this.tournaments; }
+  
   getActive(): Tournament[] { 
     const now = Date.now();
     return this.tournaments.filter(t => 
       new Date(t.starts_at).getTime() <= now && new Date(t.ends_at).getTime() > now
     );
   }
-  getUpcoming(): Tournament[] { return this.tournaments.filter(t => t.status === 'upcoming'); }
+  
+  getUpcoming(): Tournament[] { 
+    const now = Date.now();
+    return this.tournaments.filter(t => new Date(t.starts_at).getTime() > now);
+  }
   getMyEntry(tournamentId: string): TournamentEntry | null { return this.myEntries[tournamentId] ?? null; }
   getLeaderboard(tournamentId: string): TournamentEntry[] { return this.leaderboards[tournamentId] ?? []; }
   getParticipantCount(tournamentId: string): number { return this.participantCounts[tournamentId] ?? 0; }

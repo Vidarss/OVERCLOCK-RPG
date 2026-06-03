@@ -68,7 +68,13 @@ function TournamentCard({
   myUserId: string | null;
   onSelect: () => void;
 }) {
-  const statusColor = STATUS_COLORS[tournament.status];
+  // Calculate real-time status from timestamps (DB status may be stale)
+  const now = Date.now();
+  const startsAt = new Date(tournament.starts_at).getTime();
+  const endsAt = new Date(tournament.ends_at).getTime();
+  const realStatus: Tournament['status'] = now < startsAt ? 'upcoming' : now < endsAt ? 'active' : 'ended';
+  
+  const statusColor = STATUS_COLORS[realStatus];
   const isFull = participantCount >= tournament.player_cap;
   const isJoined = !!myEntry;
 
@@ -89,7 +95,7 @@ function TournamentCard({
       <div style={{
         width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
         background: statusColor,
-        boxShadow: tournament.status === 'active' ? `0 0 6px ${statusColor}` : 'none',
+        boxShadow: realStatus === 'active' ? `0 0 6px ${statusColor}` : 'none',
       }} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -103,9 +109,9 @@ function TournamentCard({
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
           <span style={{ color: statusColor, fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-            {STATUS_LABELS[tournament.status]}
-            {tournament.status === 'active' && ` — ${formatTimeRemaining(tournament.ends_at)}`}
-            {tournament.status === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
+            {STATUS_LABELS[realStatus]}
+            {realStatus === 'active' && ` — ${formatTimeRemaining(tournament.ends_at)}`}
+            {realStatus === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
           </span>
           <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
             <Users size={8} style={{ display: 'inline', marginRight: 2 }} />
