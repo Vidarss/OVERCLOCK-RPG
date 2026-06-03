@@ -470,7 +470,7 @@ export const TournamentScreen: React.FC<TournamentScreenProps> = ({ engine, onCl
           </div>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {selectedTournament ? (
             <TournamentDetail
               tournament={selectedTournament}

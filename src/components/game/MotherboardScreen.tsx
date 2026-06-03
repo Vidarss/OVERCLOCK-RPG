@@ -795,9 +795,16 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
       {/* Installed slots */}
       <div style={{ flexShrink: 0, borderBottom: '1px solid #0a0818', padding: '8px 12px', background: '#030010' }}>
         <div className="font-pixel mb-2" style={{ color: `${color}55`, fontSize: '6px', letterSpacing: '2px' }}>
-          INSTALLED
+          INSTALLED ({slotArray.filter(Boolean).length}/{slotCount})
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${slotCount}, 1fr)`, gap: 6 }}>
+        <div style={{ 
+          display: 'flex', 
+          gap: 6, 
+          overflowX: 'auto', 
+          paddingBottom: 4,
+          WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
+          scrollbarWidth: 'thin' as React.CSSProperties['scrollbarWidth'],
+        }}>
           {Array.from({ length: slotCount }).map((_, i) => {
             const item = slotArray[i] ?? null;
             if (item) {
@@ -807,6 +814,8 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
                 <div
                   key={i}
                   style={{
+                    minWidth: 140,
+                    flexShrink: 0,
                     background: `${RARITY_COLOR[item.rarity]}0a`,
                     border: `1px solid ${RARITY_COLOR[item.rarity]}`,
                     padding: '6px 8px', boxShadow: enchantLevel > 0 ? getEnchantGlow(enchantLevel) : RARITY_GLOW[item.rarity], position: 'relative',
@@ -868,6 +877,8 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
               <div
                 key={i}
                 style={{
+                  minWidth: 140,
+                  flexShrink: 0,
                   background: '#040010', border: `1px dashed ${color}1e`,
                   padding: '8px', display: 'flex', flexDirection: 'column',
                   alignItems: 'center', justifyContent: 'center', gap: 3, minHeight: 60,
