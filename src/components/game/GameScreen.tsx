@@ -147,7 +147,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
-  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
+  // Update isMobile on window resize
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);  const inventoryCount = useGameState(engine, s => (s.inventory ?? []).length);
   const inventoryMax = ITEM_CONFIG.inventoryMax;
   const inventoryWarningThreshold = ITEM_CONFIG.inventoryWarningThreshold;
   const inventoryNearFull = inventoryCount >= inventoryMax * inventoryWarningThreshold;
@@ -402,7 +407,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           <Battlefield engine={engine} />
         </div>
 
-        {/* Right sidebar: Launcher buttons — visible on desktop and mobile */}
+        {/* Right sidebar: Launcher buttons �� visible on desktop and mobile */}
         <div
           style={{
             width: isMobile ? '100%' : 200, flexShrink: 0,
