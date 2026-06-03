@@ -29,7 +29,9 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ authPlugin, onSwitchTo
     if (!trimmed || !password) return;
     setError('');
     setLoading(true);
+    console.log('[v0] Login attempt:', trimmed);
     const { error: err } = await authPlugin.signIn(trimmed, password);
+    console.log('[v0] Login result:', err ? `Error: ${err}` : 'Success');
     setLoading(false);
     if (err) setError(friendlyError(err));
   };
