@@ -163,7 +163,8 @@ export class TournamentPlugin implements IPlugin {
 
     const t = this.tournaments.find(x => x.id === tournamentId);
     if (!t) return { success: false, error: 'Tournament not found' };
-    if (t.status === 'ended') return { success: false, error: 'Tournament has ended' };
+    const now = Date.now();
+    if (new Date(t.ends_at).getTime() <= now) return { success: false, error: 'Tournament has ended' };
 
     if (t.join_closes_at && new Date() > new Date(t.join_closes_at)) {
       return { success: false, error: 'Join window has closed' };
@@ -254,9 +255,10 @@ export class TournamentPlugin implements IPlugin {
   canJoin(tournamentId: string): { canJoin: boolean; reason?: string } {
     const t = this.tournaments.find(x => x.id === tournamentId);
     if (!t) return { canJoin: false, reason: 'Tournament not found' };
-    if (t.status === 'ended') return { canJoin: false, reason: 'Tournament has ended' };
+    const now = Date.now();
+    if (new Date(t.ends_at).getTime() <= now) return { canJoin: false, reason: 'Tournament has ended' };
     if (this.myEntries[tournamentId]) return { canJoin: false, reason: 'Already joined' };
-    if (t.join_closes_at && new Date() > new Date(t.join_closes_at)) {
+    if (t.join_closes_at && new Date(t.join_closes_at).getTime() <= now) {
       return { canJoin: false, reason: 'Join window closed' };
     }
     const participantCount = this.participantCounts[tournamentId] ?? 0;
