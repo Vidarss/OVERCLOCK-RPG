@@ -402,20 +402,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           <Battlefield engine={engine} />
         </div>
 
-        {/* Right sidebar: Launcher buttons */}
+        {/* Right sidebar: Launcher buttons — visible on desktop and mobile */}
         <div
           style={{
-            width: 200, flexShrink: 0,
+            width: isMobile ? '100%' : 200, flexShrink: 0,
             background: '#0a0a0f',
-            borderLeft: '1px solid #1a1a2a',
-            display: 'flex', flexDirection: 'column',
-            padding: '12px 12px 8px', gap: 8,
-            overflowY: 'auto',
+            borderLeft: isMobile ? 'none' : '1px solid #1a1a2a',
+            borderTop: isMobile ? '1px solid #1a1a2a' : 'none',
+            display: 'flex', flexDirection: isMobile ? 'row' : 'column',
+            padding: isMobile ? '8px 8px 12px' : '12px 12px 8px', gap: 8,
+            overflowX: isMobile ? 'auto' : 'visible',
+            overflowY: isMobile ? 'visible' : 'auto',
+            WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
           }}
         >
-          <div className="font-pixel" style={{ color: '#2a3a4a', fontSize: '6px', letterSpacing: '3px', marginBottom: 2 }}>
-            SYSTEMS
-          </div>
+          {!isMobile && (
+            <div className="font-pixel" style={{ color: '#2a3a4a', fontSize: '6px', letterSpacing: '3px', marginBottom: 2 }}>
+              SYSTEMS
+            </div>
+          )}
 
           {/* Motherboard / Hardware */}
           <Tooltip content={<><TooltipLabel label="HARDWARE" color="#39ff14" /><TooltipText>Equip dropped items to boost stats.</TooltipText></>} position="left">
