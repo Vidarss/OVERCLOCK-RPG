@@ -367,39 +367,98 @@ const SetsPanel: React.FC<SetsPanelProps> = ({ engine }) => {
   const setPlugin = engine.getPlugin<SetPlugin>('sets');
   const setItems = useGameState(engine, s => s.setItems ?? []);
   const collectedSets = useGameState(engine, s => s.collectedSets ?? {});
+  const currentStage = useGameState(engine, s => s.stage ?? 1);
   const [, setTick] = useState(0);
   const refresh = useCallback(() => setTick(t => t + 1), []);
   useEffect(() => setPlugin?.subscribe(refresh), [setPlugin, refresh]);
+
+  // Get drop info for header
+  const dropInfo = setPlugin?.getSetDropInfo();
+
+  // Helper to get rarity tier label based on dropWeight
+  const getRarityTier = (weight: number) => {
+    if (weight >= 100) return { label: 'COMMON', color: '#6a8a6a' };
+    if (weight >= 80) return { label: 'UNCOMMON', color: '#6a8aaa' };
+    if (weight >= 60) return { label: 'RARE', color: '#aa6aff' };
+    if (weight >= 40) return { label: 'EPIC', color: '#ff6a8a' };
+    return { label: 'LEGENDARY', color: '#ffaa00' };
+  };
 
   return (
     <div style={{ height: '100%', overflowY: 'auto', padding: '10px 12px' }}>
       <div className="font-pixel" style={{ color: '#3a3a2a', fontSize: '6px', letterSpacing: '2px', marginBottom: 10 }}>
         {'> MYTHIC SET COLLECTION'}
       </div>
-      <div style={{ color: '#2a3a3a', fontFamily: 'var(--font-mono)', fontSize: '8px', marginBottom: 12, lineHeight: 1.5 }}>
-        Mythic set pieces are awarded from tournaments. Collect a full set for a permanent bonus — even unequipped.
+      <div style={{ color: '#2a3a3a', fontFamily: 'var(--font-mono)', fontSize: '8px', marginBottom: 8, lineHeight: 1.5 }}>
+        Mythic set pieces drop from boss kills. Higher stages unlock rarer sets.
       </div>
+      
+      {/* Drop chance info */}
+      {dropInfo && (
+        <div style={{ 
+          background: '#0a0a10', 
+          border: '1px solid #1a2a3a', 
+          padding: '6px 8px', 
+          marginBottom: 12,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <span style={{ color: '#4a5a6a', fontFamily: 'var(--font-mono)', fontSize: '7px' }}>
+            BOSS DROP CHANCE
+          </span>
+          <span className="font-pixel" style={{ color: '#00f5ff', fontSize: '8px' }}>
+            {(dropInfo.dropChance * 100).toFixed(2)}%
+          </span>
+        </div>
+      )}
 
       {SET_CATALOG.map(set => {
         const progress = setPlugin?.getProgressForSet(set.id) ?? { owned: 0, total: set.pieces.length, ownedPieces: [] };
         const isComplete = collectedSets[set.id] ?? false;
         const completePct = progress.total > 0 ? (progress.owned / progress.total) * 100 : 0;
+        const minStage = (set as { minStage?: number }).minStage ?? 0;
+        const dropWeight = (set as { dropWeight?: number }).dropWeight ?? 50;
+        const rarity = getRarityTier(dropWeight);
+        const isUnlocked = currentStage >= minStage;
 
         return (
           <div key={set.id} style={{
-            background: isComplete ? `${set.color}0a` : '#080810',
-            border: `1px solid ${isComplete ? set.color + '55' : '#1a1a28'}`,
+            background: isComplete ? `${set.color}0a` : isUnlocked ? '#080810' : '#050508',
+            border: `1px solid ${isComplete ? set.color + '55' : isUnlocked ? '#1a1a28' : '#0a0a12'}`,
             padding: '11px 13px', marginBottom: 8,
             boxShadow: isComplete ? `0 0 14px ${set.color}22` : 'none',
+            opacity: isUnlocked ? 1 : 0.6,
           }}>
             {/* Set header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-              <div>
-                <div className="font-pixel" style={{ color: isComplete ? set.color : set.color + '88', fontSize: '9px', marginBottom: 2 }}>
-                  {set.name}
-                  {isComplete && <span style={{ marginLeft: 8, fontSize: '7px', color: '#e8d48b' }}>✦ COMPLETE</span>}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                  <span className="font-pixel" style={{ color: isComplete ? set.color : isUnlocked ? set.color + '88' : '#2a2a3a', fontSize: '9px' }}>
+                    {set.name}
+                  </span>
+                  {isComplete && <span style={{ fontSize: '7px', color: '#e8d48b' }}>✦ COMPLETE</span>}
+                  <span className="font-pixel" style={{ 
+                    fontSize: '5px', 
+                    color: rarity.color,
+                    background: `${rarity.color}15`,
+                    padding: '1px 3px',
+                    letterSpacing: '0.5px'
+                  }}>
+                    {rarity.label}
+                  </span>
                 </div>
-                <div style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>{set.description}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>{set.description}</span>
+                </div>
+                <div style={{ 
+                  color: isUnlocked ? '#4a5a6a' : '#8a4a4a', 
+                  fontFamily: 'var(--font-mono)', 
+                  fontSize: '7px', 
+                  marginTop: 3 
+                }}>
+                  {isUnlocked ? `Stage ${minStage}+` : `🔒 Unlocks at Stage ${minStage.toLocaleString()}`}
+                </div>
               </div>
               <div className="font-pixel" style={{ color: set.color, fontSize: '10px', flexShrink: 0, marginLeft: 8 }}>
                 {progress.owned}/{progress.total}

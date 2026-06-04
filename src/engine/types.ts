@@ -147,6 +147,10 @@ export interface SetDef {
   pieces: SetPieceDef[];
   setBonusDescription: string;
   setBonus: ModifierDef[];
+  /** Minimum stage required for this set to drop from bosses */
+  minStage?: number;
+  /** Drop weight (higher = more common). Default: 50 */
+  dropWeight?: number;
 }
 
 export interface OverclockUpgrade {
