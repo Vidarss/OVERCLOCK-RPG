@@ -432,16 +432,16 @@ export const ENEMY_CONFIG = {
    * Monsters are randomly selected from those available at the current stage.
    */
   monsters: [
-    { name: 'NULL_PROCESS_ENTITY', minStage: 1, maxStage: 999999 },
-    { name: 'CACHE_BREAKER', minStage: 1, maxStage: 999999 },
-    { name: 'ADWARE_GLITCHLING', minStage: 1, maxStage: 999999 },
-    { name: 'FIREWALL_ORPHAN', minStage: 1, maxStage: 999999 },
-    { name: 'OVERCLOCK_ERROR', minStage: 1, maxStage: 999999 },
-    { name: 'KERNEL_LEAK_SPAWN', minStage: 1, maxStage: 999999 },
-    { name: 'AUTOUPDATE_HORROR', minStage: 1, maxStage: 999999 },
-    { name: 'DEBUG_SPECTER', minStage: 1, maxStage: 999999 },
-    { name: 'SYSTEM_POPUP_PREDATOR', minStage: 1, maxStage: 999999 },
-    { name: 'SYNC_FAILURE_CORE', minStage: 1, maxStage: 999999 },
+    { name: 'NULL_PROCESS_ENTITY', minStage: 1, maxStage: 150 },
+    { name: 'CACHE_BREAKER', minStage: 1, maxStage: 150 },
+    { name: 'ADWARE_GLITCHLING', minStage: 1, maxStage: 150 },
+    { name: 'FIREWALL_ORPHAN', minStage: 1, maxStage: 150 },
+    { name: 'OVERCLOCK_ERROR', minStage: 1, maxStage: 150 },
+    { name: 'KERNEL_LEAK_SPAWN', minStage: 1, maxStage: 150 },
+    { name: 'AUTOUPDATE_HORROR', minStage: 1, maxStage: 150 },
+    { name: 'DEBUG_SPECTER', minStage: 1, maxStage: 150 },
+    { name: 'SYSTEM_POPUP_PREDATOR', minStage: 1, maxStage: 150 },
+    { name: 'SYNC_FAILURE_CORE', minStage: 1, maxStage: 150 },
   ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
@@ -449,11 +449,11 @@ export const ENEMY_CONFIG = {
    * Elites are randomly selected from those available at the current stage.
    */
   elites: [
-    { name: 'RECURSIVE_UPGRADE_MISTAKE', minStage: 1, maxStage: 999999 },
-    { name: 'UNAUTHORIZED_PROCESS_AGENT', minStage: 1, maxStage: 999999 },
-    { name: 'MEMORY_DRIFT_ENFORCER', minStage: 1, maxStage: 999999 },
-    { name: 'PATCH_NOTES_ABERRATION', minStage: 1, maxStage: 999999 },
-    { name: 'SYNTHETIC_FAILURE_UNIT', minStage: 1, maxStage: 999999 },
+    { name: 'RECURSIVE_UPGRADE_MISTAKE', minStage: 1, maxStage: 150 },
+    { name: 'UNAUTHORIZED_PROCESS_AGENT', minStage: 1, maxStage: 150 },
+    { name: 'MEMORY_DRIFT_ENFORCER', minStage: 1, maxStage: 150 },
+    { name: 'PATCH_NOTES_ABERRATION', minStage: 1, maxStage: 150 },
+    { name: 'SYNTHETIC_FAILURE_UNIT', minStage: 1, maxStage: 150 },
   ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
@@ -461,9 +461,9 @@ export const ENEMY_CONFIG = {
    * Bosses are randomly selected from those available at the current stage.
    */
   bosses: [
-    { name: 'THE_PATCH_THAT_NEVER_FINISHED', minStage: 1, maxStage: 999999 },
-    { name: 'CORE_SYSTEM_AUTONOMY', minStage: 1, maxStage: 999999 },
-    { name: 'ADMINISTRATIVE_GOD_PROCESS', minStage: 1, maxStage: 999999 },
+    { name: 'THE_PATCH_THAT_NEVER_FINISHED', minStage: 1, maxStage: 150 },
+    { name: 'CORE_SYSTEM_AUTONOMY', minStage: 1, maxStage: 150 },
+    { name: 'ADMINISTRATIVE_GOD_PROCESS', minStage: 1, maxStage: 150 },
   ] as { name: string; minStage: number; maxStage: number }[],
 } as const;
 
