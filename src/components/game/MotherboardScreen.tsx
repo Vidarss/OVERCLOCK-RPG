@@ -989,7 +989,7 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
       <div
         style={{
           width: '100%', maxWidth: 540,
-          height: 'min(88vh, 680px)',
+          maxHeight: '90vh',
           background: '#030008', border: '1px solid #180a28',
           boxShadow: '0 0 80px rgba(0,0,0,0.95), 0 0 40px rgba(0,245,255,0.04)',
           display: 'flex', flexDirection: 'column',
