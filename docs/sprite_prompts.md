@@ -20,7 +20,7 @@ Each monster has multiple **SPRITE TIERS** (1-6) representing visual evolution b
 ## Base Prompt Template
 
 ```
-Create a pixel art enemy sprite for a cyberpunk idle RPG called "OVERCLOCK".
+Create a pixel art ENEMY MONSTER sprite for a cyberpunk idle RPG called "OVERCLOCK".
 
 Enemy name: [ENEMY_NAME]
 Sprite Tier: [1-6]
@@ -32,6 +32,9 @@ Sprite Tier: [1-6]
 - NO text, numbers, or symbols ON sprite body
 - NO UI elements, health bars, labels, watermarks
 - PURE CHARACTER ONLY
+- MUST look like an ENEMY/THREAT/MONSTER - aggressive stance, hostile expression
+- NEVER cute, friendly, or sympathetic - these are hostile entities to be destroyed
+- Sharp edges, menacing features, combat-ready posture
 
 === TIER-SPECIFIC RULES ===
 [See tier-specific section below]
@@ -43,13 +46,13 @@ Sprite Tier: [1-6]
 
 ### === TIER 1 CHARACTERISTICS ===
 
-Theme: Baby viruses, annoying popups, amateur hacker creations
+Theme: Lesser malware, glitchy viruses, weak but hostile digital creatures
 
-Vibe: Pathetic but persistent, more annoying than dangerous, like digital mosquitoes
+Vibe: Small but aggressive, like digital vermin - rats, not puppies
 
-Personality: Confused, nervous, trying too hard to be scary but failing
+Personality: Hostile, feral, snarling - weak but will still bite
 
-Threat Level: Joke enemies - player one-shots them
+Threat Level: Fodder enemies - easy to kill but visibly dangerous
 
 SIZE: SMALL (takes up 30-40% of canvas, lots of empty space)
 
@@ -57,23 +60,27 @@ COMPLEXITY: Simple shapes, 2-3 colors max, minimal detail
 
 GLOW: Faint or none
 
+EXPRESSION: Angry, aggressive, ready to attack - NEVER cute or confused
+
 ---
 
 ### === TIER 2 CHARACTERISTICS ===
 
-Theme: Teenage malware, awkward growth phase, discovering their powers
+Theme: Growing malware, mutating threats, learning to kill
 
-Vibe: Cocky and overconfident, starting to pose a real nuisance, like digital bullies
+Vibe: Predatory and aggressive, hunting stance, ready to strike
 
-Personality: Smug, taunting, flexing abilities they barely understand
+Personality: Hungry, stalking, sizing up prey - no longer just feral
 
-Threat Level: Minor annoyance - takes a few hits but still weak
+Threat Level: Real nuisance - can hurt if you're not paying attention
 
 SIZE: MEDIUM-SMALL (takes up 40-50% of canvas, some breathing room)
 
 COMPLEXITY: More defined shapes, 3-4 colors, basic shading
 
 GLOW: Subtle pulse, one glowing element (eyes or core)
+
+EXPRESSION: Predatory focus, hunting gaze - NEVER smug or playful
 
 ---
 
@@ -153,14 +160,14 @@ GLOW: Reality itself corrupting around them, background distorts, edges bleed
 
 ## MALWARE.BAT
 
-**Concept:** A confused bat animal made of corrupted code, scared of itself
+**Concept:** A hostile bat creature made of corrupted code, feral and aggressive
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A tiny, glitchy bat with error symbols for eyes. Pixelated wings that barely work. Looks lost and confused. Body made of corrupted .bat file icons. Faint green/cyan glow. |
-| Tier 2 | Larger bat with sharper wings. Eyes now glow with malicious intent but still look confused. Trailing corrupted code particles. More defined silhouette. |
-| Tier 3 | Sleek predator bat. Wings spread wide, showing data corruption patterns. Multiple glowing eyes. Body segments like code blocks. Cold scanner gaze. |
-| Tier 4 | Massive bat entity with reality-warping wings. Each wing beat glitches the space around it. Ancient virus symbols etched into body. Watching, calculating. |
+| Tier 1 | A small, glitchy bat with error symbols for eyes. Pixelated wings spread aggressively. Body made of corrupted .bat file icons. Fangs bared, ready to strike. Faint green/cyan glow. |
+| Tier 2 | Larger bat with sharper, blade-like wings. Eyes glow with malicious intent. Trailing corrupted code particles. Aggressive hunting posture, circling prey. |
+| Tier 3 | Sleek predator bat. Wings spread wide, showing data corruption patterns. Multiple glowing eyes. Body segments like code blocks. Cold scanner gaze, calculating attack vectors. |
+| Tier 4 | Massive bat entity with reality-warping wings. Each wing beat glitches the space around it. Ancient virus symbols etched into body. Patient, watching, ready to descend. |
 | Tier 5 | Eldritch bat horror filling the screen. Wings ARE the corruption spreading. Multiple phase-shifted forms visible. The original bat is just a core in cosmic terror. |
 | Tier 6 | THE bat. All corrupted files manifest as one screaming entity. Wings tear reality. The concept of "bat file" given apocalyptic physical form. |
 
@@ -168,28 +175,28 @@ GLOW: Reality itself corrupting around them, background distorts, edges bleed
 
 ## CORRUPT_PROC
 
-**Concept:** A tiny processor having an existential crisis, smoking and glitching
+**Concept:** A hostile processor entity, overheating and volatile, sparking with aggression
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A small CPU chip with a stressed face, smoking from overheating. Sparks flying. Looks like it's about to cry. Tiny legs trying to run away from itself. |
-| Tier 2 | Larger processor with cracks showing corrupted data inside. Face is now angry instead of sad. Trailing smoke and sparks. Starting to look dangerous. |
-| Tier 3 | Industrial-grade processor monster. Multiple cores visible, each with different error states. Mechanical legs, weapon-like heat sinks. Cold efficiency. |
-| Tier 4 | Quantum processor entity. Existing in multiple states simultaneously. Reality glitches around it. Ancient beyond its creation date. Knowing eyes. |
-| Tier 5 | THE Corrupt Process - all failed computations manifest. Massive form of cascading errors. The death of every crashed program given shape. |
+| Tier 1 | A small CPU chip with angry glowing eyes, smoking and sparking aggressively. Cracks showing corruption within. Hostile stance, ready to overheat your systems. |
+| Tier 2 | Larger processor with deep cracks showing corrupted data inside. Face twisted in rage. Trailing smoke and dangerous sparks. Mechanical limbs emerging. |
+| Tier 3 | Industrial-grade processor monster. Multiple cores visible, each with different error states. Mechanical legs, weapon-like heat sinks. Cold efficiency, built to destroy. |
+| Tier 4 | Quantum processor entity. Existing in multiple states simultaneously. Reality glitches around it. Ancient beyond its creation date. All-seeing hostile intelligence. |
+| Tier 5 | THE Corrupt Process - all failed computations manifest. Massive form of cascading errors. The death of every crashed program given wrathful shape. |
 | Tier 6 | Universal processor failure incarnate. The heat death of computation. All cores collapsing into void. The final BSOD given terrible form. |
 
 ---
 
 ## NULL_PTR
 
-**Concept:** A confused arrow/pointer pointing at nothing, totally lost
+**Concept:** A hostile pointer entity that erases what it targets, hunting for victims
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A cute arrow cursor with googly eyes, spinning in circles. Points at nothing. Question marks floating around it. Looks helpless and lost. |
-| Tier 2 | Sharper arrow with determined eyes. Still points at nothing but AGGRESSIVELY. Starting to crack reality where it points. Minor threat aura. |
-| Tier 3 | Geometric pointer construct. Multiple arrow heads pointing in impossible directions. Where it points, data ceases to exist. Cold precision. |
+| Tier 1 | A sharp arrow cursor with glowing hostile eyes, spinning to lock onto targets. Points aggressively at prey. Crackling void energy where it points. Small but lethal. |
+| Tier 2 | Sharper arrow with predator eyes. Points AGGRESSIVELY, hunting. Starting to crack reality where it points. Dangerous threat aura. |
+| Tier 3 | Geometric pointer construct. Multiple arrow heads pointing in impossible directions. Where it points, data ceases to exist. Cold precision killer. |
 | Tier 4 | Cosmic pointer entity. Points at concepts, at memories, at existence itself. Wherever it indicates becomes NULL. Reality fears its direction. |
 | Tier 5 | THE Null Pointer - pointing at everything and nothing. A void in arrow shape. Where it exists, existence doesn't. Paradox made manifest. |
 | Tier 6 | The arrow that points at reality itself. All of existence is its target. When it finally indicates YOU, you become null. The end of reference. |
@@ -198,13 +205,13 @@ GLOW: Reality itself corrupting around them, background distorts, edges bleed
 
 ## STACK_OVERFLOW
 
-**Concept:** Wobbly tower of blocks about to collapse, panicked eyes on top
+**Concept:** An unstable tower of hostile data blocks, threatening to collapse and crush
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A tiny wobbling stack of data blocks with a panicked face on top. Constantly swaying, about to fall. Comic relief - clearly incompetent. |
-| Tier 2 | Taller stack, more stable. Face is now angry, blocking your path. Throws blocks at you. The stack has learned to weaponize its instability. |
-| Tier 3 | Industrial stack construct. Perfectly balanced yet infinitely tall. Each block is a compressed error. Mechanical, cold, efficient recursion. |
+| Tier 1 | An aggressive stack of data blocks with hostile glowing eyes on top. Looming, threatening to topple onto prey. Blocks armed with sharp edges. Unstable but dangerous. |
+| Tier 2 | Taller stack, weaponized. Eyes now furious, blocking your path. Throws lethal blocks at targets. The stack has learned to kill with its instability. |
+| Tier 3 | Industrial stack construct. Perfectly balanced yet infinitely tall. Each block is a compressed error, razor-sharp. Mechanical, cold, efficient recursion. |
 | Tier 4 | Infinite stack entity. Goes up forever, loops back on itself. Each level contains its own stacks. Recursive horror. Ancient and patient. |
 | Tier 5 | THE Stack - all memory allocations ever made, crashing simultaneously. Blocks falling upward into void. The death of all heap space. |
 | Tier 6 | Memory itself collapsing. The stack that contains all stacks. Infinite recursion made apocalyptic. When it falls, everything falls. |
@@ -213,31 +220,31 @@ GLOW: Reality itself corrupting around them, background distorts, edges bleed
 
 ## SPAM_BOT
 
-**Concept:** A sad robot made of canned spam meat, dripping grease
+**Concept:** A hostile robot that floods and overwhelms, relentless attacker
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A tiny pathetic robot made of spam cans. Leaking pink meat-grease. Desperately sending messages no one reads. Sad puppy eyes. |
-| Tier 2 | Larger spam-bot with antenna array. Still dripping but now AGGRESSIVELY. Face is angry. Drowning enemies in unwanted messages. |
-| Tier 3 | Industrial spam factory bot. Multiple antenna, satellite uplinks. Floods networks with precision. Cold marketing algorithm efficiency. |
-| Tier 4 | Spam singularity. All unwanted messages ever sent, compressed into one entity. Knows your email, your preferences, your fears. Targeted horror. |
-| Tier 5 | THE Spam - communication itself corrupted. Drowns reality in infinite messages. Every notification, every ping, every unwanted contact - manifest. |
-| Tier 6 | The death of signal-to-noise ratio. All communication becomes spam. The bot that ends all meaningful exchange. Apocalyptic advertising. |
+| Tier 1 | An aggressive robot with multiple antenna, eyes locked on target. Launching message barrages. Relentless assault stance. Never stops, never rests. |
+| Tier 2 | Larger spam-bot with weapon-like antenna array. Face shows hostile determination. Drowning enemies in overwhelming fire. Built for volume attacks. |
+| Tier 3 | Industrial spam factory bot. Multiple antenna, satellite uplinks. Floods networks with precision strikes. Cold marketing algorithm turned weapon. |
+| Tier 4 | Spam singularity. All unwanted messages ever sent, compressed into one entity. Knows your weakness. Targeted horror, inescapable bombardment. |
+| Tier 5 | THE Spam - communication itself corrupted. Drowns reality in infinite messages. Every notification, every ping - manifest as assault. |
+| Tier 6 | The death of signal-to-noise ratio. All communication becomes attack. The bot that ends all meaningful existence. Apocalyptic overwhelming. |
 
 ---
 
 ## ADWARE.EXE
 
-**Concept:** An annoying popup character that won't go away, desperate for attention
+**Concept:** A hostile popup entity that invades and overwhelms, forced attention
 
 | Sprite Tier | Evolution Description |
 |-------------|----------------------|
-| Tier 1 | A small bouncing popup window with an obnoxious face. "CLICK ME" energy. Follows you around. Pathetically desperate for attention. |
-| Tier 2 | Larger popup with multiple overlapping windows. Harder to close. Face is now smug. Spawns smaller popups. Getting actually annoying. |
-| Tier 3 | Popup hydra - close one, two more appear. Covers entire screen worth of entity. Cold efficiency in demanding attention. Network of ads. |
-| Tier 4 | Attention singularity. All ads ever shown, all clicks ever stolen. Knows what you almost bought. Reality bends to its promotional needs. |
-| Tier 5 | THE Adware - attention itself commodified and weaponized. Your focus belongs to it. Cannot look away. Cannot close. Eternal popup. |
-| Tier 6 | The death of free will. All choice becomes their choice. Every thought an ad. The popup that consumes consciousness itself. |
+| Tier 1 | An aggressive popup window with hostile eyes. "LOOK AT ME" energy weaponized. Forces itself into your vision. Invasive and relentless. |
+| Tier 2 | Larger popup with multiple overlapping windows forming armor. Can't be dismissed. Face shows predatory satisfaction. Spawns attack popups. |
+| Tier 3 | Popup hydra - close one, two more attack. Covers entire screen with hostile presence. Cold efficiency in demanding surrender. Network of assault. |
+| Tier 4 | Attention singularity. All ads ever shown, all clicks ever stolen. Knows your weaknesses. Reality bends to its demands. Inescapable. |
+| Tier 5 | THE Adware - attention itself captured and weaponized. Your focus is its prisoner. Cannot look away. Cannot close. Eternal invasion. |
+| Tier 6 | The death of free will. All choice becomes its choice. Every thought invaded. The popup that consumes consciousness itself. |
 
 ---
 
