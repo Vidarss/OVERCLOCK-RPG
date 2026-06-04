@@ -39,6 +39,7 @@ export const DEFAULT_STATE: GameState = {
   diamonds: 0,
   skillPoints: 0,
   claimedSkillPointMilestones: [],
+  skillTreeNodes: {},
   setItems: [],
   collectedSets: {},
   scrap: 0,

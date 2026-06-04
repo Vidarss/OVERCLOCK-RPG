@@ -211,6 +211,7 @@ export interface GameState {
   diamonds: number;
   skillPoints: number;
   claimedSkillPointMilestones: number[];
+  skillTreeNodes: Record<string, number>; // nodeId -> level purchased
   setItems: HardwareItem[];
   collectedSets: Record<string, boolean>;
   scrap: number;

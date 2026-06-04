@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles } from 'lucide-react';
+import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -21,6 +21,7 @@ import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
 import { RelicsScreen } from './RelicsScreen';
+import { SkillTreeScreen } from './SkillTreeScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { usePreloadAllSprites } from '../../hooks/useSpritePreloader';
@@ -148,6 +149,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [showRelics, setShowRelics] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   // Preload all enemy sprites on mount to prevent loading delays
@@ -192,6 +194,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
       {showRelics && <RelicsScreen engine={engine} onClose={() => setShowRelics(false)} />}
+      {showSkillTree && <SkillTreeScreen engine={engine} onClose={() => setShowSkillTree(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
     </>
@@ -517,6 +520,30 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             >
               <Sparkles size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>RELICS</div>
+            </button>
+          </Tooltip>
+
+          {/* Skill Tree */}
+          <Tooltip content={<><TooltipLabel label="SKILL TREE" color="#00ff88" /><TooltipText>Spend Skill Points on permanent stat bonuses.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowSkillTree(true)}
+              style={{
+                width: '100%', background: (state.skillPoints ?? 0) > 0 ? '#001810' : '#080808',
+                border: `1px solid ${(state.skillPoints ?? 0) > 0 ? '#00ff8844' : '#1a1a2a'}`,
+                color: (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#2a2a3a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                boxShadow: (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.12)' : 'none', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00ff88'; e.currentTarget.style.color = '#00ff88'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,255,136,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = (state.skillPoints ?? 0) > 0 ? '#00ff8844' : '#1a1a2a'; e.currentTarget.style.color = (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#2a2a3a'; e.currentTarget.style.boxShadow = (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.12)' : 'none'; }}
+            >
+              <TrendingUp size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SKILLS</div>
+              {(state.skillPoints ?? 0) > 0 && (
+                <div style={{ background: '#00ff88', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+                  {state.skillPoints} SP
+                </div>
+              )}
             </button>
           </Tooltip>
 
