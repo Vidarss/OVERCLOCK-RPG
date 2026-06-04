@@ -12,6 +12,7 @@ const DEFAULT_SKILL_COOLDOWNS: Record<SkillId, SkillCooldownState> = {
 
 export const DEFAULT_STATE: GameState = {
   stage: 1,
+  phase: 1,
   highestStage: 1,
   maxStage: 999999,
   tournamentMaxStage: 0,

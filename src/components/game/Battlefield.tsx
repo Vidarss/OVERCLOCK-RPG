@@ -28,6 +28,7 @@ interface Ripple {
 export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const enemy = useGameState(engine, s => s.enemy);
   const stage = useGameState(engine, s => s.stage);
+  const phase = useGameState(engine, s => s.phase);
   const overclockCount = useGameState(engine, s => s.overclockCount);
   const pendingBossReturn = useGameState(engine, s => s.pendingBossReturn);
   const pendingBossStage = useGameState(engine, s => s.pendingBossStage);
@@ -127,7 +128,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
 
   const hpPct = enemy ? Math.max(0, (enemy.hp / enemy.maxHp) * 100) : 0;
   const isBoss = enemy?.isBoss ?? false;
-  const isBossStage = (stage ?? 1) % ENEMY_CONFIG.bossEveryNStages === 0;
+  const currentPhase = phase ?? 1;
+  const isBossPhase = currentPhase >= ENEMY_CONFIG.phasesPerStage;
 
   return (
     <div
@@ -141,7 +143,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         transitionLabel={zoneTransitionLabel}
         showStageClear={showStageClear}
         stageClearText={stageClearText}
-        showBossWarning={isBossStage && isBoss}
+        showBossWarning={isBossPhase && isBoss}
       />
 
       {/* Screen hit flash overlay */}
@@ -197,7 +199,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         )}
       </div>
 
-      {/* Stage indicator */}
+      {/* Stage & Phase indicator */}
       <div
         style={{
           position: 'relative',
@@ -209,7 +211,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
           letterSpacing: 2,
         }}
       >
-        {zone.name} // STG {stage ?? 1}
+        {zone.name} // STG {stage ?? 1} - {currentPhase}/{ENEMY_CONFIG.phasesPerStage}
       </div>
 
       {/* Enemy name */}

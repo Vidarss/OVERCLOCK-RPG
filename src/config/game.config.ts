@@ -390,8 +390,8 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 // ── ENEMY ─────────────────────────────────────────────────────────────────────
 
 export const ENEMY_CONFIG = {
-  /** Boss spawns when stage % bossEveryNStages === 0. */
-  bossEveryNStages: 10,
+  /** Number of phases (enemies) per stage. Boss spawns at the last phase. */
+  phasesPerStage: 10,
   /** Seconds before a boss times out and the player is sent back. */
   bossTimeoutSeconds: 30,
   /** Minimum stage before elite enemies can appear. */
@@ -412,7 +412,7 @@ export const ENEMY_CONFIG = {
   bossShieldDamageMultiplier: 0.3,
   /** Fraction of max HP regenerated per second in regen phase. */
   bossRegenRatePerSecond: 0.02,
-  /** Number of stages per enemy tier bracket. */
+  /** Number of stages per enemy tier bracket (50 stages = new tier of enemies). */
   stagesPerTier: 50,
 
   // HP scaling formula (see EnemyPlugin.ts for implementation):
@@ -426,29 +426,41 @@ export const ENEMY_CONFIG = {
   scalingExponentLate: 1.18,       // Steep exponential every 10 stages (stages 500+)
   hardModeStage: 500,              // Stage where difficulty ramps up significantly
 
-  /** Enemy name pools, indexed by tier (one tier = 50 stages). */
+  /** 
+   * Enemy name pools, indexed by tier (one tier = 50 stages).
+   * 50 unique enemies total, 10 per tier across 5 tiers.
+   * Within a stage, 10 random enemies from the tier's pool are selected for phases 1-9.
+   */
   enemyNamesByTier: [
-    ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT', 'ADWARE.EXE'],
-    ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'PHISH_AGENT', 'TROJAN_HORSE'],
-    ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON', 'MAN_IN_MIDDLE'],
-    ['ROGUE_AI_v1', 'DEEPFAKE_BOT', 'ZERO_DAY', 'APT_GHOST', 'SHADOW_PROCESS', 'DARK_PACKET'],
-    ['SINGULARITY', 'DAEMON_CORE', 'KERNEL_PANIC', 'BLUE_SCREEN', 'VOID_THREAD', 'NULL_DAEMON'],
-    ['SHADOW_NET', 'DARK_PROTOCOL', 'ENTROPY_SPIKE', 'PHANTOM_ROOT', 'MEMORY_LEAK', 'RACE_CONDITION'],
-    ['QUANTUM_GHOST', 'NULL_DAEMON_v2', 'SCHRODINGER_BUG', 'ENTANGLED_PROC', 'WAVE_COLLAPSE', 'QUBIT_STORM'],
-    ['VOID_ARCHITECT', 'SIGNAL_WRAITH', 'DEAD_CODE_GOD', 'RECURSIVE_HELL', 'INFINITE_LOOP', 'STACK_DEITY'],
-    ['SILICON_HORROR', 'LOGIC_ABOMINATION'],
+    // Tier 0 (Stages 1-50): PERIMETER - Baby viruses, amateur threats
+    ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT', 'ADWARE.EXE', 'POPUP_PEST', 'COOKIE_THIEF', 'SCRIPT_KIDDIE', 'TOOLBAR_WORM'],
+    // Tier 1 (Stages 51-100): FIREWALL - Teenage malware, growing threats
+    ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'PHISH_AGENT', 'TROJAN_HORSE', 'BACKDOOR_BOT', 'WORM_SPREADER', 'EXPLOIT_KIT', 'DROPPER_DAEMON'],
+    // Tier 2 (Stages 101-150): KERNEL - Adult malware, corporate-grade attacks
+    ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON', 'MAN_IN_MIDDLE', 'PACKET_SNIFFER', 'CREDENTIAL_STEALER', 'RAT_CONTROLLER', 'LOGIC_BOMB'],
+    // Tier 3 (Stages 151-200): CORE - Elite threats, weapons-grade malware
+    ['ZERO_DAY', 'APT_GHOST', 'KERNEL_PANIC', 'BUFFER_DEMON', 'MEMORY_LEAK', 'HEAP_CORRUPTOR', 'RACE_CONDITION', 'USE_AFTER_FREE', 'INTEGER_OVERFLOW', 'FORMAT_STRING'],
+    // Tier 4 (Stages 201-250): THE VOID - Legendary entities, primordial code
+    ['VOID_PROCESS', 'NULL_ENTITY', 'DARK_THREAD', 'SHADOW_DAEMON', 'ENTROPY_WORM', 'OBLIVION_CORE', 'QUANTUM_GHOST', 'SINGULARITY_BUG', 'HEAT_DEATH', 'THE_LAST_BIT'],
+    // Tier 5+ (Stages 251+): Repeats tier 4 with escalating difficulty
   ] as string[][],
 
-  /** Boss names, cycled in rotation. */
+  /** 
+   * Boss names - 10 unique bosses that cycle through stages.
+   * Boss appears at phase 10 of each stage.
+   * Boss index = (stage - 1) % 10
+   */
   bossNames: [
-    'THE_FIREWALL', 'DARK_ANTIVIRUS', 'CHAOS_KERNEL',
-    'OMEGA_ROOTKIT', 'SYSTEM32_WRAITH', 'BIOS_CORRUPTION',
-    'QUANTUM_MALWARE', 'THE_NULL_GOD',
-    'PHANTOM_OVERLORD', 'DEEP_PACKET_KING', 'APT_SOVEREIGN', 'CRYPTOVAULT',
-    'SHADOW_ADMIN', 'ZERO_TRUST_BREAKER', 'THE_RAW_SOCKET', 'KERNEL_GOD_v2',
-    'QUANTUM_ENTANGLEMENT', 'DARK_SILICON_LORD', 'THE_VOID_KERNEL', 'NULL_POINTER_PRIME',
-    'ENTROPY_ARCHITECT', 'SINGULARITY_DAEMON', 'THE_INFINITE_LOOP', 'OMEGA_SIGNAL',
-    'DEAD_CODE_OVERLORD', 'THE_LAST_SYSCALL', 'HEAT_DEATH_INCARNATE', 'THE_FINAL_BIT',
+    'THE_FIREWALL',       // Stage 1, 11, 21...
+    'DARK_ANTIVIRUS',     // Stage 2, 12, 22...
+    'CHAOS_KERNEL',       // Stage 3, 13, 23...
+    'OMEGA_ROOTKIT',      // Stage 4, 14, 24...
+    'SYSTEM32_WRAITH',    // Stage 5, 15, 25...
+    'BIOS_CORRUPTION',    // Stage 6, 16, 26...
+    'QUANTUM_MALWARE',    // Stage 7, 17, 27...
+    'THE_NULL_GOD',       // Stage 8, 18, 28...
+    'PHANTOM_OVERLORD',   // Stage 9, 19, 29...
+    'DEEP_PACKET_KING',   // Stage 10, 20, 30...
   ] as string[],
 } as const;
 

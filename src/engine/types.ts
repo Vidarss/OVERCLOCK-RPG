@@ -5,6 +5,7 @@
 export type GameEventType =
   | 'tap'
   | 'tick'
+  | 'phase_clear'
   | 'stage_clear'
   | 'boss_spawn'
   | 'boss_timeout'
@@ -183,6 +184,7 @@ export interface SkillCooldownState {
 
 export interface GameState {
   stage: number;
+  phase: number;
   highestStage: number;
   maxStage: number;
   tournamentMaxStage: number;
