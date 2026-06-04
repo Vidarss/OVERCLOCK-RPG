@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
+import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -19,6 +19,7 @@ import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
 import { RelicsScreen } from './RelicsScreen';
+import { OverclockScreen } from './OverclockScreen';
 import { SkillTreeScreen } from './SkillTreeScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
@@ -146,6 +147,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [showRelics, setShowRelics] = useState(false);
+  const [showOverclock, setShowOverclock] = useState(false);
   const [showSkillTree, setShowSkillTree] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
@@ -197,6 +199,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
       {showRelics && <RelicsScreen engine={engine} onClose={() => setShowRelics(false)} />}
+      {showOverclock && <OverclockScreen engine={engine} onClose={() => setShowOverclock(false)} />}
       {showSkillTree && <SkillTreeScreen engine={engine} onClose={() => setShowSkillTree(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
@@ -274,6 +277,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             activeColor="#ff0080"
             badge={availableOCT > 0 ? availableOCT : null}
             onClick={() => setShowRelics(true)}
+          />
+          <MobileTab
+            icon={<Zap size={15} color="#3a4a5a" />}
+            label="OVERCLOCK"
+            activeColor="#ff0080"
+            onClick={() => setShowOverclock(true)}
           />
           <MobileTab
             icon={<TrendingUp size={15} color="#3a4a5a" />}
@@ -514,6 +523,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
                   {availableOCT} OCP
                 </div>
               )}
+            </button>
+          </Tooltip>
+
+          {/* Overclock / Prestige */}
+          <Tooltip content={<><TooltipLabel label="OVERCLOCK" color="#ff0080" /><TooltipText>Reset progress to earn OCT and unlock permanent perks. Requires Stage 50+.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowOverclock(true)}
+              style={{
+                width: '100%', background: 'linear-gradient(135deg, #100010 0%, #1a0018 100%)',
+                border: '1px solid #3a0030',
+                color: '#8a4080', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff0080'; e.currentTarget.style.color = '#ff0080'; e.currentTarget.style.boxShadow = '0 0 20px rgba(255,0,128,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#3a0030'; e.currentTarget.style.color = '#8a4080'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <Zap size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>OVERCLOCK</div>
             </button>
           </Tooltip>
 

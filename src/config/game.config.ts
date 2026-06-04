@@ -166,7 +166,7 @@ export interface SkillTreeNode {
 
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ════════════════════════════════════════════════════════��══════════════════
+    // ════════════════════════════════════════════════════════���══════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
@@ -235,23 +235,23 @@ export const TAP_CONFIG = {
   /** Raw tap damage before any modifiers. */
   baseDamage: 1,
   /** Base crit chance (0–1). Additive with modifier stack. Cap: 0.85 (85%) */
-  baseCritChance: 0.05,
+  baseCritChance: 0.03,
   /** Maximum crit chance achievable (prevents 100% crit builds) */
-  maxCritChance: 0.85,
+  maxCritChance: 0.65,
   /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
-  baseCritMultiplier: 2.0,
+  baseCritMultiplier: 1.5,
   /** Maximum crit damage multiplier (prevents one-shot everything builds) */
-  maxCritMultiplier: 20.0,
+  maxCritMultiplier: 10.0,
   /** Window (ms) within which rapid taps build a combo. */
-  comboWindowMs: 500,
+  comboWindowMs: 400,
   /** Number of taps within the window required to activate combo bonus. */
-  comboThreshold: 5,
+  comboThreshold: 8,
   /** Damage multiplier applied when the combo threshold is met. */
-  comboMultiplier: 1.3,
+  comboMultiplier: 1.15,
   /** Combo max stacks (for potential future combo counter feature) */
   comboMaxStacks: 10,
   /** Damage bonus per additional combo stack above threshold */
-  comboBonusPerStack: 0.05,
+  comboBonusPerStack: 0.03,
 } as const;
 
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
@@ -708,7 +708,7 @@ export interface OverclockPerkDef {
 
 export const OVERCLOCK_CONFIG = {
   /** Minimum highestStage required before the player can prestige. */
-  minStageToOverclock: 100,
+  minStageToOverclock: 50,
   /** Base stages per OCP (era 1) */
   stagesPerOCPEra1: 50,
   /** Threshold for era 2 OCP scaling */
@@ -1341,7 +1341,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'reboot_50',        name: 'ENDLESS LOOP',      description: 'Perform 50 Overclocks',        icon: 'RefreshCw', color: '#ff2200', type: 'overclocks', threshold: 50  },
     { id: 'reboot_100',       name: 'RECURSION GOD',     description: 'Perform 100 Overclocks',       icon: 'RefreshCw', color: '#dd0000', type: 'overclocks', threshold: 100 },
 
-    // ── Gold Achievements ────────────────────────────────────────────
+    // ── Gold Achievements ──────────────────────────────────────���─────
     { id: 'gold_10k',         name: 'SMALL STASH',       description: 'Earn 10,000 total gold',       icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 10000      },
     { id: 'gold_100k',        name: 'VAULT KEEPER',      description: 'Earn 100,000 total gold',      icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 100000     },
     { id: 'gold_1m',          name: 'MILLIONAIRE',       description: 'Earn 1,000,000 total gold',    icon: 'Coins', color: '#ff8800', type: 'gold', threshold: 1000000    },
@@ -1571,7 +1571,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ── VOID LATTICE (Hybrid Balanced) ─────────────────────────────────────────
+  // ── VOID LATTICE (Hybrid Balanced) ─────────────────────────��───────────────
   {
     id: 'void_lattice',
     name: 'VOID LATTICE',
