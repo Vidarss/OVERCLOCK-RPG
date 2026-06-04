@@ -10,7 +10,7 @@ Sprite Tier: [1-5]
 
 === STYLE RULES (ALL TIERS) ===
 - HIGH QUALITY pixel art - crisp, detailed, professional grade
-- MINIMUM 64x64 pixel detail level (no blurry/muddy sprites)
+- MINIMUM 256x256 pixel detail level (no blurry/muddy sprites)
 - 32-bit retro pixel art style, clean edges, NO anti-aliasing, NO blur
 - IMAGE SIZE: 512x512 pixels (ALWAYS - no exceptions)
 - SPRITE SIZE: Monster centered, occupying tier-defined % of canvas
