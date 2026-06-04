@@ -2,9 +2,9 @@
 
 import { useState, useMemo } from 'react';
 import { X, Lock, Check, ChevronDown, ChevronUp, Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown } from 'lucide-react';
-import type { IEngine } from '@/engine/types';
-import { SKILL_TREE_CONFIG, type SkillTreeNode } from '@/config/game.config';
-import { useGameState } from '@/hooks/useGameState';
+import type { IEngine } from '../../engine/types';
+import { SKILL_TREE_CONFIG, type SkillTreeNode } from '../../config/game.config';
+import { useGameState } from '../../hooks/useGameState';
 
 // Icon map for dynamic rendering
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
