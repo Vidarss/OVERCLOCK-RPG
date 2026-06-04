@@ -231,7 +231,7 @@ export interface GameState {
 export interface DamageNumberEvent {
   id: string;
   value: number;
-  type: 'normal' | 'crit' | 'idle' | 'boss';
+  type: 'normal' | 'crit' | 'idle' | 'boss' | 'blocked';
   x?: number;
   y?: number;
 }

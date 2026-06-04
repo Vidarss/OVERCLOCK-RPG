@@ -42,6 +42,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const [zoneTransitionLabel, setZoneTransitionLabel] = useState('');
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const [screenFlash, setScreenFlash] = useState(false);
+  const [tapHeat, setTapHeat] = useState(0);
+  const [isOverheated, setIsOverheated] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const zone: ZoneConfig = getZone(stage ?? 1);
@@ -92,7 +94,21 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
       playSFX.bossSpawn();
     });
 
-    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); };
+    const unsub7 = engine.on('tap_overheated', () => {
+      setIsOverheated(true);
+      setTimeout(() => setIsOverheated(false), 2000);
+    });
+
+    // Poll tap heat
+    const heatInterval = setInterval(() => {
+      const tapPlugin = engine.getPlugin<TapPlugin>('tap');
+      if (tapPlugin) {
+        setTapHeat(tapPlugin.getHeat());
+        setIsOverheated(tapPlugin.isOverheated());
+      }
+    }, 50);
+
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); unsub5(); unsub6(); unsub7(); clearInterval(heatInterval); };
   }, [engine]);
 
   const handleTap = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -286,7 +302,58 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         {damageNumbers.map(d => (
           <DamageNumber key={d.id} event={d} onDone={removeDamageNumber} />
         ))}
+
+        {/* Overheat warning */}
+        {isOverheated && (
+          <div
+            className="font-pixel animate-pulse"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              color: '#ff4444',
+              fontSize: '14px',
+              textShadow: '0 0 10px #ff0000, 0 0 20px #ff0000',
+              zIndex: 100,
+              pointerEvents: 'none',
+            }}
+          >
+            OVERHEATED!
+          </div>
+        )}
       </div>
+
+      {/* Tap Heat Bar */}
+      {tapHeat > 0 && (
+        <div style={{ width: '100%', maxWidth: 200, margin: '0 auto 6px', position: 'relative', zIndex: 3 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+            <span className="font-pixel" style={{ fontSize: '6px', color: isOverheated ? '#ff4444' : tapHeat > 0.7 ? '#ff8800' : '#666', letterSpacing: '1px' }}>
+              {isOverheated ? 'COOLING' : 'HEAT'}
+            </span>
+            <div style={{
+              flex: 1,
+              height: 6,
+              background: '#0a0a12',
+              border: `1px solid ${isOverheated ? '#ff4444' : tapHeat > 0.7 ? '#ff880066' : '#1a1a2a'}`,
+              borderRadius: 2,
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                width: `${tapHeat * 100}%`,
+                height: '100%',
+                background: isOverheated 
+                  ? 'linear-gradient(90deg, #ff4444, #ff0000)' 
+                  : tapHeat > 0.7 
+                    ? 'linear-gradient(90deg, #ff8800, #ff4400)' 
+                    : 'linear-gradient(90deg, #ffaa00, #ff6600)',
+                boxShadow: isOverheated ? '0 0 8px #ff0000' : tapHeat > 0.7 ? '0 0 6px #ff8800' : 'none',
+                transition: 'width 0.05s linear',
+              }} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Boss Return Button */}
       {pendingBossReturn && pendingBossStage && (
