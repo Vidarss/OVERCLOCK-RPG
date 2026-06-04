@@ -253,15 +253,22 @@ const BoardPanel: React.FC<BoardPanelProps> = ({
       <div
         style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          background: 'rgba(2,4,2,0.92)', borderTop: '1px solid #0a1a0a',
-          padding: '5px 12px',
+          background: nextTier && canUpgrade 
+            ? 'linear-gradient(180deg, rgba(57,255,20,0.08) 0%, rgba(2,4,2,0.95) 100%)' 
+            : 'rgba(2,4,2,0.92)',
+          borderTop: `1px solid ${nextTier && canUpgrade ? '#39ff1455' : '#0a1a0a'}`,
+          padding: '8px 12px',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           zIndex: 3, gap: 8,
+          boxShadow: nextTier && canUpgrade ? '0 -4px 20px rgba(57,255,20,0.15)' : 'none',
         }}
       >
         <div>
-          <div className="font-pixel" style={{ color: '#39ff14', fontSize: '6px', letterSpacing: '1px' }}>
-            {currentTier.name}
+          <div className="font-pixel flex items-center gap-2" style={{ marginBottom: 2 }}>
+            <CircuitBoard size={10} color="#39ff14" />
+            <span style={{ color: '#39ff14', fontSize: '7px', letterSpacing: '1px' }}>
+              {currentTier.name}
+            </span>
           </div>
           <div style={{ color: '#1a4a1a', fontFamily: 'var(--font-mono)', fontSize: '7px' }}>
             RAM×{ramSlots} · EXP×{expansionSlots}
@@ -272,27 +279,36 @@ const BoardPanel: React.FC<BoardPanelProps> = ({
           <button
             onClick={() => moboPlugin?.upgrade()}
             disabled={!canUpgrade}
-            className="font-pixel flex items-center gap-1"
+            className="font-pixel flex items-center gap-2"
             style={{
-              background: canUpgrade ? '#031a03' : '#020a02',
+              background: canUpgrade 
+                ? 'linear-gradient(135deg, #031a03 0%, #052a05 100%)' 
+                : '#020a02',
               border: `1px solid ${canUpgrade ? '#39ff14' : '#1a2a1a'}`,
               color: canUpgrade ? '#39ff14' : '#1a3a1a',
-              padding: '4px 8px', fontSize: '5px', letterSpacing: '1px',
+              padding: '6px 12px', fontSize: '6px', letterSpacing: '1px',
               cursor: canUpgrade ? 'pointer' : 'not-allowed',
-              boxShadow: canUpgrade ? '0 0 8px rgba(57,255,20,0.2)' : 'none',
+              boxShadow: canUpgrade ? '0 0 15px rgba(57,255,20,0.35), inset 0 0 10px rgba(57,255,20,0.1)' : 'none',
               transition: 'all 0.2s', whiteSpace: 'nowrap',
+              animation: canUpgrade ? 'pulse 2s ease-in-out infinite' : 'none',
             }}
           >
-            <ArrowUpCircle size={8} />
-            <span>{nextTier.revision}</span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4, color: canUpgrade ? '#00e5ff' : '#1a3a3a' }}>
-              <Diamond size={7} />
+            <ArrowUpCircle size={10} />
+            <span>UPGRADE TO {nextTier.revision}</span>
+            <span style={{ 
+              display: 'inline-flex', alignItems: 'center', gap: 2, marginLeft: 4, 
+              color: canUpgrade ? '#00e5ff' : '#1a3a3a',
+              background: canUpgrade ? 'rgba(0,229,255,0.1)' : 'transparent',
+              padding: '2px 4px',
+            }}>
+              <Diamond size={8} />
               {nextTier.diamondCost}
             </span>
           </button>
         ) : (
-          <div className="font-pixel" style={{ color: '#1a4a1a', fontSize: '5px', letterSpacing: '1px' }}>
-            MAX TIER
+          <div className="font-pixel flex items-center gap-2" style={{ color: '#39ff14', fontSize: '6px', letterSpacing: '1px' }}>
+            <Sparkles size={10} />
+            MAX TIER ACHIEVED
           </div>
         )}
       </div>

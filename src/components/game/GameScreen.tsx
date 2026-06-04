@@ -167,6 +167,12 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const overclockCount = useGameState(engine, s => s.overclockCount);
   const skillPoints = useGameState(engine, s => s.skillPoints ?? 0);
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
+  
+  // Check if motherboard upgrade is available
+  const diamonds = useGameState(engine, s => s.diamonds ?? 0);
+  const motherboardTier = useGameState(engine, s => s.motherboardTier ?? 0);
+  const nextMoboTier = motherboardTier < 7 ? motherboardTier + 1 : null;
+  const moboUpgradeAvailable = nextMoboTier !== null && diamonds >= ([0, 5, 10, 25, 50, 100, 200, 500][nextMoboTier] ?? 999999);
 
   useEffect(() => {
     const unsub = engine.on<{ goldEarned: number }>('offline_progress', event => {
@@ -280,7 +286,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             icon={<Cpu size={15} color="#3a4a5a" />}
             label="HARDWARE"
             activeColor="#39ff14"
-            badge={inventoryCount > 0 ? inventoryCount : null}
+            badge={moboUpgradeAvailable ? '↑' : (inventoryCount > 0 ? inventoryCount : null)}
             onClick={() => setShowMotherboard(true)}
           />
           <MobileTab
@@ -430,22 +436,37 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           )}
 
           {/* Motherboard / Hardware */}
-          <Tooltip content={<><TooltipLabel label="HARDWARE" color="#39ff14" /><TooltipText>Equip dropped items to boost stats.</TooltipText></>} position="left">
+          <Tooltip content={<><TooltipLabel label="HARDWARE" color="#39ff14" /><TooltipText>Equip dropped items to boost stats. {moboUpgradeAvailable ? 'UPGRADE AVAILABLE!' : ''}</TooltipText></>} position="left">
             <button
               onClick={() => setShowMotherboard(true)}
               style={{
-                width: '100%', background: inventoryCount > 0 ? '#031a10' : '#080810',
-                border: `1px solid ${inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'}`,
-                color: inventoryCount > 0 ? '#39ff14' : '#2a3a4a', padding: '12px 10px',
+                width: '100%', background: moboUpgradeAvailable ? '#051a05' : (inventoryCount > 0 ? '#031a10' : '#080810'),
+                border: `1px solid ${moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff1455' : '#1a2a2a')}`,
+                color: moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff14' : '#2a3a4a'), padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                boxShadow: inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none', transition: 'all 0.15s',
+                boxShadow: moboUpgradeAvailable ? '0 0 15px rgba(57,255,20,0.3)' : (inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'), transition: 'all 0.15s',
+                position: 'relative',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#39ff14'; e.currentTarget.style.color = '#39ff14'; e.currentTarget.style.boxShadow = '0 0 14px rgba(57,255,20,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'; e.currentTarget.style.color = inventoryCount > 0 ? '#39ff14' : '#2a3a4a'; e.currentTarget.style.boxShadow = inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'); e.currentTarget.style.color = moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff14' : '#2a3a4a'); e.currentTarget.style.boxShadow = moboUpgradeAvailable ? '0 0 15px rgba(57,255,20,0.3)' : (inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'); }}
             >
+              {moboUpgradeAvailable && (
+                <div style={{
+                  position: 'absolute', top: 4, right: 4,
+                  background: '#39ff14', color: '#000',
+                  padding: '1px 4px', fontSize: '6px', fontFamily: 'var(--font-mono)',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}>
+                  ↑
+                </div>
+              )}
               <CircuitBoard size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>HARDWARE</div>
-              {inventoryCount > 0 && (
+              {moboUpgradeAvailable ? (
+                <div style={{ background: '#39ff14', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+                  UPGRADE!
+                </div>
+              ) : inventoryCount > 0 && (
                 <div style={{ background: '#39ff14', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
                   {inventoryCount} IN STORAGE
                 </div>
