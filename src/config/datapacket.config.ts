@@ -1,6 +1,7 @@
 // =====================================================================
 // Data Packet (Ad Reward) Configuration
 // "Intercepted transmissions" that grant gold rewards
+// Ads reward MAX GOLD (equivalent to killing many enemies)
 // =====================================================================
 
 import { getEnemyHp } from '../plugins/EnemyPlugin';
@@ -27,13 +28,13 @@ export const DATAPACKET_CONFIG = {
   // Spawn timing (all in milliseconds)
   // ─────────────────────────────────────────────────
   /** Minimum time between packet spawns */
-  minSpawnInterval: 45_000, // 45 seconds
+  minSpawnInterval: 60_000, // 1 minute
   /** Maximum time between packet spawns */
-  maxSpawnInterval: 120_000, // 2 minutes
+  maxSpawnInterval: 180_000, // 3 minutes
   /** How long a packet stays on screen before auto-dismissing */
-  packetLifetime: 15_000, // 15 seconds
+  packetLifetime: 20_000, // 20 seconds
   /** Cooldown after collecting a packet before next can spawn */
-  collectCooldown: 30_000, // 30 seconds
+  collectCooldown: 45_000, // 45 seconds
 
   // ─────────────────────────────────────────────────
   // Reward formulas
@@ -63,20 +64,20 @@ export const DATAPACKET_CONFIG = {
       color: '#00f5ff',
       icon: '📦',
       requiresAd: false,
-      /** Basic intercept = worth 3 enemies (small boost) */
-      enemyEquivalent: 3,
-      spawnWeight: 70,
+      /** Basic intercept = worth 5 enemies */
+      enemyEquivalent: 5,
+      spawnWeight: 75,
     },
     {
       type: 'encrypted',
       name: 'ENCRYPTED CACHE',
-      description: 'High-value encrypted data (requires decryption)',
+      description: 'MAX GOLD REWARD - Watch to decrypt',
       color: '#ffaa00',
       icon: '🔐',
       requiresAd: true,
-      /** Ad reward = worth 3 enemies (same as basic, but benefits from gold skills) */
-      enemyEquivalent: 3,
-      spawnWeight: 30,
+      /** Ad reward = worth 100 enemies (MAX GOLD) */
+      enemyEquivalent: 100,
+      spawnWeight: 25,
     },
   ] as DataPacketDef[],
 
@@ -85,10 +86,10 @@ export const DATAPACKET_CONFIG = {
   // ─────────────────────────────────────────────────
   messages: {
     basicCollect: 'PACKET RECEIVED',
-    encryptedCollect: 'DECRYPTION COMPLETE',
-    watchAdPrompt: 'DECRYPT NOW',
+    encryptedCollect: 'MAX GOLD UNLOCKED',
+    watchAdPrompt: 'WATCH AD FOR MAX GOLD',
     collectPrompt: 'INTERCEPT',
-    processing: 'PROCESSING...',
+    processing: 'DECRYPTING...',
     expired: 'SIGNAL LOST',
   },
 } as const;
