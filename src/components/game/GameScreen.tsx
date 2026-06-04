@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
+import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -284,9 +284,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             onClick={() => setShowMotherboard(true)}
           />
           <MobileTab
-            icon={<ShoppingBag size={15} color="#3a4a5a" />}
-            label={MODULES_CONFIG.shop.label ?? 'SHOP'}
-            activeColor="#00e5ff"
+            icon={<Sparkles size={15} color="#3a4a5a" />}
+            label={MODULES_CONFIG.shop.label ?? 'PASS'}
+            activeColor="#9933ff"
             onClick={() => setShowShop(true)}
           />
           {MODULES_CONFIG.tournaments.enabled && (
@@ -520,22 +520,22 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             </button>
           </Tooltip>
 
-          {/* Shop */}
-          <Tooltip content={<><TooltipLabel label="BLACK MARKET" color="#00e5ff" /><TooltipText>Spend OC tokens and Diamonds on permanent upgrades.</TooltipText></>} position="left">
+          {/* Battle Pass */}
+          <Tooltip content={<><TooltipLabel label="BATTLE PASS" color="#9933ff" /><TooltipText>Seasonal progression with premium rewards. $7.99 unlocks all premium tiers.</TooltipText></>} position="left">
             <button
               onClick={() => setShowShop(true)}
               style={{
-                width: '100%', background: '#080810',
-                border: '1px solid #0a1a28',
-                color: '#2a3a5a', padding: '12px 10px',
+                width: '100%', background: 'linear-gradient(135deg, #0a0020 0%, #100030 100%)',
+                border: '1px solid #2a1a5a',
+                color: '#6a4a9a', padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00e5ff'; e.currentTarget.style.color = '#00e5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,229,255,0.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a1a28'; e.currentTarget.style.color = '#2a3a5a'; e.currentTarget.style.boxShadow = 'none'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#9933ff'; e.currentTarget.style.color = '#9933ff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(153,51,255,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1a5a'; e.currentTarget.style.color = '#6a4a9a'; e.currentTarget.style.boxShadow = 'none'; }}
             >
-              <ShoppingBag size={20} />
-              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SHOP</div>
+              <Sparkles size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>PASS</div>
             </button>
           </Tooltip>
 

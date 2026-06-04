@@ -207,6 +207,12 @@ html, body, #root {
 .animate-boss-return-pulse { animation: boss-return-pulse 1.2s ease-in-out infinite; }
 .animate-screen-flash { animation: screen-flash 0.12s ease-out forwards; }
 
+/* Module scanline animation */
+@keyframes scanline {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
 /* Zone scene animations */
 @keyframes particle-rise {
   0% { transform: translateY(0); opacity: 0; }

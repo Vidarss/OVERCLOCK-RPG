@@ -20,6 +20,7 @@ import { SkillPlugin } from './plugins/SkillPlugin';
 import { DailyPlugin } from './plugins/DailyPlugin';
 import { AchievementPlugin } from './plugins/AchievementPlugin';
 import { ShopPlugin } from './plugins/ShopPlugin';
+import { BattlePassPlugin } from './plugins/BattlePassPlugin';
 import { TournamentPlugin } from './plugins/TournamentPlugin';
 import { SetPlugin } from './plugins/SetPlugin';
 import { ClanPlugin } from './plugins/ClanPlugin';
@@ -59,6 +60,7 @@ function createEngine(): GameEngine {
   engine.register(new AchievementPlugin());
   engine.register(new LeaderboardPlugin());
   engine.register(new ShopPlugin());
+  engine.register(new BattlePassPlugin());
   engine.register(new TournamentPlugin());
   engine.register(new SetPlugin());
   engine.register(new ClanPlugin());

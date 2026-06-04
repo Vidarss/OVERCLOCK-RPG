@@ -54,7 +54,9 @@ export type GameEventType =
   | 'skill_upgrade'
   | 'datapacket_spawned'
   | 'datapacket_collected'
-  | 'datapacket_expired';
+  | 'datapacket_expired'
+  | 'battle_pass_tier_up'
+  | 'battle_pass_purchased';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;

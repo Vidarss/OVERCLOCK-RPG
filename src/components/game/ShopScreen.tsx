@@ -1,281 +1,653 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { X, Zap, Cpu, Coins, Target, ShoppingBag, Diamond, Lock } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { X, Zap, Lock, Check, ChevronLeft, ChevronRight, Gift, Crown, Sparkles, TrendingUp, Award, Box, Diamond, Cpu, Cog } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import { useGameState } from '../../hooks/useGameState';
-import { OCT_CATALOG, DIAMOND_CATALOG, type ShopItem } from '../../plugins/ShopPlugin';
-import type { ShopPlugin } from '../../plugins/ShopPlugin';
+import { BattlePassPlugin, BATTLE_PASS_TIERS, BATTLE_PASS_CONFIG, type BattlePassReward } from '../../plugins/BattlePassPlugin';
+import { formatNumber } from '../../utils/format';
+import { playSFX } from '../../hooks/useAudio';
 
 interface ShopScreenProps {
   engine: GameEngine;
   onClose: () => void;
 }
 
-const ICON_MAP: Record<string, React.FC<{ size: number; color: string }>> = {
-  Zap, Cpu, Coins, Target,
+const REWARD_ICONS: Record<string, React.FC<{ size: number; color: string }>> = {
+  coins: ({ size, color }) => <span style={{ fontSize: size, color }}>$</span>,
+  diamond: Diamond,
+  cpu: Cpu,
+  zap: Zap,
+  cog: Cog,
+  'trending-up': TrendingUp,
+  box: Box,
+  award: Award,
 };
 
-const TIER_LABELS: Record<ShopItem['tier'], string> = {
-  early: 'EARLY GAME',
-  mid: 'MID GAME',
-  late: 'LATE GAME',
-  endgame: 'END GAME',
-};
+function RewardIcon({ icon, color, size = 14 }: { icon: string; color: string; size?: number }) {
+  const Icon = REWARD_ICONS[icon];
+  if (!Icon) return <Gift size={size} color={color} />;
+  return <Icon size={size} color={color} />;
+}
 
-const TIER_COLORS: Record<ShopItem['tier'], string> = {
-  early: '#5a6a7a',
-  mid: '#39ff14',
-  late: '#ffaa00',
-  endgame: '#ff0080',
-};
-
-const IAP_BUNDLES = [
-  { id: 'iap_50', diamonds: 50, price: '$0.99', label: 'STARTER PACK', color: '#5a7a8a' },
-  { id: 'iap_150', diamonds: 150, price: '$2.49', label: 'SMALL CACHE', color: '#39ff14' },
-  { id: 'iap_500', diamonds: 500, price: '$4.99', label: 'PAYLOAD', color: '#00f5ff', popular: true },
-  { id: 'iap_1500', diamonds: 1500, price: '$9.99', label: 'ARSENAL', color: '#ffaa00' },
-  { id: 'iap_5000', diamonds: 5000, price: '$24.99', label: 'SINGULARITY CACHE', color: '#ff0080' },
-];
-
-function ShopItemCard({
-  item,
-  canBuy,
-  purchaseCount,
-  onBuy,
-}: {
-  item: ShopItem;
-  canBuy: boolean;
-  purchaseCount: number;
-  onBuy: () => void;
+function RewardCard({ 
+  reward, 
+  claimed, 
+  canClaim, 
+  locked, 
+  isPremium,
+  onClaim 
+}: { 
+  reward: BattlePassReward | null;
+  claimed: boolean;
+  canClaim: boolean;
+  locked: boolean;
+  isPremium: boolean;
+  onClaim: () => void;
 }) {
-  const [flash, setFlash] = useState(false);
-  const maxed = purchaseCount >= item.maxPurchases;
-  const Icon = ICON_MAP[item.icon] ?? Zap;
-  const currencyColor = item.currency === 'oct' ? '#ff0080' : '#00e5ff';
-  const currencySymbol = item.currency === 'oct' ? 'OC' : '◈';
+  if (!reward) {
+    return (
+      <div style={{
+        width: 56,
+        height: 56,
+        background: '#050508',
+        border: '1px solid #0a0a12',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        opacity: 0.3,
+      }}>
+        <span style={{ color: '#1a1a2a', fontSize: 10 }}>-</span>
+      </div>
+    );
+  }
 
-  const handleClick = () => {
-    if (!canBuy || maxed) return;
-    onBuy();
-    setFlash(true);
-    setTimeout(() => setFlash(false), 400);
-  };
+  const bgColor = claimed ? '#0a1a12' : canClaim ? `${reward.color}15` : locked ? '#050508' : '#080810';
+  const borderColor = claimed ? '#39ff14' : canClaim ? reward.color : locked ? '#1a1a28' : `${reward.color}44`;
 
   return (
     <div
+      onClick={canClaim ? onClaim : undefined}
       style={{
-        background: flash ? `${item.color}15` : '#0a0a12',
-        border: `1px solid ${maxed ? '#1a1a1a' : canBuy ? item.color + '44' : '#151520'}`,
-        padding: '9px 11px',
-        marginBottom: 5,
+        width: 56,
+        height: 56,
+        background: bgColor,
+        border: `1px solid ${borderColor}`,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: canClaim ? 'pointer' : 'default',
         position: 'relative',
-        transition: 'background 0.2s, border-color 0.2s',
-        boxShadow: canBuy && !maxed ? `0 0 6px ${item.color}18` : 'none',
+        transition: 'all 0.15s',
+        boxShadow: canClaim ? `0 0 12px ${reward.color}22` : 'none',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+      {/* Premium badge */}
+      {isPremium && (
         <div style={{
-          width: 28, height: 28, flexShrink: 0,
-          background: maxed ? '#0a0a0a' : `${item.color}10`,
-          border: `1px solid ${maxed ? '#1a1a1a' : item.color + '33'}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          position: 'absolute',
+          top: -1,
+          right: -1,
+          background: 'linear-gradient(135deg, #ffaa00, #ff6600)',
+          width: 12,
+          height: 12,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}>
-          <Icon size={12} color={maxed ? '#2a2a2a' : item.color} />
+          <Crown size={7} color="#000" />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="font-pixel" style={{ color: maxed ? '#2a2a2a' : item.color, fontSize: '7px', marginBottom: 2 }}>
-            {item.name}
-          </div>
-          <div style={{ color: '#4a5a6a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-            {item.description}
-          </div>
+      )}
+      
+      {/* Claimed checkmark */}
+      {claimed && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(57,255,20,0.1)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Check size={20} color="#39ff14" />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3, flexShrink: 0 }}>
-          {maxed ? (
-            <span className="font-pixel" style={{ color: '#39ff14', fontSize: '7px' }}>MAXED</span>
-          ) : (
-            <button
-              onClick={handleClick}
-              disabled={!canBuy}
-              className="font-pixel"
-              style={{
-                background: canBuy ? `${item.color}15` : '#060606',
-                border: `1px solid ${canBuy ? item.color : '#151515'}`,
-                color: canBuy ? item.color : '#1a1a1a',
-                padding: '4px 7px', fontSize: '7px', cursor: canBuy ? 'pointer' : 'not-allowed',
-                whiteSpace: 'nowrap', boxShadow: canBuy ? `0 0 5px ${item.color}28` : 'none',
-              }}
-            >
-              {item.price} <span style={{ color: currencyColor }}>{currencySymbol}</span>
-            </button>
-          )}
-          <span style={{ color: '#2a3a4a', fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-            {purchaseCount}/{item.maxPurchases}
+      )}
+      
+      {/* Locked overlay */}
+      {locked && !claimed && (
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'rgba(0,0,0,0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <Lock size={14} color="#3a3a4a" />
+        </div>
+      )}
+      
+      {!claimed && (
+        <>
+          <RewardIcon icon={reward.icon} color={locked ? '#2a2a3a' : reward.color} size={16} />
+          <span className="font-pixel" style={{ 
+            color: locked ? '#2a2a3a' : reward.color, 
+            fontSize: 6, 
+            marginTop: 3,
+            textAlign: 'center',
+            lineHeight: 1.1,
+            maxWidth: '90%',
+          }}>
+            {reward.label}
           </span>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
 
-type ShopTab = 'oct' | 'diamond' | 'iap';
+function TierNode({ 
+  tier, 
+  isActive, 
+  isPassed, 
+  isPremium,
+  freeReward,
+  premiumReward,
+  claimedFree,
+  claimedPremium,
+  canClaimFree,
+  canClaimPremium,
+  onClaimFree,
+  onClaimPremium,
+}: {
+  tier: number;
+  isActive: boolean;
+  isPassed: boolean;
+  isPremium: boolean;
+  freeReward: BattlePassReward | null;
+  premiumReward: BattlePassReward;
+  claimedFree: boolean;
+  claimedPremium: boolean;
+  canClaimFree: boolean;
+  canClaimPremium: boolean;
+  onClaimFree: () => void;
+  onClaimPremium: () => void;
+}) {
+  const isMilestone = tier % 10 === 0;
+  
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      gap: 4,
+      minWidth: 70,
+      position: 'relative',
+    }}>
+      {/* Premium reward (top) */}
+      <RewardCard
+        reward={premiumReward}
+        claimed={claimedPremium}
+        canClaim={canClaimPremium}
+        locked={!isPremium || (!isPassed && !isActive)}
+        isPremium
+        onClaim={onClaimPremium}
+      />
+      
+      {/* Tier number */}
+      <div style={{
+        width: isMilestone ? 32 : 24,
+        height: isMilestone ? 32 : 24,
+        background: isActive 
+          ? 'linear-gradient(135deg, #00f5ff, #0080ff)' 
+          : isPassed 
+            ? '#39ff14' 
+            : '#1a1a28',
+        border: `2px solid ${isActive ? '#00f5ff' : isPassed ? '#39ff14' : '#2a2a3a'}`,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+        zIndex: 2,
+        boxShadow: isActive ? '0 0 16px rgba(0,245,255,0.5)' : isPassed ? '0 0 8px rgba(57,255,20,0.3)' : 'none',
+      }}>
+        <span className="font-pixel" style={{ 
+          color: isActive || isPassed ? '#000' : '#4a4a5a', 
+          fontSize: isMilestone ? 10 : 8,
+          fontWeight: 'bold',
+        }}>
+          {tier}
+        </span>
+      </div>
+      
+      {/* Free reward (bottom) */}
+      <RewardCard
+        reward={freeReward}
+        claimed={claimedFree}
+        canClaim={canClaimFree}
+        locked={!isPassed && !isActive}
+        isPremium={false}
+        onClaim={onClaimFree}
+      />
+    </div>
+  );
+}
 
 export const ShopScreen: React.FC<ShopScreenProps> = ({ engine, onClose }) => {
-  const [tab, setTab] = useState<ShopTab>('oct');
-  const overclockCount = useGameState(engine, s => s.overclockCount);
-  const diamonds = useGameState(engine, s => s.diamonds);
-  const shopPlugin = engine.getPlugin<ShopPlugin>('shop');
+  const battlePassPlugin = engine.getPlugin<BattlePassPlugin>('battlepass');
   const [, setTick] = useState(0);
   const refresh = useCallback(() => setTick(t => t + 1), []);
-  useEffect(() => shopPlugin?.subscribe(refresh), [shopPlugin, refresh]);
+  useEffect(() => battlePassPlugin?.subscribe(refresh), [battlePassPlugin, refresh]);
 
-  const renderTierGroup = (items: ShopItem[]) => {
-    const tiers: ShopItem['tier'][] = ['early', 'mid', 'late', 'endgame'];
-    return tiers.map(tier => {
-      const group = items.filter(i => i.tier === tier);
-      if (group.length === 0) return null;
-      return (
-        <div key={tier}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 8,
-            margin: '10px 0 6px', padding: '0 2px',
-          }}>
-            <div style={{ flex: 1, height: 1, background: TIER_COLORS[tier] + '28' }} />
-            <span className="font-pixel" style={{ color: TIER_COLORS[tier], fontSize: '6px', letterSpacing: '2px' }}>
-              {TIER_LABELS[tier]}
-            </span>
-            <div style={{ flex: 1, height: 1, background: TIER_COLORS[tier] + '28' }} />
-          </div>
-          {group.map(item => (
-            <ShopItemCard
-              key={item.id}
-              item={item}
-              canBuy={shopPlugin?.canBuy(item) ?? false}
-              purchaseCount={shopPlugin?.getPurchaseCount(item.id) ?? 0}
-              onBuy={() => shopPlugin?.buy(item.id)}
-            />
-          ))}
-        </div>
-      );
-    });
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [visibleRange, setVisibleRange] = useState({ start: 0, end: 10 });
+
+  const bpState = battlePassPlugin?.getState();
+  const tierProgress = battlePassPlugin?.getTierProgress();
+  const unclaimedCount = battlePassPlugin?.getUnclaimedCount();
+
+  // Scroll to current tier on mount
+  useEffect(() => {
+    if (scrollRef.current && bpState) {
+      const tierWidth = 78; // 70px + 8px gap
+      const scrollPos = Math.max(0, (bpState.currentTier - 3) * tierWidth);
+      scrollRef.current.scrollLeft = scrollPos;
+    }
+  }, [bpState?.currentTier]);
+
+  const handleClaimReward = (tier: number, isPremium: boolean) => {
+    const success = battlePassPlugin?.claimReward(tier, isPremium);
+    if (success) {
+      playSFX.purchase();
+    }
   };
+
+  const handlePurchasePremium = () => {
+    // In a real app, this would trigger a payment flow
+    battlePassPlugin?.purchasePremium();
+    playSFX.purchase();
+  };
+
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 280;
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  if (!bpState || !tierProgress) return null;
 
   return (
     <div
-      style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      style={{ 
+        position: 'fixed', 
+        inset: 0, 
+        zIndex: 200, 
+        background: 'rgba(0,0,0,0.92)', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center' 
+      }}
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div style={{
-        width: '100%', maxWidth: 480, maxHeight: '90vh', background: '#0a0a12',
-        border: '1px solid #1a2a3a', display: 'flex', flexDirection: 'column', margin: '0 12px',
-        boxShadow: '0 0 40px rgba(0,245,255,0.06)',
+        width: '100%',
+        maxWidth: 600,
+        maxHeight: '95vh',
+        background: 'linear-gradient(180deg, #0a0a14 0%, #050508 100%)',
+        border: '1px solid #1a2a3a',
+        display: 'flex',
+        flexDirection: 'column',
+        margin: '0 12px',
+        overflow: 'hidden',
       }}>
-        {/* Header */}
+        {/* Hero Header */}
         <div style={{
-          flexShrink: 0, padding: '12px 14px', borderBottom: '1px solid #1a2a3a',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#050510',
+          flexShrink: 0,
+          background: 'linear-gradient(135deg, #0a0020 0%, #100030 50%, #0a0020 100%)',
+          borderBottom: '1px solid #2a1a4a',
+          padding: '20px 16px',
+          position: 'relative',
+          overflow: 'hidden',
         }}>
-          <div className="flex items-center gap-2">
-            <ShoppingBag size={13} color="#00f5ff" />
-            <span className="font-pixel" style={{ color: '#00f5ff', fontSize: '10px', letterSpacing: '2px' }}>BLACK MARKET</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1">
-              <span style={{ color: '#ff0080', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>OC</span>
-              <span className="font-pixel" style={{ color: '#ff0080', fontSize: '10px' }}>{overclockCount}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <span style={{ color: '#00e5ff', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>◈</span>
-              <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '10px' }}>{diamonds}</span>
-            </div>
-            <button
-              onClick={onClose}
-              style={{ background: 'transparent', border: '1px solid #1a2a3a', color: '#3a4a5a', width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#ff4444'; e.currentTarget.style.borderColor = '#ff4444'; }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#3a4a5a'; e.currentTarget.style.borderColor = '#1a2a3a'; }}
-            >
-              <X size={12} />
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div style={{ flexShrink: 0, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', borderBottom: '1px solid #1a2a3a' }}>
-          {([
-            { key: 'oct' as ShopTab, label: 'OC STORE', color: '#ff0080', bg: '#130010' },
-            { key: 'diamond' as ShopTab, label: '◈ DIAMONDS', color: '#00e5ff', bg: '#001520' },
-            { key: 'iap' as ShopTab, label: 'BUY ◈', color: '#ffaa00', bg: '#130a00' },
-          ] as const).map(({ key, label, color, bg }) => (
-            <button key={key} onClick={() => setTab(key)} className="font-pixel" style={{
-              background: tab === key ? bg : 'transparent', border: 'none',
-              borderBottom: tab === key ? `2px solid ${color}` : '2px solid transparent',
-              color: tab === key ? color : '#3a4a5a', padding: '9px', fontSize: '7px',
-              letterSpacing: '1px', cursor: 'pointer', transition: 'all 0.15s',
+          {/* Animated background lines */}
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(0,245,255,0.03) 40px, rgba(0,245,255,0.03) 41px)',
+            pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            background: 'radial-gradient(ellipse at top, rgba(153,51,255,0.15) 0%, transparent 60%)',
+            pointerEvents: 'none',
+          }} />
+          
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            style={{
+              position: 'absolute',
+              top: 12,
+              right: 12,
+              background: 'rgba(0,0,0,0.5)',
+              border: '1px solid #2a2a3a',
+              color: '#5a5a6a',
+              width: 28,
+              height: 28,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              zIndex: 10,
+            }}
+          >
+            <X size={14} />
+          </button>
+          
+          {/* Title */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{
+              width: 40,
+              height: 40,
+              background: 'linear-gradient(135deg, #9933ff, #ff0080)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(153,51,255,0.4)',
             }}>
-              {label}
-            </button>
-          ))}
-        </div>
-
-        {/* Description */}
-        <div style={{ flexShrink: 0, padding: '7px 13px', background: '#06060e', borderBottom: '1px solid #10182a' }}>
-          {tab === 'oct' && <div style={{ color: '#4a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Spend OC tokens earned from Overclock runs. Prices are steep — this is end-game investment.</div>}
-          {tab === 'diamond' && <div style={{ color: '#4a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Diamonds ◈ are earned from daily ops and tournaments. Rare and powerful.</div>}
-          {tab === 'iap' && <div style={{ color: '#5a4a2a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>Purchase diamond bundles to accelerate your progress. Real-money transactions.</div>}
-        </div>
-
-        {/* Content */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '6px 11px 12px' }}>
-          {tab === 'oct' && renderTierGroup(OCT_CATALOG)}
-          {tab === 'diamond' && renderTierGroup(DIAMOND_CATALOG)}
-          {tab === 'iap' && (
-            <div style={{ paddingTop: 8 }}>
-              {IAP_BUNDLES.map(bundle => (
-                <div key={bundle.id} style={{
-                  position: 'relative', background: '#0a0a0a',
-                  border: `1px solid ${bundle.color}33`, padding: '13px 14px', marginBottom: 8,
-                  boxShadow: bundle.popular ? `0 0 12px ${bundle.color}18` : 'none',
-                }}>
-                  {bundle.popular && (
-                    <div className="font-pixel" style={{
-                      position: 'absolute', top: -1, right: 12,
-                      background: '#00f5ff', color: '#000', fontSize: '6px',
-                      padding: '2px 6px', letterSpacing: '1px',
-                    }}>
-                      BEST VALUE
-                    </div>
-                  )}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div className="font-pixel" style={{ color: bundle.color, fontSize: '8px', marginBottom: 3 }}>
-                        {bundle.label}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <Diamond size={12} color="#00e5ff" />
-                        <span className="font-pixel" style={{ color: '#00e5ff', fontSize: '13px' }}>{bundle.diamonds}</span>
-                        <span style={{ color: '#3a4a5a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>diamonds</span>
-                      </div>
-                    </div>
-                    <button
-                      disabled
-                      className="font-pixel"
-                      style={{
-                        background: '#0a0808', border: `1px solid ${bundle.color}55`,
-                        color: bundle.color + '66', padding: '8px 12px', fontSize: '8px',
-                        cursor: 'not-allowed', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
-                      }}
-                    >
-                      <Lock size={10} color={bundle.color + '55'} />
-                      <span>{bundle.price}</span>
-                      <span style={{ fontSize: '6px', letterSpacing: '1px', opacity: 0.5 }}>SOON</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <div style={{ color: '#2a3a3a', fontFamily: 'var(--font-mono)', fontSize: '8px', textAlign: 'center', marginTop: 12, padding: '0 8px' }}>
-                Real-money purchases will be available in a future update. Diamonds earned in-game are identical in function.
+              <Sparkles size={20} color="#fff" />
+            </div>
+            <div>
+              <h2 className="font-pixel" style={{ 
+                color: '#fff', 
+                fontSize: 16, 
+                margin: 0,
+                textShadow: '0 0 20px rgba(153,51,255,0.8)',
+                letterSpacing: '3px',
+              }}>
+                OVERCLOCK PROTOCOL
+              </h2>
+              <div style={{ color: '#8a7aaa', fontFamily: 'var(--font-mono)', fontSize: 10, marginTop: 2 }}>
+                SEASON 1 - NEURAL UPRISING
               </div>
             </div>
+          </div>
+
+          {/* Tier & XP Progress */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{
+              width: 60,
+              height: 60,
+              background: 'linear-gradient(135deg, #00f5ff22, #00808022)',
+              border: '2px solid #00f5ff',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 0 20px rgba(0,245,255,0.3)',
+            }}>
+              <span style={{ color: '#6a8a9a', fontFamily: 'var(--font-mono)', fontSize: 8 }}>TIER</span>
+              <span className="font-pixel" style={{ color: '#00f5ff', fontSize: 20 }}>{bpState.currentTier}</span>
+            </div>
+            
+            <div style={{ flex: 1 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <span style={{ color: '#6a7a8a', fontFamily: 'var(--font-mono)', fontSize: 9 }}>
+                  {formatNumber(tierProgress.current)} / {formatNumber(tierProgress.max)} XP
+                </span>
+                <span className="font-pixel" style={{ color: '#9933ff', fontSize: 8 }}>
+                  {tierProgress.percent.toFixed(0)}%
+                </span>
+              </div>
+              <div style={{ 
+                height: 8, 
+                background: '#1a1a28', 
+                border: '1px solid #2a2a3a',
+                overflow: 'hidden',
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${tierProgress.percent}%`,
+                  background: 'linear-gradient(90deg, #9933ff, #00f5ff)',
+                  boxShadow: '0 0 10px rgba(153,51,255,0.5)',
+                  transition: 'width 0.3s',
+                }} />
+              </div>
+              
+              {/* Unclaimed rewards indicator */}
+              {(unclaimedCount?.free ?? 0) + (unclaimedCount?.premium ?? 0) > 0 && (
+                <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                  {(unclaimedCount?.free ?? 0) > 0 && (
+                    <span className="font-pixel" style={{ color: '#39ff14', fontSize: 7 }}>
+                      {unclaimedCount?.free} FREE REWARDS
+                    </span>
+                  )}
+                  {(unclaimedCount?.premium ?? 0) > 0 && (
+                    <span className="font-pixel" style={{ color: '#ffaa00', fontSize: 7 }}>
+                      {unclaimedCount?.premium} PREMIUM REWARDS
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Premium purchase button */}
+          {!bpState.isPremium && (
+            <button
+              onClick={handlePurchasePremium}
+              className="font-pixel"
+              style={{
+                width: '100%',
+                marginTop: 16,
+                padding: '12px 16px',
+                background: 'linear-gradient(90deg, #ff6600, #ffaa00)',
+                border: 'none',
+                color: '#000',
+                fontSize: 11,
+                fontWeight: 'bold',
+                letterSpacing: '2px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                boxShadow: '0 0 20px rgba(255,170,0,0.4)',
+              }}
+            >
+              <Crown size={14} color="#000" />
+              UNLOCK PREMIUM TRACK - ${BATTLE_PASS_CONFIG.price}
+            </button>
           )}
+          
+          {bpState.isPremium && (
+            <div style={{
+              width: '100%',
+              marginTop: 16,
+              padding: '10px 16px',
+              background: 'linear-gradient(90deg, rgba(255,102,0,0.2), rgba(255,170,0,0.2))',
+              border: '1px solid #ffaa0055',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+            }}>
+              <Crown size={12} color="#ffaa00" />
+              <span className="font-pixel" style={{ color: '#ffaa00', fontSize: 9, letterSpacing: '2px' }}>
+                PREMIUM ACTIVE
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Track Labels */}
+        <div style={{
+          flexShrink: 0,
+          display: 'flex',
+          padding: '8px 16px',
+          borderBottom: '1px solid #1a1a28',
+          background: '#06060c',
+        }}>
+          <div style={{ width: 70 }} />
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Crown size={10} color="#ffaa00" />
+              <span className="font-pixel" style={{ color: '#ffaa00', fontSize: 7, letterSpacing: '1px' }}>
+                PREMIUM TRACK
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Gift size={10} color="#5a7a8a" />
+              <span className="font-pixel" style={{ color: '#5a7a8a', fontSize: 7, letterSpacing: '1px' }}>
+                FREE TRACK
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Scrollable Tier Track */}
+        <div style={{ 
+          flex: 1, 
+          position: 'relative',
+          background: '#050508',
+        }}>
+          {/* Scroll buttons */}
+          <button
+            onClick={() => handleScroll('left')}
+            style={{
+              position: 'absolute',
+              left: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              width: 32,
+              height: 48,
+              background: 'rgba(0,0,0,0.8)',
+              border: '1px solid #2a2a3a',
+              color: '#5a5a6a',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={() => handleScroll('right')}
+            style={{
+              position: 'absolute',
+              right: 4,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              zIndex: 10,
+              width: 32,
+              height: 48,
+              background: 'rgba(0,0,0,0.8)',
+              border: '1px solid #2a2a3a',
+              color: '#5a5a6a',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <ChevronRight size={16} />
+          </button>
+
+          {/* Tier nodes container */}
+          <div
+            ref={scrollRef}
+            style={{
+              display: 'flex',
+              gap: 8,
+              padding: '16px 48px',
+              overflowX: 'auto',
+              scrollBehavior: 'smooth',
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+            }}
+          >
+            {/* Progress line */}
+            <div style={{
+              position: 'absolute',
+              top: '50%',
+              left: 48,
+              right: 48,
+              height: 3,
+              background: '#1a1a28',
+              zIndex: 0,
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${((bpState.currentTier - 1) / (BATTLE_PASS_CONFIG.maxTier - 1)) * 100}%`,
+                background: 'linear-gradient(90deg, #39ff14, #00f5ff)',
+                boxShadow: '0 0 8px rgba(57,255,20,0.5)',
+                transition: 'width 0.3s',
+              }} />
+            </div>
+
+            {BATTLE_PASS_TIERS.map((tier, idx) => {
+              const tierNum = idx + 1;
+              const isActive = bpState.currentTier === tierNum;
+              const isPassed = bpState.currentTier > tierNum;
+              
+              return (
+                <TierNode
+                  key={tierNum}
+                  tier={tierNum}
+                  isActive={isActive}
+                  isPassed={isPassed}
+                  isPremium={bpState.isPremium}
+                  freeReward={tier.freeReward}
+                  premiumReward={tier.premiumReward}
+                  claimedFree={bpState.claimedFreeTiers.includes(tierNum)}
+                  claimedPremium={bpState.claimedPremiumTiers.includes(tierNum)}
+                  canClaimFree={battlePassPlugin?.canClaimReward(tierNum, false) ?? false}
+                  canClaimPremium={battlePassPlugin?.canClaimReward(tierNum, true) ?? false}
+                  onClaimFree={() => handleClaimReward(tierNum, false)}
+                  onClaimPremium={() => handleClaimReward(tierNum, true)}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div style={{
+          flexShrink: 0,
+          padding: '10px 16px',
+          borderTop: '1px solid #1a1a28',
+          background: '#06060c',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}>
+          <div style={{ display: 'flex', gap: 16 }}>
+            {bpState.xpBoostMultiplier > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <TrendingUp size={10} color="#9933ff" />
+                <span className="font-pixel" style={{ color: '#9933ff', fontSize: 7 }}>
+                  +{Math.round((bpState.xpBoostMultiplier - 1) * 100)}% XP
+                </span>
+              </div>
+            )}
+            {bpState.goldBoostMultiplier > 1 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                <TrendingUp size={10} color="#ffaa00" />
+                <span className="font-pixel" style={{ color: '#ffaa00', fontSize: 7 }}>
+                  +{Math.round((bpState.goldBoostMultiplier - 1) * 100)}% GOLD
+                </span>
+              </div>
+            )}
+          </div>
+          <span style={{ color: '#3a3a4a', fontFamily: 'var(--font-mono)', fontSize: 8 }}>
+            Earn XP from kills, stages, and dailies
+          </span>
         </div>
       </div>
     </div>
