@@ -2,20 +2,306 @@
 // OVERCLOCK — Asset Configuration
 //
 // This file centralizes all monster sprites and stage background images.
-// To change sprites or backgrounds, simply:
-//   1. Add your image file to the appropriate folder:
-//      - Enemies: public/assets/enemies/
-//      - Backgrounds: public/assets/backgrounds/
-//   2. Update the config arrays below with the new filename
+// 
+// SPRITE SYSTEM:
+//   - Each monster has a unique name (e.g., "MALWARE.BAT", "VIRUS_V2")
+//   - Each monster can have multiple SPRITE TIERS (visual evolution)
+//   - Sprite tier determines which visual variant to show based on game progression
+//   - Higher sprite tiers = more evolved/menacing appearance
+//
+// TO ADD SPRITES:
+//   1. Add your image file to: public/assets/enemies/{monster_name}/tier{N}.png
+//   2. Add the sprite definition to MONSTER_SPRITES below
+//   3. The game will automatically pick the appropriate tier based on progression
 //
 // NAMING CONVENTION:
-//   - Enemies: public/assets/enemies/{name}.png
-//   - Backgrounds: public/assets/backgrounds/{name}.png
+//   - Enemies: public/assets/enemies/{monster_name}/tier{1-6}.png
+//   - Backgrounds: public/assets/backgrounds/{zone_name}.png
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ── ENEMY SPRITES ────────────────────────────────────────────────────────────
-// Each tier can have multiple sprites. A random one is chosen when spawning.
-// Set to null to use the default pixel-art fallback.
+// ── MONSTER SPRITE TYPES ─────────────────────────────────────────────────────
+
+export interface SpriteTierDef {
+  /** Sprite tier (1-6, higher = more evolved visual) */
+  tier: number;
+  /** Path to the sprite image */
+  src: string;
+  /** Scale factor (1.0 = 200px base) */
+  scale?: number;
+  /** Optional vertical offset in pixels */
+  offsetY?: number;
+}
+
+export interface MonsterSpriteDef {
+  /** Monster name (must match ENEMY_CONFIG.enemyNamesByTier entries) */
+  name: string;
+  /** Available sprite tiers for this monster (sorted by tier) */
+  tiers: SpriteTierDef[];
+  /** Boss variant sprite tiers (optional) */
+  bossTiers?: SpriteTierDef[];
+  /** Elite variant sprite tiers (optional, uses regular with glow if not set) */
+  eliteTiers?: SpriteTierDef[];
+}
+
+// ── MONSTER SPRITES REGISTRY ─────────────────────────────────────────────────
+// Add all monster sprites here. Each monster can have multiple tiers.
+// The game will select the appropriate tier based on overclock count or stage.
+
+export const MONSTER_SPRITES: MonsterSpriteDef[] = [
+  // ════════════════════════════════════════════════════════════════════════════
+  // TIER 0 ENEMIES (Stages 1-50: PERIMETER)
+  // ════════════════════════════════════════════════════════════════════════════
+  {
+    name: 'MALWARE.BAT',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 },
+      // { tier: 2, src: '/assets/enemies/malware_bat/tier2.png', scale: 1.5 },
+      // { tier: 3, src: '/assets/enemies/malware_bat/tier3.png', scale: 1.6 },
+    ],
+  },
+  {
+    name: 'CORRUPT_PROC',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 },
+    ],
+  },
+  {
+    name: 'NULL_PTR',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 },
+    ],
+  },
+  {
+    name: 'STACK_OVERFLOW',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 },
+    ],
+  },
+  {
+    name: 'SPAM_BOT',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 },
+    ],
+  },
+  {
+    name: 'ADWARE.EXE',
+    tiers: [
+      { tier: 1, src: '/assets/enemies/adware.png', scale: 2.0 },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // TIER 1 ENEMIES (Stages 51-100: FIREWALL)
+  // ════════════════════════════════════════════════════════════════════════════
+  {
+    name: 'VIRUS_V2',
+    tiers: [
+      // { tier: 1, src: '/assets/enemies/virus_v2/tier1.png', scale: 1.3 },
+    ],
+  },
+  {
+    name: 'RANSOMWARE',
+    tiers: [
+      // { tier: 1, src: '/assets/enemies/ransomware/tier1.png', scale: 1.4 },
+    ],
+  },
+  {
+    name: 'ROOTKIT',
+    tiers: [
+      { tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 },
+    ],
+  },
+  {
+    name: 'KEYLOGGER',
+    tiers: [
+      // { tier: 1, src: '/assets/enemies/keylogger/tier1.png', scale: 1.2 },
+    ],
+  },
+  {
+    name: 'PHISH_AGENT',
+    tiers: [
+      // { tier: 1, src: '/assets/enemies/phish_agent/tier1.png', scale: 1.3 },
+    ],
+  },
+  {
+    name: 'TROJAN_HORSE',
+    tiers: [
+      // { tier: 1, src: '/assets/enemies/trojan_horse/tier1.png', scale: 1.5 },
+    ],
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // TIER 2 ENEMIES (Stages 101-150: KERNEL)
+  // ════════════════════════════════════════════════════════════════════════════
+  {
+    name: 'BOTNET_NODE',
+    tiers: [],
+  },
+  {
+    name: 'CRYPTOMINER',
+    tiers: [],
+  },
+  {
+    name: 'SQL_INJECT',
+    tiers: [],
+  },
+  {
+    name: 'XSS_WORM',
+    tiers: [],
+  },
+  {
+    name: 'DNS_POISON',
+    tiers: [],
+  },
+  {
+    name: 'MAN_IN_MIDDLE',
+    tiers: [],
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // TIER 3 ENEMIES (Stages 151-200: CORE)
+  // ════════════════════════════════════════════════════════════════════════════
+  {
+    name: 'ZERO_DAY',
+    tiers: [],
+  },
+  {
+    name: 'APT_GHOST',
+    tiers: [],
+  },
+  {
+    name: 'KERNEL_PANIC',
+    tiers: [],
+  },
+  {
+    name: 'BUFFER_DEMON',
+    tiers: [],
+  },
+  {
+    name: 'MEMORY_LEAK',
+    tiers: [],
+  },
+  {
+    name: 'HEAP_CORRUPTOR',
+    tiers: [],
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // TIER 4 ENEMIES (Stages 201-250: THE VOID)
+  // ════════════════════════════════════════════════════════════════════════════
+  {
+    name: 'VOID_PROCESS',
+    tiers: [],
+  },
+  {
+    name: 'NULL_ENTITY',
+    tiers: [],
+  },
+  {
+    name: 'DARK_THREAD',
+    tiers: [],
+  },
+  {
+    name: 'SHADOW_DAEMON',
+    tiers: [],
+  },
+  {
+    name: 'ENTROPY_WORM',
+    tiers: [],
+  },
+  {
+    name: 'OBLIVION_CORE',
+    tiers: [],
+  },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // BOSS SPRITES (Optional - override for specific bosses)
+  // ════════════════════════════════════════════════════════════════════════════
+  // Bosses use their own naming from ENEMY_CONFIG.bossNames
+  // Add boss-specific sprites here if needed
+];
+
+// ── SPRITE LOOKUP FUNCTIONS ──────────────────────────────────────────────────
+
+/**
+ * Get sprite definition for a monster by name
+ */
+export function getMonsterSprite(name: string): MonsterSpriteDef | null {
+  // Normalize name for matching (handle case differences)
+  const normalizedName = name.toUpperCase().replace(/[^A-Z0-9_\.]/g, '');
+  return MONSTER_SPRITES.find(m => 
+    m.name.toUpperCase().replace(/[^A-Z0-9_\.]/g, '') === normalizedName
+  ) ?? null;
+}
+
+/**
+ * Get the best sprite tier for a monster based on progression
+ * @param name Monster name
+ * @param spriteTier Desired sprite tier (1-6, based on overclock count or game progression)
+ * @param isBoss Whether this is a boss variant
+ * @param isElite Whether this is an elite variant
+ * @returns The sprite definition or null if no sprite available
+ */
+export function getSpriteForMonster(
+  name: string, 
+  spriteTier: number, 
+  isBoss: boolean = false, 
+  isElite: boolean = false
+): SpriteTierDef | null {
+  const monster = getMonsterSprite(name);
+  if (!monster) return null;
+
+  // Select the tier array based on variant
+  let tiers: SpriteTierDef[];
+  if (isBoss && monster.bossTiers && monster.bossTiers.length > 0) {
+    tiers = monster.bossTiers;
+  } else if (isElite && monster.eliteTiers && monster.eliteTiers.length > 0) {
+    tiers = monster.eliteTiers;
+  } else {
+    tiers = monster.tiers;
+  }
+
+  if (tiers.length === 0) return null;
+
+  // Sort tiers by tier number
+  const sortedTiers = [...tiers].sort((a, b) => a.tier - b.tier);
+
+  // Find the highest tier that doesn't exceed the requested tier
+  // This ensures we use the best available sprite up to the requested tier
+  let bestMatch: SpriteTierDef | null = null;
+  for (const t of sortedTiers) {
+    if (t.tier <= spriteTier) {
+      bestMatch = t;
+    } else {
+      break;
+    }
+  }
+
+  // If no match found (requested tier is lower than all available), use the lowest tier
+  return bestMatch ?? sortedTiers[0];
+}
+
+/**
+ * Calculate sprite tier based on overclock count
+ * More overclocks = higher sprite tier = more evolved visuals
+ */
+export function calculateSpriteTier(overclockCount: number): number {
+  // Tier 1: 0 overclocks
+  // Tier 2: 1-2 overclocks
+  // Tier 3: 3-5 overclocks
+  // Tier 4: 6-10 overclocks
+  // Tier 5: 11-20 overclocks
+  // Tier 6: 21+ overclocks
+  if (overclockCount >= 21) return 6;
+  if (overclockCount >= 11) return 5;
+  if (overclockCount >= 6) return 4;
+  if (overclockCount >= 3) return 3;
+  if (overclockCount >= 1) return 2;
+  return 1;
+}
+
+// ── LEGACY COMPATIBILITY ─────────────────────────────────────────────────────
+// These types and functions maintain backwards compatibility with existing code
 
 export interface EnemySpriteDef {
   /** Unique identifier */
@@ -30,88 +316,33 @@ export interface EnemySpriteDef {
   offsetY?: number;
 }
 
-export interface EnemyTierSprites {
-  /** Tier index (0-9, matches ENEMY_CONFIG.enemyNamesByTier) */
-  tier: number;
-  /** Regular enemy sprites for this tier */
-  sprites: EnemySpriteDef[];
-  /** Boss sprite for this tier (optional, falls back to default if not set) */
-  bossSprite?: EnemySpriteDef;
-  /** Elite sprite for this tier (optional, uses regular sprite with glow if not set) */
-  eliteSprite?: EnemySpriteDef;
-}
-
-export const ENEMY_SPRITES: EnemyTierSprites[] = [
-  // ── Tier 0 (Stages 1-50): PERIMETER ─────────────────────────────────────────
-  {
-    tier: 0,
-    sprites: [
-      { id: 'adware', name: 'ADWARE.EXE', src: '/assets/enemies/adware.png', scale: 2.0 },
-      { id: 'null_ptr', name: 'null_ptr', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 },
-      { id: 'rootkit', name: 'ROOTKIT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 },
-      { id: 'malware_bat', name: 'MALWARE.BAT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 },
-      { id: 'spam_bot', name: 'SPAM_BOT', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 },
-      { id: 'corrupt_proc', name: 'CORRUPT_PROC', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 },
-      { id: 'stackoverflow', name: 'STACKOVERFLOW', src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 },
-    ],
-    // bossSprite: { id: 'firewall_boss', name: 'THE_FIREWALL', src: '/assets/enemies/firewall-boss.png', scale: 1.2 },
-  },
-  // ── Tier 1 (Stages 51-100): FIREWALL ────────────────────────────────────────
-  {
-    tier: 1,
-    sprites: [
-      // Add tier 1 sprites here:
-      // { id: 'virus', name: 'VIRUS_V2', src: '/assets/enemies/virus.png', scale: 0.4 },
-    ],
-  },
-  // ── Tier 2 (Stages 101-150): KERNEL ─────────────────────────────────────────
-  {
-    tier: 2,
-    sprites: [],
-  },
-  // ── Tier 3 (Stages 151-200): CORE ───────────────────────────────────────────
-  {
-    tier: 3,
-    sprites: [],
-  },
-  // ── Tier 4 (Stages 201-250): THE VOID ───────────────────────────────────────
-  {
-    tier: 4,
-    sprites: [],
-  },
-  // ── Tier 5+ : Add more tiers as needed ──────────────────────────────────────
-];
-
 /**
- * Get sprites for a specific tier
- * Falls back to pixel-art if no sprites defined
+ * Legacy function - Get a sprite for an enemy
+ * Now uses the new monster-based sprite system
  */
-export function getEnemySpritesForTier(tier: number): EnemyTierSprites | null {
-  return ENEMY_SPRITES.find(t => t.tier === tier) ?? null;
-}
+export function getRandomEnemySprite(
+  tier: number, 
+  isBoss: boolean, 
+  isElite: boolean,
+  enemyName?: string,
+  overclockCount: number = 0
+): EnemySpriteDef | null {
+  // If no enemy name provided, we can't look up the sprite
+  if (!enemyName) return null;
 
-/**
- * Get a random sprite for a tier
- * Returns null if no sprites defined (use pixel-art fallback)
- */
-export function getRandomEnemySprite(tier: number, isBoss: boolean, isElite: boolean): EnemySpriteDef | null {
-  const tierSprites = getEnemySpritesForTier(tier);
-  if (!tierSprites) return null;
+  const spriteTier = calculateSpriteTier(overclockCount);
+  const sprite = getSpriteForMonster(enemyName, spriteTier, isBoss, isElite);
+  
+  if (!sprite) return null;
 
-  // Boss takes priority
-  if (isBoss && tierSprites.bossSprite) {
-    return tierSprites.bossSprite;
-  }
-
-  // Elite takes second priority
-  if (isElite && tierSprites.eliteSprite) {
-    return tierSprites.eliteSprite;
-  }
-
-  // Regular sprites
-  if (tierSprites.sprites.length === 0) return null;
-  const idx = Math.floor(Math.random() * tierSprites.sprites.length);
-  return tierSprites.sprites[idx];
+  // Convert to legacy format
+  return {
+    id: enemyName.toLowerCase().replace(/[^a-z0-9]/g, '_'),
+    name: enemyName,
+    src: sprite.src,
+    scale: sprite.scale,
+    offsetY: sprite.offsetY,
+  };
 }
 
 
@@ -186,13 +417,21 @@ export function preloadImage(src: string): Promise<HTMLImageElement> {
 export async function preloadAllAssets(): Promise<void> {
   const imagesToLoad: string[] = [];
 
-  // Collect enemy sprites
-  for (const tier of ENEMY_SPRITES) {
-    for (const sprite of tier.sprites) {
-      imagesToLoad.push(sprite.src);
+  // Collect monster sprites from new system
+  for (const monster of MONSTER_SPRITES) {
+    for (const tier of monster.tiers) {
+      imagesToLoad.push(tier.src);
     }
-    if (tier.bossSprite) imagesToLoad.push(tier.bossSprite.src);
-    if (tier.eliteSprite) imagesToLoad.push(tier.eliteSprite.src);
+    if (monster.bossTiers) {
+      for (const tier of monster.bossTiers) {
+        imagesToLoad.push(tier.src);
+      }
+    }
+    if (monster.eliteTiers) {
+      for (const tier of monster.eliteTiers) {
+        imagesToLoad.push(tier.src);
+      }
+    }
   }
 
   // Collect zone backgrounds

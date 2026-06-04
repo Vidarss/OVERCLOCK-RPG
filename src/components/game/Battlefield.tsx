@@ -28,6 +28,7 @@ interface Ripple {
 export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const enemy = useGameState(engine, s => s.enemy);
   const stage = useGameState(engine, s => s.stage);
+  const overclockCount = useGameState(engine, s => s.overclockCount);
   const pendingBossReturn = useGameState(engine, s => s.pendingBossReturn);
   const pendingBossStage = useGameState(engine, s => s.pendingBossStage);
 
@@ -246,10 +247,10 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         onTouchStart={handleTap}
       >
         {enemy && !isDying && (
-          <EnemySprite enemy={enemy} isHit={isHit} isDying={false} zone={zone} />
+          <EnemySprite enemy={enemy} isHit={isHit} isDying={false} zone={zone} overclockCount={overclockCount ?? 0} />
         )}
         {isDying && enemy && (
-          <EnemySprite enemy={enemy} isHit={false} isDying={true} zone={zone} />
+          <EnemySprite enemy={enemy} isHit={false} isDying={true} zone={zone} overclockCount={overclockCount ?? 0} />
         )}
         {!enemy && (
           <div className="font-pixel animate-blink" style={{ color: zone.accentColor, fontSize: '8px', opacity: 0.7 }}>

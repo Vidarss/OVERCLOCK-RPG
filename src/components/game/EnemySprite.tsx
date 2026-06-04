@@ -2,13 +2,13 @@ import React, { useMemo } from 'react';
 import type { Enemy } from '../../engine/types';
 import type { ZoneConfig } from './ZoneScene';
 import { getRandomEnemySprite, type EnemySpriteDef } from '../../config/assets.config';
-import { ENEMY_CONFIG } from '../../config/game.config';
 
 interface EnemySpriteProps {
   enemy: Enemy;
   isHit: boolean;
   isDying: boolean;
   zone: ZoneConfig;
+  overclockCount?: number;
 }
 
 // Pixel art grids per tier (B=body, A=accent, space=transparent)
@@ -109,18 +109,23 @@ function getPhaseOverlay(phase: string | undefined): React.CSSProperties | null 
   }
 }
 
-export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying, zone }) => {
+export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying, zone, overclockCount = 0 }) => {
   const tier = Math.min(enemy.tier ?? 0, PIXEL_ARTS.length - 1);
   const pixels = enemy.isBoss ? BOSS_PIXEL_ART : PIXEL_ARTS[tier];
   const pixelSize = enemy.isBoss ? 12 : enemy.isElite ? 11 : 10;
   const colors = getSpriteColors(enemy, zone);
   const phaseStyle = getPhaseOverlay(enemy.bossPhase);
 
-  // Try to get a custom sprite image for this enemy
+  // Try to get a custom sprite image for this enemy by name
   const customSprite: EnemySpriteDef | null = useMemo(() => {
-    const enemyTier = Math.floor(((enemy.tier ?? 0) * ENEMY_CONFIG.stagesPerTier) / ENEMY_CONFIG.stagesPerTier);
-    return getRandomEnemySprite(enemyTier, enemy.isBoss, enemy.isElite ?? false);
-  }, [enemy.tier, enemy.isBoss, enemy.isElite]);
+    return getRandomEnemySprite(
+      enemy.tier ?? 0, 
+      enemy.isBoss, 
+      enemy.isElite ?? false,
+      enemy.name,
+      overclockCount
+    );
+  }, [enemy.tier, enemy.isBoss, enemy.isElite, enemy.name, overclockCount]);
 
   // If we have a custom sprite, render it as an image
   if (customSprite) {
