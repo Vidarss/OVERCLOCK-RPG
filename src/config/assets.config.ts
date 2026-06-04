@@ -95,17 +95,18 @@ export const MONSTER_SPRITES: MonsterSpriteDef[] = [
 
   // ════════════════════════════════════════════════════════════════════════════
   // BOSS SPRITES (10 bosses that cycle through stages)
+  // Ironically hilarious but evil - each has a personality flaw
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'THE_FIREWALL', tiers: [], bossTiers: [] },
-  { name: 'DARK_ANTIVIRUS', tiers: [], bossTiers: [] },
-  { name: 'CHAOS_KERNEL', tiers: [], bossTiers: [] },
-  { name: 'OMEGA_ROOTKIT', tiers: [], bossTiers: [] },
-  { name: 'SYSTEM32_WRAITH', tiers: [], bossTiers: [] },
-  { name: 'BIOS_CORRUPTION', tiers: [], bossTiers: [] },
-  { name: 'QUANTUM_MALWARE', tiers: [], bossTiers: [] },
-  { name: 'THE_NULL_GOD', tiers: [], bossTiers: [] },
-  { name: 'PHANTOM_OVERLORD', tiers: [], bossTiers: [] },
-  { name: 'DEEP_PACKET_KING', tiers: [], bossTiers: [] },
+  { name: 'THE_FIREWALL', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }] },
+  { name: 'DARK_ANTIVIRUS', tiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }] },
+  { name: 'CHAOS_KERNEL', tiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }] },
+  { name: 'OMEGA_ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }] },
+  { name: 'SYSTEM32_WRAITH', tiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }] },
+  { name: 'BIOS_CORRUPTION', tiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }] },
+  { name: 'QUANTUM_MALWARE', tiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }] },
+  { name: 'THE_NULL_GOD', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }] },
+  { name: 'PHANTOM_OVERLORD', tiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }] },
+  { name: 'DEEP_PACKET_KING', tiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }] },
 ];
 
 // ── SPRITE LOOKUP FUNCTIONS ──────────────────────────────────────────────────
