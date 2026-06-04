@@ -5,7 +5,7 @@ import { TAP_CONFIG } from '../config/game.config';
 
 // Tap limiter config
 const TAP_LIMITER = {
-  maxTapsPerSecond: 6,       // Taps/s threshold before heat builds
+  maxTapsPerSecond: 12,      // Taps/s threshold before heat builds
   heatPerExcessTap: 0.15,   // Heat gained per tap over limit (0-1 scale)
   heatDecayPerSecond: 0.25, // Heat lost per second when under limit
   overheatCooldown: 2000,   // Ms of cooldown when overheated (heat = 1)
