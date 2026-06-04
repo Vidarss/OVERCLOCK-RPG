@@ -4,7 +4,7 @@
 // This file centralizes all monster sprites and stage background images.
 // 
 // SPRITE SYSTEM:
-//   - Each monster has a unique name (e.g., "MALWARE.BAT", "VIRUS_V2")
+//   - Each monster has a unique name (e.g., "MALWARE_BAT", "VIRUS_V2")
 //   - Each monster can have multiple SPRITE TIERS (visual evolution)
 //   - Sprite tier determines which visual variant to show based on game progression
 //   - Higher sprite tiers = more evolved/menacing appearance
@@ -49,93 +49,64 @@ export interface MonsterSpriteDef {
 
 export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 10 enemies
-  // Baby viruses, annoying popups, amateur hacker creations
+  // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'MALWARE.BAT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 }] },
-  { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 }] },
-  { name: 'NULL_PTR', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 }] },
-  { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 }] },
-  { name: 'SPAM_BOT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 }] },
-  { name: 'ADWARE.EXE', tiers: [{ tier: 1, src: '/assets/enemies/adware.png', scale: 2.0 }] },
-  { name: 'POPUP_PEST', tiers: [] },
-  { name: 'COOKIE_THIEF', tiers: [] },
-  { name: 'SCRIPT_KIDDIE', tiers: [] },
-  { name: 'TOOLBAR_WORM', tiers: [] },
+  { name: 'MALWARE_BAT', tiers: [{ tier: 1, src: '/assets/enemies/malware_bat.png', scale: 1.0 }] },
+  { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: '/assets/enemies/corrupt_proc.png', scale: 1.0 }] },
+  { name: 'NULL_PTR', tiers: [{ tier: 1, src: '/assets/enemies/null_ptr.png', scale: 1.0 }] },
+  { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: '/assets/enemies/stack_overflow.png', scale: 1.0 }] },
+  { name: 'SPAM_BOT', tiers: [{ tier: 1, src: '/assets/enemies/spam_bot.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 10 enemies
-  // Teenage malware, growing threats
+  // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VIRUS_V2', tiers: [] },
-  { name: 'RANSOMWARE', tiers: [] },
-  { name: 'ROOTKIT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 }] },
-  { name: 'KEYLOGGER', tiers: [] },
-  { name: 'PHISH_AGENT', tiers: [] },
-  { name: 'TROJAN_HORSE', tiers: [] },
-  { name: 'BACKDOOR_BOT', tiers: [] },
-  { name: 'WORM_SPREADER', tiers: [] },
-  { name: 'EXPLOIT_KIT', tiers: [] },
-  { name: 'DROPPER_DAEMON', tiers: [] },
+  { name: 'VIRUS_V2', tiers: [{ tier: 1, src: '/assets/enemies/virus_v2.png', scale: 1.0 }] },
+  { name: 'RANSOMWARE', tiers: [{ tier: 1, src: '/assets/enemies/ransomware.png', scale: 1.0 }] },
+  { name: 'ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/rootkit.png', scale: 1.0 }] },
+  { name: 'KEYLOGGER', tiers: [{ tier: 1, src: '/assets/enemies/keylogger.png', scale: 1.0 }] },
+  { name: 'TROJAN_HORSE', tiers: [{ tier: 1, src: '/assets/enemies/trojan_horse.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 10 enemies
-  // Adult malware, corporate-grade attacks
+  // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'BOTNET_NODE', tiers: [] },
-  { name: 'CRYPTOMINER', tiers: [] },
-  { name: 'SQL_INJECT', tiers: [] },
-  { name: 'XSS_WORM', tiers: [] },
-  { name: 'DNS_POISON', tiers: [] },
-  { name: 'MAN_IN_MIDDLE', tiers: [] },
-  { name: 'PACKET_SNIFFER', tiers: [] },
-  { name: 'CREDENTIAL_STEALER', tiers: [] },
-  { name: 'RAT_CONTROLLER', tiers: [] },
-  { name: 'LOGIC_BOMB', tiers: [] },
+  { name: 'BOTNET_NODE', tiers: [{ tier: 1, src: '/assets/enemies/botnet_node.png', scale: 1.0 }] },
+  { name: 'CRYPTOMINER', tiers: [{ tier: 1, src: '/assets/enemies/cryptominer.png', scale: 1.0 }] },
+  { name: 'SQL_INJECT', tiers: [{ tier: 1, src: '/assets/enemies/sql_inject.png', scale: 1.0 }] },
+  { name: 'XSS_WORM', tiers: [{ tier: 1, src: '/assets/enemies/xss_worm.png', scale: 1.0 }] },
+  { name: 'DNS_POISON', tiers: [{ tier: 1, src: '/assets/enemies/dns_poison.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 3 ENEMIES (Stages 151-200: CORE) - 10 enemies
-  // Elite threats, weapons-grade malware
+  // TIER 3 ENEMIES (Stages 151-200: CORE) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'ZERO_DAY', tiers: [] },
-  { name: 'APT_GHOST', tiers: [] },
-  { name: 'KERNEL_PANIC', tiers: [] },
-  { name: 'BUFFER_DEMON', tiers: [] },
-  { name: 'MEMORY_LEAK', tiers: [] },
-  { name: 'HEAP_CORRUPTOR', tiers: [] },
-  { name: 'RACE_CONDITION', tiers: [] },
-  { name: 'USE_AFTER_FREE', tiers: [] },
-  { name: 'INTEGER_OVERFLOW', tiers: [] },
-  { name: 'FORMAT_STRING', tiers: [] },
+  { name: 'ZERO_DAY', tiers: [{ tier: 1, src: '/assets/enemies/zero_day.png', scale: 1.0 }] },
+  { name: 'APT_GHOST', tiers: [{ tier: 1, src: '/assets/enemies/apt_ghost.png', scale: 1.0 }] },
+  { name: 'KERNEL_PANIC', tiers: [{ tier: 1, src: '/assets/enemies/kernel_panic.png', scale: 1.0 }] },
+  { name: 'BUFFER_DEMON', tiers: [{ tier: 1, src: '/assets/enemies/buffer_demon.png', scale: 1.0 }] },
+  { name: 'MEMORY_LEAK', tiers: [{ tier: 1, src: '/assets/enemies/memory_leak.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 10 enemies
-  // Legendary entities, primordial code
+  // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VOID_PROCESS', tiers: [] },
-  { name: 'NULL_ENTITY', tiers: [] },
-  { name: 'DARK_THREAD', tiers: [] },
-  { name: 'SHADOW_DAEMON', tiers: [] },
-  { name: 'ENTROPY_WORM', tiers: [] },
-  { name: 'OBLIVION_CORE', tiers: [] },
-  { name: 'QUANTUM_GHOST', tiers: [] },
-  { name: 'SINGULARITY_BUG', tiers: [] },
-  { name: 'HEAT_DEATH', tiers: [] },
-  { name: 'THE_LAST_BIT', tiers: [] },
+  { name: 'VOID_PROCESS', tiers: [{ tier: 1, src: '/assets/enemies/void_process.png', scale: 1.0 }] },
+  { name: 'NULL_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/null_entity.png', scale: 1.0 }] },
+  { name: 'DARK_THREAD', tiers: [{ tier: 1, src: '/assets/enemies/dark_thread.png', scale: 1.0 }] },
+  { name: 'SHADOW_DAEMON', tiers: [{ tier: 1, src: '/assets/enemies/shadow_daemon.png', scale: 1.0 }] },
+  { name: 'ENTROPY_WORM', tiers: [{ tier: 1, src: '/assets/enemies/entropy_worm.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // BOSS SPRITES (10 bosses that cycle through stages)
+  // Ironically hilarious but evil - each has a personality flaw
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'THE_FIREWALL', tiers: [], bossTiers: [] },
-  { name: 'DARK_ANTIVIRUS', tiers: [], bossTiers: [] },
-  { name: 'CHAOS_KERNEL', tiers: [], bossTiers: [] },
-  { name: 'OMEGA_ROOTKIT', tiers: [], bossTiers: [] },
-  { name: 'SYSTEM32_WRAITH', tiers: [], bossTiers: [] },
-  { name: 'BIOS_CORRUPTION', tiers: [], bossTiers: [] },
-  { name: 'QUANTUM_MALWARE', tiers: [], bossTiers: [] },
-  { name: 'THE_NULL_GOD', tiers: [], bossTiers: [] },
-  { name: 'PHANTOM_OVERLORD', tiers: [], bossTiers: [] },
-  { name: 'DEEP_PACKET_KING', tiers: [], bossTiers: [] },
+  { name: 'THE_FIREWALL', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }] },
+  { name: 'DARK_ANTIVIRUS', tiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }] },
+  { name: 'CHAOS_KERNEL', tiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }] },
+  { name: 'OMEGA_ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }] },
+  { name: 'SYSTEM32_WRAITH', tiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }] },
+  { name: 'BIOS_CORRUPTION', tiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }] },
+  { name: 'QUANTUM_MALWARE', tiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }] },
+  { name: 'THE_NULL_GOD', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }] },
+  { name: 'PHANTOM_OVERLORD', tiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }] },
+  { name: 'DEEP_PACKET_KING', tiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }] },
 ];
 
 // ── SPRITE LOOKUP FUNCTIONS ──────────────────────────────────────────────────
