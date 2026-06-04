@@ -55,7 +55,7 @@ export const DATAPACKET_CONFIG = {
      * @param enemyEquivalent - How many enemies worth of gold to give
      */
     calculateGold: (stage: number, enemyEquivalent: number): number => {
-      const enemyHp = getEnemyHp(stage);
+      const enemyHp = getEnemyHp(stage, 1); // Use phase 1 as baseline
       const goldPerEnemy = enemyHp * ENEMY_CONFIG.normalGoldMultiplier;
       return Math.floor(goldPerEnemy * enemyEquivalent);
     },
