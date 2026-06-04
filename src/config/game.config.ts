@@ -428,20 +428,20 @@ export const ENEMY_CONFIG = {
 
   /** 
    * Enemy name pools, indexed by tier (one tier = 50 stages).
-   * 50 unique enemies total, 10 per tier across 5 tiers.
-   * Within a stage, 10 random enemies from the tier's pool are selected for phases 1-9.
+   * 25 unique enemies total, 5 per tier across 5 tiers.
+   * Within a stage, random enemies from the tier's pool are selected for phases 1-9.
    */
   enemyNamesByTier: [
-    // Tier 0 (Stages 1-50): PERIMETER - Baby viruses, amateur threats
-    ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT', 'ADWARE.EXE', 'POPUP_PEST', 'COOKIE_THIEF', 'SCRIPT_KIDDIE', 'TOOLBAR_WORM'],
-    // Tier 1 (Stages 51-100): FIREWALL - Teenage malware, growing threats
-    ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'PHISH_AGENT', 'TROJAN_HORSE', 'BACKDOOR_BOT', 'WORM_SPREADER', 'EXPLOIT_KIT', 'DROPPER_DAEMON'],
+    // Tier 0 (Stages 1-50): PERIMETER - Lesser malware, weak threats
+    ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT'],
+    // Tier 1 (Stages 51-100): FIREWALL - Growing malware, real threats
+    ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'TROJAN_HORSE'],
     // Tier 2 (Stages 101-150): KERNEL - Adult malware, corporate-grade attacks
-    ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON', 'MAN_IN_MIDDLE', 'PACKET_SNIFFER', 'CREDENTIAL_STEALER', 'RAT_CONTROLLER', 'LOGIC_BOMB'],
+    ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON'],
     // Tier 3 (Stages 151-200): CORE - Elite threats, weapons-grade malware
-    ['ZERO_DAY', 'APT_GHOST', 'KERNEL_PANIC', 'BUFFER_DEMON', 'MEMORY_LEAK', 'HEAP_CORRUPTOR', 'RACE_CONDITION', 'USE_AFTER_FREE', 'INTEGER_OVERFLOW', 'FORMAT_STRING'],
+    ['ZERO_DAY', 'APT_GHOST', 'KERNEL_PANIC', 'BUFFER_DEMON', 'MEMORY_LEAK'],
     // Tier 4 (Stages 201-250): THE VOID - Legendary entities, primordial code
-    ['VOID_PROCESS', 'NULL_ENTITY', 'DARK_THREAD', 'SHADOW_DAEMON', 'ENTROPY_WORM', 'OBLIVION_CORE', 'QUANTUM_GHOST', 'SINGULARITY_BUG', 'HEAT_DEATH', 'THE_LAST_BIT'],
+    ['VOID_PROCESS', 'NULL_ENTITY', 'DARK_THREAD', 'SHADOW_DAEMON', 'ENTROPY_WORM'],
     // Tier 5+ (Stages 251+): Repeats tier 4 with escalating difficulty
   ] as string[][],
 

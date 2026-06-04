@@ -49,79 +49,49 @@ export interface MonsterSpriteDef {
 
 export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 10 enemies
-  // Baby viruses, annoying popups, amateur hacker creations
+  // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'MALWARE.BAT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 }] },
   { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 }] },
   { name: 'NULL_PTR', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 }] },
   { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 }] },
   { name: 'SPAM_BOT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 }] },
-  { name: 'ADWARE.EXE', tiers: [{ tier: 1, src: '/assets/enemies/adware.png', scale: 2.0 }] },
-  { name: 'POPUP_PEST', tiers: [] },
-  { name: 'COOKIE_THIEF', tiers: [] },
-  { name: 'SCRIPT_KIDDIE', tiers: [] },
-  { name: 'TOOLBAR_WORM', tiers: [] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 10 enemies
-  // Teenage malware, growing threats
+  // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'VIRUS_V2', tiers: [] },
   { name: 'RANSOMWARE', tiers: [] },
   { name: 'ROOTKIT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 }] },
   { name: 'KEYLOGGER', tiers: [] },
-  { name: 'PHISH_AGENT', tiers: [] },
   { name: 'TROJAN_HORSE', tiers: [] },
-  { name: 'BACKDOOR_BOT', tiers: [] },
-  { name: 'WORM_SPREADER', tiers: [] },
-  { name: 'EXPLOIT_KIT', tiers: [] },
-  { name: 'DROPPER_DAEMON', tiers: [] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 10 enemies
-  // Adult malware, corporate-grade attacks
+  // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'BOTNET_NODE', tiers: [] },
   { name: 'CRYPTOMINER', tiers: [] },
   { name: 'SQL_INJECT', tiers: [] },
   { name: 'XSS_WORM', tiers: [] },
   { name: 'DNS_POISON', tiers: [] },
-  { name: 'MAN_IN_MIDDLE', tiers: [] },
-  { name: 'PACKET_SNIFFER', tiers: [] },
-  { name: 'CREDENTIAL_STEALER', tiers: [] },
-  { name: 'RAT_CONTROLLER', tiers: [] },
-  { name: 'LOGIC_BOMB', tiers: [] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 3 ENEMIES (Stages 151-200: CORE) - 10 enemies
-  // Elite threats, weapons-grade malware
+  // TIER 3 ENEMIES (Stages 151-200: CORE) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'ZERO_DAY', tiers: [] },
   { name: 'APT_GHOST', tiers: [] },
   { name: 'KERNEL_PANIC', tiers: [] },
   { name: 'BUFFER_DEMON', tiers: [] },
   { name: 'MEMORY_LEAK', tiers: [] },
-  { name: 'HEAP_CORRUPTOR', tiers: [] },
-  { name: 'RACE_CONDITION', tiers: [] },
-  { name: 'USE_AFTER_FREE', tiers: [] },
-  { name: 'INTEGER_OVERFLOW', tiers: [] },
-  { name: 'FORMAT_STRING', tiers: [] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 10 enemies
-  // Legendary entities, primordial code
+  // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'VOID_PROCESS', tiers: [] },
   { name: 'NULL_ENTITY', tiers: [] },
   { name: 'DARK_THREAD', tiers: [] },
   { name: 'SHADOW_DAEMON', tiers: [] },
   { name: 'ENTROPY_WORM', tiers: [] },
-  { name: 'OBLIVION_CORE', tiers: [] },
-  { name: 'QUANTUM_GHOST', tiers: [] },
-  { name: 'SINGULARITY_BUG', tiers: [] },
-  { name: 'HEAT_DEATH', tiers: [] },
-  { name: 'THE_LAST_BIT', tiers: [] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // BOSS SPRITES (10 bosses that cycle through stages)
