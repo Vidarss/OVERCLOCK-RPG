@@ -192,6 +192,7 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
                   width: `${hpPct}%`,
                   background: isBoss ? '#ff0080' : zone.accentColor,
                   boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
+                  transition: 'width 0.15s ease-out',
                 }}
               />
             </div>
