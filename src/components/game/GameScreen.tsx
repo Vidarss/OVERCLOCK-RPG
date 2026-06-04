@@ -168,6 +168,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const inventoryNearFull = inventoryCount >= inventoryMax * inventoryWarningThreshold;
   const inventoryFull = inventoryCount >= inventoryMax;
   const overclockCount = useGameState(engine, s => s.overclockCount);
+  const skillPoints = useGameState(engine, s => s.skillPoints ?? 0);
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
 
   useEffect(() => {
@@ -528,20 +529,20 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             <button
               onClick={() => setShowSkillTree(true)}
               style={{
-                width: '100%', background: (state.skillPoints ?? 0) > 0 ? '#001810' : '#080810',
-                border: `1px solid ${(state.skillPoints ?? 0) > 0 ? '#00ff8866' : '#0a2a1a'}`,
-                color: (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#1a5a3a', padding: '12px 10px',
+                width: '100%', background: skillPoints > 0 ? '#001810' : '#080810',
+                border: `1px solid ${skillPoints > 0 ? '#00ff8866' : '#0a2a1a'}`,
+                color: skillPoints > 0 ? '#00ff88' : '#1a5a3a', padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                boxShadow: (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none', transition: 'all 0.15s',
+                boxShadow: skillPoints > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none', transition: 'all 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#00ff88'; e.currentTarget.style.color = '#00ff88'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,255,136,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = (state.skillPoints ?? 0) > 0 ? '#00ff8866' : '#0a2a1a'; e.currentTarget.style.color = (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#1a5a3a'; e.currentTarget.style.boxShadow = (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = skillPoints > 0 ? '#00ff8866' : '#0a2a1a'; e.currentTarget.style.color = skillPoints > 0 ? '#00ff88' : '#1a5a3a'; e.currentTarget.style.boxShadow = skillPoints > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none'; }}
             >
               <TrendingUp size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SKILLS</div>
-              {(state.skillPoints ?? 0) > 0 && (
+              {skillPoints > 0 && (
                 <div style={{ background: '#00ff88', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-                  {state.skillPoints} SP
+                  {skillPoints} SP
                 </div>
               )}
             </button>
