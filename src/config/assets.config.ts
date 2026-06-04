@@ -224,15 +224,28 @@ export interface ZoneBackgroundDef {
 }
 
 export const ZONE_BACKGROUNDS: ZoneBackgroundDef[] = [
-  // ── Zone 0: PERIMETER ───────────────────────────────────────────────────────
+  // ── Stages 1-150: SYSTEM CORE MEGACITY ─────────────────────────────────────
   {
     zoneId: 0,
-    src: '/assets/backgrounds/perimeter.png',
+    src: '/assets/backgrounds/system_core_megacity.jpg',
     fit: 'cover',
     position: 'center',
-    overlayOpacity: 0.5,
+    overlayOpacity: 0.4,
   },
-  // Other zones use procedural backgrounds until images are generated
+  {
+    zoneId: 1,
+    src: '/assets/backgrounds/system_core_megacity.jpg',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.4,
+  },
+  {
+    zoneId: 2,
+    src: '/assets/backgrounds/system_core_megacity.jpg',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.4,
+  },
 ];
 
 /**
