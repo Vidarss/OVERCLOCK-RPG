@@ -46,6 +46,9 @@ export default defineConfig(({ mode }) => {
   const supabaseUrl = env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   
+  // Stripe publishable key
+  const stripePublishableKey = env.VITE_STRIPE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || env.STRIPE_PUBLISHABLE_KEY || '';
+  
   return {
     plugins: [react()],
     optimizeDeps: {
@@ -60,6 +63,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
       'import.meta.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(supabaseUrl),
       'import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(supabaseAnonKey),
+      'import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY': JSON.stringify(stripePublishableKey),
+      'import.meta.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY': JSON.stringify(stripePublishableKey),
     },
   };
 });
