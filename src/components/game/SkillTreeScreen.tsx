@@ -17,12 +17,10 @@ interface SkillTreeScreenProps {
 }
 
 export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
-  const state = useGameState(engine);
+  const skillPoints = useGameState(engine, s => s.skillPoints ?? 0);
+  const skillTreeNodes = useGameState(engine, s => s.skillTreeNodes ?? {});
   const [selectedNode, setSelectedNode] = useState<SkillTreeNode | null>(null);
   const [showInfo, setShowInfo] = useState(false);
-
-  const skillPoints = state.skillPoints ?? 0;
-  const skillTreeNodes = state.skillTreeNodes ?? {};
 
   // Calculate total SP spent
   const totalSpent = useMemo(() => {
