@@ -33,7 +33,7 @@ export interface SpriteTierDef {
 }
 
 export interface MonsterSpriteDef {
-  /** Monster name (must match ENEMY_CONFIG.enemyNamesByTier entries) */
+  /** Monster name (must match ENEMY_CONFIG.monsters, .elites, or .bosses entries) */
   name: string;
   /** Available sprite tiers for this monster (sorted by tier) */
   tiers: SpriteTierDef[];
@@ -49,19 +49,13 @@ export interface MonsterSpriteDef {
 
 export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 1 MONSTERS (Stages 1-50: PERIMETER) - 5 enemies
-  // Lesser malware, glitchy viruses, weak but hostile digital creatures
+  // MONSTERS - Regular enemies (stages 1-150)
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'NULL_PROCESS_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/monsters/null_process_entity.png', scale: 1.0 }] },
   { name: 'CACHE_BREAKER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/cache_breaker.png', scale: 1.0 }] },
   { name: 'ADWARE_GLITCHLING', tiers: [{ tier: 1, src: '/assets/enemies/monsters/adware_glitchling.png', scale: 1.0 }] },
   { name: 'FIREWALL_ORPHAN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/firewall_orphan.png', scale: 1.0 }] },
   { name: 'OVERCLOCK_ERROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/overclock_error.png', scale: 1.0 }] },
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // TIER 2 MONSTERS (Stages 51-100: SUBNET) - 5 enemies
-  // More evolved threats, system-level intrusions
-  // ════════════════════════════════════════════════════════════════════════════
   { name: 'KERNEL_LEAK_SPAWN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/kernel_leak_spawn.png', scale: 1.0 }] },
   { name: 'AUTOUPDATE_HORROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/autoupdate_horror.png', scale: 1.0 }] },
   { name: 'DEBUG_SPECTER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/debug_specter.png', scale: 1.0 }] },
@@ -69,7 +63,7 @@ export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   { name: 'SYNC_FAILURE_CORE', tiers: [{ tier: 1, src: '/assets/enemies/monsters/sync_failure_core.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // ELITE SPRITES - Stronger variants with unique appearances
+  // ELITES - Stronger enemies with unique sprites
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'RECURSIVE_UPGRADE_MISTAKE', tiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }] },
   { name: 'UNAUTHORIZED_PROCESS_AGENT', tiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }] },
@@ -78,7 +72,7 @@ export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   { name: 'SYNTHETIC_FAILURE_UNIT', tiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // BOSS SPRITES - Major threats at stage milestones
+  // BOSSES - Phase 10 enemies
   // ════════════════════════════════════════════════════════════════════════════
   { name: 'THE_PATCH_THAT_NEVER_FINISHED', tiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }] },
   { name: 'CORE_SYSTEM_AUTONOMY', tiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }] },

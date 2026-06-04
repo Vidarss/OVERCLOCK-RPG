@@ -415,8 +415,6 @@ export const ENEMY_CONFIG = {
   bossShieldDamageMultiplier: 0.3,
   /** Fraction of max HP regenerated per second in regen phase. */
   bossRegenRatePerSecond: 0.02,
-  /** Number of stages per enemy tier bracket (50 stages = new tier of enemies). */
-  stagesPerTier: 50,
 
   // HP scaling formula (see EnemyPlugin.ts for implementation):
   //   stage ≤ 500 : base * (1 + (stage - 1) * linearGrowth) * scalingExponentEarly ^ ((stage - 1) / 50)
@@ -430,39 +428,43 @@ export const ENEMY_CONFIG = {
   hardModeStage: 500,              // Stage where difficulty ramps up significantly
 
   /** 
-   * Enemy name pools, indexed by tier (one tier = 50 stages).
-   * Stages 1-150 now have unique monster sprites!
+   * Monster definitions with stage ranges.
+   * Monsters are randomly selected from those available at the current stage.
    */
-  enemyNamesByTier: [
-    // Tier 1 (Stages 1-50): PERIMETER - Lesser malware, weak threats
-    ['NULL_PROCESS_ENTITY', 'CACHE_BREAKER', 'ADWARE_GLITCHLING', 'FIREWALL_ORPHAN', 'OVERCLOCK_ERROR'],
-    // Tier 2 (Stages 51-100): SUBNET - Evolved threats, system-level
-    ['KERNEL_LEAK_SPAWN', 'AUTOUPDATE_HORROR', 'DEBUG_SPECTER', 'SYSTEM_POPUP_PREDATOR', 'SYNC_FAILURE_CORE'],
-    // Tier 3 (Stages 101-150): Mix of all monsters
-    ['NULL_PROCESS_ENTITY', 'CACHE_BREAKER', 'KERNEL_LEAK_SPAWN', 'AUTOUPDATE_HORROR', 'DEBUG_SPECTER'],
-  ] as string[][],
+  monsters: [
+    { name: 'NULL_PROCESS_ENTITY', minStage: 1, maxStage: 150 },
+    { name: 'CACHE_BREAKER', minStage: 1, maxStage: 150 },
+    { name: 'ADWARE_GLITCHLING', minStage: 1, maxStage: 150 },
+    { name: 'FIREWALL_ORPHAN', minStage: 1, maxStage: 150 },
+    { name: 'OVERCLOCK_ERROR', minStage: 1, maxStage: 150 },
+    { name: 'KERNEL_LEAK_SPAWN', minStage: 1, maxStage: 150 },
+    { name: 'AUTOUPDATE_HORROR', minStage: 1, maxStage: 150 },
+    { name: 'DEBUG_SPECTER', minStage: 1, maxStage: 150 },
+    { name: 'SYSTEM_POPUP_PREDATOR', minStage: 1, maxStage: 150 },
+    { name: 'SYNC_FAILURE_CORE', minStage: 1, maxStage: 150 },
+  ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
-   * Elite enemy names - Unique elite sprites with stronger stats
+   * Elite definitions with stage ranges.
+   * Elites are randomly selected from those available at the current stage.
    */
-  eliteNames: [
-    'RECURSIVE_UPGRADE_MISTAKE', 
-    'UNAUTHORIZED_PROCESS_AGENT', 
-    'MEMORY_DRIFT_ENFORCER', 
-    'PATCH_NOTES_ABERRATION', 
-    'SYNTHETIC_FAILURE_UNIT',
-  ] as string[],
+  elites: [
+    { name: 'RECURSIVE_UPGRADE_MISTAKE', minStage: 1, maxStage: 150 },
+    { name: 'UNAUTHORIZED_PROCESS_AGENT', minStage: 1, maxStage: 150 },
+    { name: 'MEMORY_DRIFT_ENFORCER', minStage: 1, maxStage: 150 },
+    { name: 'PATCH_NOTES_ABERRATION', minStage: 1, maxStage: 150 },
+    { name: 'SYNTHETIC_FAILURE_UNIT', minStage: 1, maxStage: 150 },
+  ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
-   * Boss names - 3 bosses for stages 1-150
-   * Boss appears at phase 10 of each stage.
-   * Boss index = floor((stage - 1) / 50) % bossNames.length
+   * Boss definitions with stage ranges.
+   * Bosses are randomly selected from those available at the current stage.
    */
-  bossNames: [
-    'THE_PATCH_THAT_NEVER_FINISHED',
-    'CORE_SYSTEM_AUTONOMY',
-    'ADMINISTRATIVE_GOD_PROCESS',
-  ] as string[],
+  bosses: [
+    { name: 'THE_PATCH_THAT_NEVER_FINISHED', minStage: 1, maxStage: 150 },
+    { name: 'CORE_SYSTEM_AUTONOMY', minStage: 1, maxStage: 150 },
+    { name: 'ADMINISTRATIVE_GOD_PROCESS', minStage: 1, maxStage: 150 },
+  ] as { name: string; minStage: number; maxStage: number }[],
 } as const;
 
 // ── OVERCLOCK ──────────────────────────────────────────���─��────────────────────
@@ -704,7 +706,7 @@ export const INITIAL_COMPONENTS: ComponentDef[] = [
   { id: 'godmode',        name: 'GODMODE_KERNEL',      description: 'Absolute privilege. No rules apply.', baseDps: 6.5e41,                        baseCost: 1e49,                                  costMultiplier: 1.50, level: 0, unlocked: false, color: 'cyan'  },
 ];
 
-// ── MOTHERBOARD ───────────────────────────────────────────────────────────────
+// ── MOTHERBOARD ───���───────────────────────────────────────────────────────────
 
 export interface MoboTierDef {
   tier: number;
@@ -1205,7 +1207,7 @@ export const SET_CATALOG: SetDef[] = [
       { name: 'NEXUS_SYNAPSE',slot: 'GPU', flavorText: 'Renders destruction in parallel threads of neural fire.',               stats: [{ type: 'idle_dps', value: 2.0, isMultiplier: true }, { type: 'crit_multiplier', value: 1.6,  isMultiplier: true  }] },
     ],
   },
-  // ── GHOST PROTOCOL (Tap + Crit Focus) ──────────────────────────────────────
+  // ── GHOST PROTOCOL (Tap + Crit Focus) ────────��─────────────────────────────
   {
     id: 'ghost_protocol',
     name: 'GHOST PROTOCOL',

@@ -46,37 +46,41 @@ export function getBossHp(stage: number): number {
 }
 
 /**
- * Get enemy tier (0-4) based on stage for name pool selection.
- */
-export function getEnemyTier(stage: number): number {
-  return Math.min(Math.floor((stage - 1) / ENEMY_CONFIG.stagesPerTier), ENEMY_CONFIG.enemyNamesByTier.length - 1);
-}
-
-/**
  * Get enemy name based on stage, phase, and whether it's a boss.
+ * Randomly selects from enemies available at the current stage.
  */
 function getEnemyName(stage: number, phase: number, isBoss: boolean): string {
   if (isBoss) {
-    // Boss index based on tier (every 50 stages) for variety
-    const tier = Math.floor((stage - 1) / 50);
-    const idx = tier % ENEMY_CONFIG.bossNames.length;
-    return ENEMY_CONFIG.bossNames[idx];
+    // Filter bosses available at this stage
+    const available = ENEMY_CONFIG.bosses.filter(
+      b => stage >= b.minStage && stage <= b.maxStage
+    );
+    if (available.length === 0) return ENEMY_CONFIG.bosses[0].name;
+    // Use seeded random for consistency
+    const seed = (stage * 1000 + phase) % available.length;
+    return available[seed].name;
   }
   
-  const tier = getEnemyTier(stage);
-  const names = ENEMY_CONFIG.enemyNamesByTier[tier] ?? ENEMY_CONFIG.enemyNamesByTier[0];
-  // Use a seeded random based on stage + phase for consistency
-  const seed = (stage * 1000 + phase) % names.length;
-  return names[seed];
+  // Filter monsters available at this stage
+  const available = ENEMY_CONFIG.monsters.filter(
+    m => stage >= m.minStage && stage <= m.maxStage
+  );
+  if (available.length === 0) return ENEMY_CONFIG.monsters[0].name;
+  // Use seeded random for consistency
+  const seed = (stage * 1000 + phase) % available.length;
+  return available[seed].name;
 }
 
 /**
- * Get a random elite enemy name from the elite pool.
+ * Get a random elite enemy name from those available at the current stage.
  */
-function getEliteName(): string {
-  const names = ENEMY_CONFIG.eliteNames;
-  const idx = Math.floor(Math.random() * names.length);
-  return names[idx];
+function getEliteName(stage: number): string {
+  const available = ENEMY_CONFIG.elites.filter(
+    e => stage >= e.minStage && stage <= e.maxStage
+  );
+  if (available.length === 0) return ENEMY_CONFIG.elites[0].name;
+  const idx = Math.floor(Math.random() * available.length);
+  return available[idx].name;
 }
 
 /**
@@ -92,11 +96,11 @@ export function spawnEnemy(stage: number, phase: number): Enemy {
 
   return {
     id: `enemy_${stage}_${phase}_${Date.now()}`,
-    name: isElite ? getEliteName() : getEnemyName(stage, phase, isBoss),
+    name: isElite ? getEliteName(stage) : getEnemyName(stage, phase, isBoss),
     hp: baseHp,
     maxHp: baseHp,
     isBoss,
-    tier: getEnemyTier(stage),
+    tier: 1, // Tiers removed - all enemies are equal tier
     enemyType: isBoss ? 'boss' : isElite ? 'elite' : 'normal',
     bossPhase: 'none',
     isElite,
