@@ -6,7 +6,7 @@
 Create a pixel art ENEMY MONSTER sprite for a cyberpunk idle RPG called "OVERCLOCK".
 
 Enemy name: [ENEMY_NAME]
-Sprite Tier: [1-6]
+Sprite Tier: [1-5]
 
 === STYLE RULES (ALL TIERS) ===
 - HIGH QUALITY pixel art - crisp, detailed, professional grade
@@ -101,17 +101,3 @@ Sprite Tier: [1-6]
 - COMPLEXITY: Maximum detail, 6+ colors, multiple layers
 - GLOW: Blinding intensity, reality tearing, corruption spreading from body
 - EXPRESSION: Beyond mortal concern, absolute
-
----
-
-### TIER 6
-
-- Theme: Apocalyptic entities, universe-ending threats, malware given godlike form
-- Vibe: End of all things, beyond fear into awe, digital heat death
-- Personality: Beyond emotion - they ARE entropy, they ARE the end
-- Threat Level: Endgame - the final challenge, overwhelming power
-- SIZE: MASSIVE (85-95% of canvas)
-- COMPLEXITY: Full detail overload, full color palette
-- GLOW: Reality itself corrupting around them, edges bleed
-- EXPRESSION: Inevitable destruction incarnate
-- BACKGROUND: TRANSPARENT (NO background color - PNG with alpha channel)
