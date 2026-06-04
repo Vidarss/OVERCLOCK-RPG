@@ -112,5 +112,6 @@ Sprite Tier: [1-6]
 - Threat Level: Endgame - the final challenge, overwhelming power
 - SIZE: MASSIVE (85-95% of canvas)
 - COMPLEXITY: Full detail overload, full color palette
-- GLOW: Reality itself corrupting around them, background distorts, edges bleed
+- GLOW: Reality itself corrupting around them, edges bleed
 - EXPRESSION: Inevitable destruction incarnate
+- BACKGROUND: TRANSPARENT (NO background color - PNG with alpha channel)
