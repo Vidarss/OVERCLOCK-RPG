@@ -64,7 +64,6 @@ enemyPlugin.spawnNext();
 **Exported Functions:**
 - `getEnemyHp(stage)` - Calculate enemy HP for stage
 - `getBossHp(stage)` - Calculate boss HP for stage
-- `getEnemyTier(stage)` - Get enemy tier (0-9) for stage
 - `spawnEnemy(stage)` - Create enemy object
 
 **Events Emitted:**
@@ -79,8 +78,9 @@ enemyPlugin.spawnNext();
 - `bossEveryNStages` - Boss frequency (every 10)
 - `bossTimeoutSeconds` - Boss timer
 - `eliteChance` / `eliteHpMultiplier` / `eliteMinStage` - Elite enemies
-- `enemyNamesByTier` - 2D array of enemy names per tier
-- `bossNames` - Boss name pool
+- `monsters` - Array of {name, minStage, maxStage} for regular enemies
+- `elites` - Array of {name, minStage, maxStage} for elite enemies
+- `bosses` - Array of {name, minStage, maxStage} for boss enemies
 
 ---
 

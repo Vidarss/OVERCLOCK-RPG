@@ -33,7 +33,7 @@ export interface SpriteTierDef {
 }
 
 export interface MonsterSpriteDef {
-  /** Monster name (must match ENEMY_CONFIG.enemyNamesByTier entries) */
+  /** Monster name (must match ENEMY_CONFIG.monsters, .elites, or .bosses entries) */
   name: string;
   /** Available sprite tiers for this monster (sorted by tier) */
   tiers: SpriteTierDef[];
@@ -49,64 +49,34 @@ export interface MonsterSpriteDef {
 
 export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
+  // MONSTERS - Regular enemies (stages 1-150)
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'MALWARE_BAT', tiers: [{ tier: 1, src: '/assets/enemies/malware_bat.png', scale: 1.0 }] },
-  { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: '/assets/enemies/corrupt_proc.png', scale: 1.0 }] },
-  { name: 'NULL_PTR', tiers: [{ tier: 1, src: '/assets/enemies/null_ptr.png', scale: 1.0 }] },
-  { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: '/assets/enemies/stack_overflow.png', scale: 1.0 }] },
-  { name: 'SPAM_BOT', tiers: [{ tier: 1, src: '/assets/enemies/spam_bot.png', scale: 1.0 }] },
+  { name: 'NULL_PROCESS_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/monsters/null_process_entity.png', scale: 1.0 }] },
+  { name: 'CACHE_BREAKER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/cache_breaker.png', scale: 1.0 }] },
+  { name: 'ADWARE_GLITCHLING', tiers: [{ tier: 1, src: '/assets/enemies/monsters/adware_glitchling.png', scale: 1.0 }] },
+  { name: 'FIREWALL_ORPHAN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/firewall_orphan.png', scale: 1.0 }] },
+  { name: 'OVERCLOCK_ERROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/overclock_error.png', scale: 1.0 }] },
+  { name: 'KERNEL_LEAK_SPAWN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/kernel_leak_spawn.png', scale: 1.0 }] },
+  { name: 'AUTOUPDATE_HORROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/autoupdate_horror.png', scale: 1.0 }] },
+  { name: 'DEBUG_SPECTER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/debug_specter.png', scale: 1.0 }] },
+  { name: 'SYSTEM_POPUP_PREDATOR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/system_popup_predator.png', scale: 1.0 }] },
+  { name: 'SYNC_FAILURE_CORE', tiers: [{ tier: 1, src: '/assets/enemies/monsters/sync_failure_core.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 5 enemies
+  // ELITES - Stronger enemies with unique sprites
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VIRUS_V2', tiers: [{ tier: 1, src: '/assets/enemies/virus_v2.png', scale: 1.0 }] },
-  { name: 'RANSOMWARE', tiers: [{ tier: 1, src: '/assets/enemies/ransomware.png', scale: 1.0 }] },
-  { name: 'ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/rootkit.png', scale: 1.0 }] },
-  { name: 'KEYLOGGER', tiers: [{ tier: 1, src: '/assets/enemies/keylogger.png', scale: 1.0 }] },
-  { name: 'TROJAN_HORSE', tiers: [{ tier: 1, src: '/assets/enemies/trojan_horse.png', scale: 1.0 }] },
+  { name: 'RECURSIVE_UPGRADE_MISTAKE', tiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }] },
+  { name: 'UNAUTHORIZED_PROCESS_AGENT', tiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }] },
+  { name: 'MEMORY_DRIFT_ENFORCER', tiers: [{ tier: 1, src: '/assets/enemies/elites/memory_drift_enforcer.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/memory_drift_enforcer.png', scale: 1.1 }] },
+  { name: 'PATCH_NOTES_ABERRATION', tiers: [{ tier: 1, src: '/assets/enemies/elites/patch_notes_aberration.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/patch_notes_aberration.png', scale: 1.1 }] },
+  { name: 'SYNTHETIC_FAILURE_UNIT', tiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 5 enemies
+  // BOSSES - Phase 10 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'BOTNET_NODE', tiers: [{ tier: 1, src: '/assets/enemies/botnet_node.png', scale: 1.0 }] },
-  { name: 'CRYPTOMINER', tiers: [{ tier: 1, src: '/assets/enemies/cryptominer.png', scale: 1.0 }] },
-  { name: 'SQL_INJECT', tiers: [{ tier: 1, src: '/assets/enemies/sql_inject.png', scale: 1.0 }] },
-  { name: 'XSS_WORM', tiers: [{ tier: 1, src: '/assets/enemies/xss_worm.png', scale: 1.0 }] },
-  { name: 'DNS_POISON', tiers: [{ tier: 1, src: '/assets/enemies/dns_poison.png', scale: 1.0 }] },
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // TIER 3 ENEMIES (Stages 151-200: CORE) - 5 enemies
-  // ════════════════════════════════════════════════════════════════════════════
-  { name: 'ZERO_DAY', tiers: [{ tier: 1, src: '/assets/enemies/zero_day.png', scale: 1.0 }] },
-  { name: 'APT_GHOST', tiers: [{ tier: 1, src: '/assets/enemies/apt_ghost.png', scale: 1.0 }] },
-  { name: 'KERNEL_PANIC', tiers: [{ tier: 1, src: '/assets/enemies/kernel_panic.png', scale: 1.0 }] },
-  { name: 'BUFFER_DEMON', tiers: [{ tier: 1, src: '/assets/enemies/buffer_demon.png', scale: 1.0 }] },
-  { name: 'MEMORY_LEAK', tiers: [{ tier: 1, src: '/assets/enemies/memory_leak.png', scale: 1.0 }] },
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 5 enemies
-  // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VOID_PROCESS', tiers: [{ tier: 1, src: '/assets/enemies/void_process.png', scale: 1.0 }] },
-  { name: 'NULL_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/null_entity.png', scale: 1.0 }] },
-  { name: 'DARK_THREAD', tiers: [{ tier: 1, src: '/assets/enemies/dark_thread.png', scale: 1.0 }] },
-  { name: 'SHADOW_DAEMON', tiers: [{ tier: 1, src: '/assets/enemies/shadow_daemon.png', scale: 1.0 }] },
-  { name: 'ENTROPY_WORM', tiers: [{ tier: 1, src: '/assets/enemies/entropy_worm.png', scale: 1.0 }] },
-
-  // ════════════════════════════════════════════════════════════════════════════
-  // BOSS SPRITES (10 bosses that cycle through stages)
-  // Ironically hilarious but evil - each has a personality flaw
-  // ════════════════════════════════════════════════════════════════════════════
-  { name: 'THE_FIREWALL', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_firewall.png', scale: 1.2 }] },
-  { name: 'DARK_ANTIVIRUS', tiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_dark_antivirus.png', scale: 1.2 }] },
-  { name: 'CHAOS_KERNEL', tiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_chaos_kernel.png', scale: 1.2 }] },
-  { name: 'OMEGA_ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_omega_rootkit.png', scale: 1.2 }] },
-  { name: 'SYSTEM32_WRAITH', tiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_system32_wraith.png', scale: 1.2 }] },
-  { name: 'BIOS_CORRUPTION', tiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_bios_corruption.png', scale: 1.2 }] },
-  { name: 'QUANTUM_MALWARE', tiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_quantum_malware.png', scale: 1.2 }] },
-  { name: 'THE_NULL_GOD', tiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_the_null_god.png', scale: 1.3 }] },
-  { name: 'PHANTOM_OVERLORD', tiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_phantom_overlord.png', scale: 1.3 }] },
-  { name: 'DEEP_PACKET_KING', tiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss_deep_packet_king.png', scale: 1.3 }] },
+  { name: 'THE_PATCH_THAT_NEVER_FINISHED', tiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }] },
+  { name: 'CORE_SYSTEM_AUTONOMY', tiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }] },
+  { name: 'ADMINISTRATIVE_GOD_PROCESS', tiers: [{ tier: 1, src: '/assets/enemies/bosses/administrative_god_process.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/administrative_god_process.png', scale: 1.3 }] },
 ];
 
 // ── SPRITE LOOKUP FUNCTIONS ──────────────────────────────────────────────────
@@ -262,38 +232,7 @@ export const ZONE_BACKGROUNDS: ZoneBackgroundDef[] = [
     position: 'center',
     overlayOpacity: 0.5,
   },
-  // ── Zone 1: FIREWALL ────────────────────────────────────────────────────────
-  {
-    zoneId: 1,
-    src: '/assets/backgrounds/firewall.png',
-    fit: 'cover',
-    position: 'center',
-    overlayOpacity: 0.5,
-  },
-  // ── Zone 2: KERNEL ──────────────────────────────────────────────────────────
-  {
-    zoneId: 2,
-    src: '/assets/backgrounds/kernel.png',
-    fit: 'cover',
-    position: 'center',
-    overlayOpacity: 0.5,
-  },
-  // ── Zone 3: CORE ────────────────────────────────────────────────────────────
-  {
-    zoneId: 3,
-    src: '/assets/backgrounds/core.png',
-    fit: 'cover',
-    position: 'center',
-    overlayOpacity: 0.5,
-  },
-  // ── Zone 4: THE VOID ────────────────────────────────────────────────────────
-  {
-    zoneId: 4,
-    src: '/assets/backgrounds/void.png',
-    fit: 'cover',
-    position: 'center',
-    overlayOpacity: 0.4,
-  },
+  // Other zones use procedural backgrounds until images are generated
 ];
 
 /**
