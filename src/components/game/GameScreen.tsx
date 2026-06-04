@@ -22,6 +22,7 @@ import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
+import { usePreloadAllSprites } from '../../hooks/useSpritePreloader';
 import { Tooltip, TooltipLabel, TooltipText } from './Tooltip';
 import { MODULES_CONFIG } from '../../config/modules.config';
 import type { OverclockPlugin } from '../../plugins/OverclockPlugin';
@@ -146,6 +147,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
+
+  // Preload all enemy sprites on mount to prevent loading delays
+  usePreloadAllSprites();
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);

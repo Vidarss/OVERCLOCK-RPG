@@ -1,7 +1,8 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import type { Enemy } from '../../engine/types';
 import type { ZoneConfig } from './ZoneScene';
 import { getRandomEnemySprite, type EnemySpriteDef } from '../../config/assets.config';
+import { isSpriteLoaded } from '../../hooks/useSpritePreloader';
 
 interface EnemySpriteProps {
   enemy: Enemy;
@@ -127,6 +128,28 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
     );
   }, [enemy.tier, enemy.isBoss, enemy.isElite, enemy.name, overclockCount]);
 
+  // Track image loading state
+  const [imageLoaded, setImageLoaded] = useState(() => 
+    customSprite ? isSpriteLoaded(customSprite.src) : false
+  );
+
+  // Preload image when sprite changes
+  useEffect(() => {
+    if (!customSprite) return;
+    
+    // Check if already loaded
+    if (isSpriteLoaded(customSprite.src)) {
+      setImageLoaded(true);
+      return;
+    }
+
+    setImageLoaded(false);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => setImageLoaded(true);
+    img.src = customSprite.src;
+  }, [customSprite?.src]);
+
   // If we have a custom sprite, render it as an image
   if (customSprite) {
     const scale = customSprite.scale ?? 1;
@@ -136,7 +159,7 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
     const spriteSize = baseSize * scale;
     
     return (
-      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: spriteSize }}>
         {/* Phase overlay aura */}
         {phaseStyle && (
           <div
@@ -187,6 +210,8 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
               : `drop-shadow(0 0 12px ${colors.glow})`,
             animation: enemy.isBoss && !isHit && !isDying ? 'boss-pulse 2s steps(4) infinite' : undefined,
             transform: `translateY(${offsetY}px)`,
+            opacity: imageLoaded ? 1 : 0,
+            transition: 'opacity 0.15s ease-out',
           }}
         >
           <img
@@ -199,12 +224,37 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
               imageRendering: 'pixelated',
               pointerEvents: 'none',
             }}
+            onLoad={() => setImageLoaded(true)}
             onError={(e) => {
               // Fallback if image fails to load
               e.currentTarget.style.display = 'none';
             }}
           />
         </div>
+
+        {/* Loading placeholder - shows while image loads */}
+        {!imageLoaded && (
+          <div
+            style={{
+              position: 'absolute',
+              width: `${spriteSize}px`,
+              height: `${spriteSize}px`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <div
+              style={{
+                width: `${spriteSize * 0.4}px`,
+                height: `${spriteSize * 0.4}px`,
+                background: `radial-gradient(circle, ${colors.glow} 0%, transparent 70%)`,
+                borderRadius: '50%',
+                animation: 'pulse 0.8s ease-in-out infinite',
+              }}
+            />
+          </div>
+        )}
       </div>
     );
   }
