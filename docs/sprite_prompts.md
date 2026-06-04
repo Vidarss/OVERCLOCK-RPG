@@ -9,16 +9,27 @@ Enemy name: [ENEMY_NAME]
 Sprite Tier: [1-6]
 
 === STYLE RULES (ALL TIERS) ===
-- 32-bit retro pixel art, clean edges, NO anti-aliasing
+- HIGH QUALITY pixel art - crisp, detailed, professional grade
+- MINIMUM 64x64 pixel detail level (no blurry/muddy sprites)
+- 32-bit retro pixel art style, clean edges, NO anti-aliasing, NO blur
 - IMAGE SIZE: 512x512 pixels (ALWAYS - no exceptions)
 - SPRITE SIZE: Monster centered, occupying tier-defined % of canvas
 - Background: SOLID SINGLE COLOR (dark purple #1a0a2e or dark blue #0a0a2e)
+- NO compression artifacts, NO noise, NO grain
 - NO text, numbers, or symbols ON sprite body
 - NO UI elements, health bars, labels, watermarks
-- PURE CHARACTER ONLY - centered in frame
+- PURE CHARACTER ONLY - centered in frame, sharp outlines
 - MUST look like an ENEMY/THREAT/MONSTER - aggressive stance, hostile expression
 - NEVER cute, friendly, or sympathetic - these are hostile entities to be destroyed
 - Sharp edges, menacing features, combat-ready posture
+- Each pixel must be intentional - no random noise or artifacts
+
+=== QUALITY REQUIREMENTS ===
+- Crisp pixel edges - every pixel clearly defined
+- Consistent pixel size throughout the sprite
+- Clean color separation - no muddy blending
+- Readable silhouette at any zoom level
+- Professional pixel art quality - arcade/console game standard
 
 === TIER-SPECIFIC RULES ===
 [Apply the tier characteristics below - SIZE refers to monster size within the 512x512 canvas]
