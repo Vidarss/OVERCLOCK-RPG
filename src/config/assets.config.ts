@@ -257,21 +257,43 @@ export const ZONE_BACKGROUNDS: ZoneBackgroundDef[] = [
   // ── Zone 0: PERIMETER ───────────────────────────────────────────────────────
   {
     zoneId: 0,
-    src: '/assets/backgrounds/zone-0.png',
+    src: '/assets/backgrounds/perimeter.png',
     fit: 'cover',
     position: 'center',
-    overlayOpacity: 0.6,
+    overlayOpacity: 0.5,
   },
   // ── Zone 1: FIREWALL ────────────────────────────────────────────────────────
-  // {
-  //   zoneId: 1,
-  //   src: '/assets/backgrounds/zone-1.png',
-  //   fit: 'cover',
-  //   position: 'center',
-  //   overlayOpacity: 0.65,
-  // },
+  {
+    zoneId: 1,
+    src: '/assets/backgrounds/firewall.png',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.5,
+  },
   // ── Zone 2: KERNEL ──────────────────────────────────────────────────────────
-  // Add more zone backgrounds here...
+  {
+    zoneId: 2,
+    src: '/assets/backgrounds/kernel.png',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.5,
+  },
+  // ── Zone 3: CORE ────────────────────────────────────────────────────────────
+  {
+    zoneId: 3,
+    src: '/assets/backgrounds/core.png',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.5,
+  },
+  // ── Zone 4: THE VOID ────────────────────────────────────────────────────────
+  {
+    zoneId: 4,
+    src: '/assets/backgrounds/void.png',
+    fit: 'cover',
+    position: 'center',
+    overlayOpacity: 0.4,
+  },
 ];
 
 /**
