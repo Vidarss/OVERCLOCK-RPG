@@ -19,6 +19,7 @@ interface SkillTreeScreenProps {
 export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
   const skillPoints = useGameState(engine, s => s.skillPoints ?? 0);
   const skillTreeNodes = useGameState(engine, s => s.skillTreeNodes ?? {});
+  const highestStage = useGameState(engine, s => s.highestStage ?? 1);
   const [selectedNode, setSelectedNode] = useState<SkillTreeNode | null>(null);
   const [showInfo, setShowInfo] = useState(false);
 
@@ -532,7 +533,7 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
           Earn Skill Points by reaching stage milestones. Next milestone at stage {
             (() => {
               const milestones = [50, 100, 150, 200, 250, 500, 750, 1000];
-              const next = milestones.find(m => m > state.highestStage);
+              const next = milestones.find(m => m > highestStage);
               return next ?? 'MAX';
             })()
           }
