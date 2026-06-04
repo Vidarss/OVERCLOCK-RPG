@@ -56,9 +56,22 @@ async function processImage(filePath) {
 }
 
 async function main() {
-  const files = fs.readdirSync(ENEMIES_DIR)
-    .filter(f => f.endsWith('.png'))
-    .map(f => path.join(ENEMIES_DIR, f));
+  // Get files from main directory and all subdirectories
+  const getAllPngFiles = (dir) => {
+    let files = [];
+    const items = fs.readdirSync(dir, { withFileTypes: true });
+    for (const item of items) {
+      const fullPath = path.join(dir, item.name);
+      if (item.isDirectory()) {
+        files = files.concat(getAllPngFiles(fullPath));
+      } else if (item.name.endsWith('.png')) {
+        files.push(fullPath);
+      }
+    }
+    return files;
+  };
+
+  const files = getAllPngFiles(ENEMIES_DIR);
   
   console.log(`Found ${files.length} images to process`);
   
