@@ -51,47 +51,47 @@ export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'MALWARE_BAT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 }] },
-  { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 }] },
-  { name: 'NULL_PTR', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 }] },
-  { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 }] },
-  { name: 'SPAM_BOT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/spam%20bot-kUHqrduhRo2ZlQSIg9Tqz7yqJ9ZLQq.png', scale: 1.3 }] },
+  { name: 'MALWARE_BAT', tiers: [{ tier: 1, src: '/assets/enemies/malware_bat.png', scale: 1.0 }] },
+  { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: '/assets/enemies/corrupt_proc.png', scale: 1.0 }] },
+  { name: 'NULL_PTR', tiers: [{ tier: 1, src: '/assets/enemies/null_ptr.png', scale: 1.0 }] },
+  { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: '/assets/enemies/stack_overflow.png', scale: 1.0 }] },
+  { name: 'SPAM_BOT', tiers: [{ tier: 1, src: '/assets/enemies/spam_bot.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 1 ENEMIES (Stages 51-100: FIREWALL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VIRUS_V2', tiers: [] },
-  { name: 'RANSOMWARE', tiers: [] },
-  { name: 'ROOTKIT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/rootkit.png-kgLkahgVM9h4CKjghfwyx5DcEz7bwW.jpeg', scale: 1.5 }] },
-  { name: 'KEYLOGGER', tiers: [] },
-  { name: 'TROJAN_HORSE', tiers: [] },
+  { name: 'VIRUS_V2', tiers: [{ tier: 1, src: '/assets/enemies/virus_v2.png', scale: 1.0 }] },
+  { name: 'RANSOMWARE', tiers: [{ tier: 1, src: '/assets/enemies/ransomware.png', scale: 1.0 }] },
+  { name: 'ROOTKIT', tiers: [{ tier: 1, src: '/assets/enemies/rootkit.png', scale: 1.0 }] },
+  { name: 'KEYLOGGER', tiers: [{ tier: 1, src: '/assets/enemies/keylogger.png', scale: 1.0 }] },
+  { name: 'TROJAN_HORSE', tiers: [{ tier: 1, src: '/assets/enemies/trojan_horse.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 2 ENEMIES (Stages 101-150: KERNEL) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'BOTNET_NODE', tiers: [] },
-  { name: 'CRYPTOMINER', tiers: [] },
-  { name: 'SQL_INJECT', tiers: [] },
-  { name: 'XSS_WORM', tiers: [] },
-  { name: 'DNS_POISON', tiers: [] },
+  { name: 'BOTNET_NODE', tiers: [{ tier: 1, src: '/assets/enemies/botnet_node.png', scale: 1.0 }] },
+  { name: 'CRYPTOMINER', tiers: [{ tier: 1, src: '/assets/enemies/cryptominer.png', scale: 1.0 }] },
+  { name: 'SQL_INJECT', tiers: [{ tier: 1, src: '/assets/enemies/sql_inject.png', scale: 1.0 }] },
+  { name: 'XSS_WORM', tiers: [{ tier: 1, src: '/assets/enemies/xss_worm.png', scale: 1.0 }] },
+  { name: 'DNS_POISON', tiers: [{ tier: 1, src: '/assets/enemies/dns_poison.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 3 ENEMIES (Stages 151-200: CORE) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'ZERO_DAY', tiers: [] },
-  { name: 'APT_GHOST', tiers: [] },
-  { name: 'KERNEL_PANIC', tiers: [] },
-  { name: 'BUFFER_DEMON', tiers: [] },
-  { name: 'MEMORY_LEAK', tiers: [] },
+  { name: 'ZERO_DAY', tiers: [{ tier: 1, src: '/assets/enemies/zero_day.png', scale: 1.0 }] },
+  { name: 'APT_GHOST', tiers: [{ tier: 1, src: '/assets/enemies/apt_ghost.png', scale: 1.0 }] },
+  { name: 'KERNEL_PANIC', tiers: [{ tier: 1, src: '/assets/enemies/kernel_panic.png', scale: 1.0 }] },
+  { name: 'BUFFER_DEMON', tiers: [{ tier: 1, src: '/assets/enemies/buffer_demon.png', scale: 1.0 }] },
+  { name: 'MEMORY_LEAK', tiers: [{ tier: 1, src: '/assets/enemies/memory_leak.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 4 ENEMIES (Stages 201-250: THE VOID) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'VOID_PROCESS', tiers: [] },
-  { name: 'NULL_ENTITY', tiers: [] },
-  { name: 'DARK_THREAD', tiers: [] },
-  { name: 'SHADOW_DAEMON', tiers: [] },
-  { name: 'ENTROPY_WORM', tiers: [] },
+  { name: 'VOID_PROCESS', tiers: [{ tier: 1, src: '/assets/enemies/void_process.png', scale: 1.0 }] },
+  { name: 'NULL_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/null_entity.png', scale: 1.0 }] },
+  { name: 'DARK_THREAD', tiers: [{ tier: 1, src: '/assets/enemies/dark_thread.png', scale: 1.0 }] },
+  { name: 'SHADOW_DAEMON', tiers: [{ tier: 1, src: '/assets/enemies/shadow_daemon.png', scale: 1.0 }] },
+  { name: 'ENTROPY_WORM', tiers: [{ tier: 1, src: '/assets/enemies/entropy_worm.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
   // BOSS SPRITES (10 bosses that cycle through stages)
