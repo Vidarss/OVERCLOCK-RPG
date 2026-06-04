@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle } from 'lucide-react';
+import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -20,6 +20,7 @@ import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
+import { RelicsScreen } from './RelicsScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { usePreloadAllSprites } from '../../hooks/useSpritePreloader';
@@ -146,6 +147,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showClan, setShowClan] = useState(false);
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
+  const [showRelics, setShowRelics] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   // Preload all enemy sprites on mount to prevent loading delays
@@ -189,6 +191,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
+      {showRelics && <RelicsScreen engine={engine} onClose={() => setShowRelics(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
     </>
@@ -495,6 +498,25 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
                   {availableOCT} OCT FREE
                 </div>
               )}
+            </button>
+          </Tooltip>
+
+          {/* Relics */}
+          <Tooltip content={<><TooltipLabel label="RELICS" color="#00f5ff" /><TooltipText>Unlock permanent bonuses with OC Points.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowRelics(true)}
+              style={{
+                width: '100%', background: availableOCT > 0 ? '#001018' : '#080808',
+                border: `1px solid ${availableOCT > 0 ? '#00f5ff44' : '#1a1a2a'}`,
+                color: availableOCT > 0 ? '#00f5ff' : '#2a2a3a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                boxShadow: availableOCT > 0 ? '0 0 10px rgba(0,245,255,0.12)' : 'none', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00f5ff'; e.currentTarget.style.color = '#00f5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,245,255,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = availableOCT > 0 ? '#00f5ff44' : '#1a1a2a'; e.currentTarget.style.color = availableOCT > 0 ? '#00f5ff' : '#2a2a3a'; e.currentTarget.style.boxShadow = availableOCT > 0 ? '0 0 10px rgba(0,245,255,0.12)' : 'none'; }}
+            >
+              <Sparkles size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>RELICS</div>
             </button>
           </Tooltip>
 

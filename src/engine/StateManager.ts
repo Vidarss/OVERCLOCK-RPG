@@ -44,6 +44,9 @@ export const DEFAULT_STATE: GameState = {
   scrap: 0,
   heroUpgrades: {},
   skillUpgrades: {} as Record<SkillId, number>,
+  unlockedRelics: [],
+  equippedRelics: [],
+  lifetimeGold: 0,
   lastSaveTime: 0, // Will be set on actual save, not on startup
   lastTickTime: 0, // Will be set on first engine tick
   schemaVersion: 1,

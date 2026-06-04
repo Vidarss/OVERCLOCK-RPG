@@ -218,6 +218,10 @@ export interface GameState {
   heroUpgrades: Record<string, number>;
   // Skill level upgrades
   skillUpgrades: Record<SkillId, number>;
+  // Relics system
+  unlockedRelics: string[];
+  equippedRelics: string[];
+  lifetimeGold: number;
   lastSaveTime: number;
   lastTickTime: number;
   schemaVersion: number;
