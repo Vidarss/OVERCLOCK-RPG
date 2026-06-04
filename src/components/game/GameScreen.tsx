@@ -528,14 +528,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             <button
               onClick={() => setShowSkillTree(true)}
               style={{
-                width: '100%', background: (state.skillPoints ?? 0) > 0 ? '#001810' : '#080808',
-                border: `1px solid ${(state.skillPoints ?? 0) > 0 ? '#00ff8844' : '#1a1a2a'}`,
-                color: (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#2a2a3a', padding: '12px 10px',
+                width: '100%', background: (state.skillPoints ?? 0) > 0 ? '#001810' : '#080810',
+                border: `1px solid ${(state.skillPoints ?? 0) > 0 ? '#00ff8866' : '#0a2a1a'}`,
+                color: (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#1a5a3a', padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                boxShadow: (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.12)' : 'none', transition: 'all 0.15s',
+                boxShadow: (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none', transition: 'all 0.15s',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#00ff88'; e.currentTarget.style.color = '#00ff88'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,255,136,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = (state.skillPoints ?? 0) > 0 ? '#00ff8844' : '#1a1a2a'; e.currentTarget.style.color = (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#2a2a3a'; e.currentTarget.style.boxShadow = (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.12)' : 'none'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = (state.skillPoints ?? 0) > 0 ? '#00ff8866' : '#0a2a1a'; e.currentTarget.style.color = (state.skillPoints ?? 0) > 0 ? '#00ff88' : '#1a5a3a'; e.currentTarget.style.boxShadow = (state.skillPoints ?? 0) > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none'; }}
             >
               <TrendingUp size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SKILLS</div>
