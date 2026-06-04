@@ -166,7 +166,7 @@ export interface SkillTreeNode {
 
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ════════════════════════════════════════════════════════��══════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
@@ -204,20 +204,26 @@ export const SKILL_TREE_CONFIG = {
 } as const;
 
 // ── TAP ──────────────────────────────────────────────────────────────────────
+//
+// GOD FORMULA TAP BALANCE:
+// - Base tap damage is low, requiring upgrades
+// - Crits reward skilled play but don't break the game
+// - Combo system rewards active engagement
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const TAP_CONFIG = {
   /** Raw tap damage before any modifiers. */
   baseDamage: 1,
   /** Base crit chance (0–1). Additive with modifier stack. */
-  baseCritChance: 0.1,
+  baseCritChance: 0.05,
   /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
   baseCritMultiplier: 1.5,
   /** Window (ms) within which rapid taps build a combo. */
-  comboWindowMs: 800,
+  comboWindowMs: 600,
   /** Number of taps within the window required to activate combo bonus. */
-  comboThreshold: 5,
+  comboThreshold: 4,
   /** Damage multiplier applied when the combo threshold is met. */
-  comboMultiplier: 2,
+  comboMultiplier: 1.5,
 } as const;
 
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
@@ -264,21 +270,19 @@ export interface HeroUpgradeDef {
 export const HERO_CONFIG = {
   /** 
    * Hero upgrade definitions
-   * Cost formula: baseCost * (costMultiplier ^ currentLevel)
-   * 
-   * BALANCE: Tap upgrades are the main early-game progression.
-   * Late-game requires OV perks and skills for meaningful damage.
+   * GOD FORMULA: Upgrades are essential but have diminishing returns.
+   * Cost curve ensures players must diversify (skills, relics, hardware).
    */
   upgrades: [
     {
       id: 'hero_tap_power',
       name: 'TAP POWER',
       description: 'Increase base tap damage',
-      baseCost: 20,
-      costMultiplier: 1.22,        // Steeper curve to limit late-game tap power
-      maxLevel: 300,               // Capped - OV perks take over late game
+      baseCost: 15,
+      costMultiplier: 1.18,        // Moderate curve - core progression
+      maxLevel: 200,               // Soft cap - relics/skills needed beyond
       modifierType: 'tap_damage',
-      valuePerLevel: 1,            // +1 tap damage per level
+      valuePerLevel: 1.2,          // +1.2 tap damage per level
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
@@ -287,9 +291,9 @@ export const HERO_CONFIG = {
       id: 'hero_crit_chance',
       name: 'CRIT CHANCE',
       description: 'Increase critical hit chance',
-      baseCost: 800,
-      costMultiplier: 1.30,        // Steeper curve
-      maxLevel: 15,                // Caps at +15% crit chance (25% total)
+      baseCost: 500,
+      costMultiplier: 1.35,        // Steep - crits are powerful
+      maxLevel: 20,                // Caps at +20% crit chance (25% total)
       modifierType: 'crit_chance',
       valuePerLevel: 0.01,         // +1% crit chance per level
       isMultiplier: false,
@@ -300,9 +304,9 @@ export const HERO_CONFIG = {
       id: 'hero_crit_damage',
       name: 'CRIT DAMAGE',
       description: 'Increase critical damage multiplier',
-      baseCost: 1500,
-      costMultiplier: 1.35,        // Steeper curve
-      maxLevel: 15,                // Caps at +0.75x crit damage (2.25x total)
+      baseCost: 1000,
+      costMultiplier: 1.40,        // Steeper - multipliers stack
+      maxLevel: 20,                // Caps at +1.0x crit damage (2.5x total)
       modifierType: 'crit_multiplier',
       valuePerLevel: 0.05,         // +5% crit damage per level
       isMultiplier: false,
@@ -451,6 +455,13 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 }
 
 // ── ENEMY ─────────────────────────────────────────────────────────────────────
+//
+// GOD FORMULA BALANCE: Make progression feel rewarding but challenging.
+// - Early game (1-50): Easy, learn mechanics, build confidence
+// - Mid game (51-100): Requires upgrades, skill usage, strategy
+// - Late game (100+): Hard wall, requires relics and skill tree
+// - Prestige (150+): Soft cap, time to prestige for OC Points
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const ENEMY_CONFIG = {
   /** Number of phases (enemies) per stage. Boss spawns at the last phase. */
@@ -458,34 +469,72 @@ export const ENEMY_CONFIG = {
   /** Seconds before a boss times out and the player is sent back. */
   bossTimeoutSeconds: 30,
   /** Minimum stage before elite enemies can appear. */
-  eliteMinStage: 3,
+  eliteMinStage: 5,
   /** Probability (0–1) that a non-boss enemy is elite. */
-  eliteChance: 0.15,
+  eliteChance: 0.12,
   /** HP multiplier for elite enemies. */
-  eliteHpMultiplier: 3,
+  eliteHpMultiplier: 4,
   /** Gold multiplier for elite kills. */
-  eliteGoldMultiplier: 3,
-  /** Gold multiplier for boss kills. */
-  bossGoldMultiplier: 5,
+  eliteGoldMultiplier: 2.5,
+  /** Boss gold multiplier. */
+  bossGoldMultiplier: 4,
   /** Gold multiplier for normal enemy kills. */
   normalGoldMultiplier: 1,
   /** Boss phase triggers when HP drops below this fraction of max. */
   bossPhaseThreshold: 0.5,
   /** Damage multiplier when boss is in shield phase. */
-  bossShieldDamageMultiplier: 0.3,
+  bossShieldDamageMultiplier: 0.25,
   /** Fraction of max HP regenerated per second in regen phase. */
-  bossRegenRatePerSecond: 0.02,
+  bossRegenRatePerSecond: 0.03,
 
-  // HP scaling formula (see EnemyPlugin.ts for implementation):
-  //   stage ≤ 500 : base * (1 + (stage - 1) * linearGrowth) * scalingExponentEarly ^ ((stage - 1) / 50)
-  //   stage > 500 : hp500 * scalingExponentLate ^ ((stage - 500) / 10)
-  // This creates a smooth curve up to 500, then steep exponential requiring skills/combos
-  normalHpBase: 8,
-  bossHpBase: 50,
-  linearGrowth: 0.35,              // Linear growth factor per stage (higher = tankier enemies)
-  scalingExponentEarly: 1.12,      // Exponential every 50 stages (stages 1-500)
-  scalingExponentLate: 1.18,       // Steep exponential every 10 stages (stages 500+)
-  hardModeStage: 500,              // Stage where difficulty ramps up significantly
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GOD FORMULA - Enemy HP Scaling
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Phase 1 (Stages 1-50): Gentle introduction
+  //   HP = base * (1 + stage * 0.4) * 1.08^(stage/10)
+  //   Stage 1: ~8 HP, Stage 50: ~400 HP
+  //
+  // Phase 2 (Stages 51-100): Requires investment
+  //   HP = hp50 * 1.12^((stage-50)/8)
+  //   Stage 100: ~8,000 HP
+  //
+  // Phase 3 (Stages 101-150): Hard mode, need combos/skills
+  //   HP = hp100 * 1.15^((stage-100)/5)
+  //   Stage 150: ~200,000 HP
+  //
+  // Phase 4 (Stages 150+): Prestige territory
+  //   HP = hp150 * 1.20^((stage-150)/3)
+  //   Exponential growth - signals time to prestige
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  normalHpBase: 10,
+  bossHpBase: 80,
+  
+  // Phase 1: Stages 1-50 (gentle)
+  phase1LinearGrowth: 0.4,
+  phase1Exponent: 1.08,
+  phase1ExponentInterval: 10,
+  phase1MaxStage: 50,
+  
+  // Phase 2: Stages 51-100 (medium)
+  phase2Exponent: 1.12,
+  phase2ExponentInterval: 8,
+  phase2MaxStage: 100,
+  
+  // Phase 3: Stages 101-150 (hard)
+  phase3Exponent: 1.15,
+  phase3ExponentInterval: 5,
+  phase3MaxStage: 150,
+  
+  // Phase 4: Stages 150+ (prestige)
+  phase4Exponent: 1.20,
+  phase4ExponentInterval: 3,
+
+  // Legacy (deprecated - kept for compatibility)
+  linearGrowth: 0.4,
+  scalingExponentEarly: 1.12,
+  scalingExponentLate: 1.18,
+  hardModeStage: 500,
 
   /** 
    * Monster definitions with stage ranges.
@@ -548,28 +597,35 @@ export interface OverclockPerkDef {
 }
 
 export const OVERCLOCK_CONFIG = {
-  /** Minimum highestStage required before the player can overclock. */
-  minStageToOverclock: 500,
-  /** Number of stages required to earn 1 base OCT. Higher = harder to get points. */
-  stagesPerOCT: 500,
-  /** Number of overclock runs per tier progression. */
-  runsPerTier: 3,
+  /** 
+   * PRESTIGE SYSTEM (Relics)
+   * GOD FORMULA: Prestige at stage 100+ for OC Points to spend on Relics.
+   * Early prestige (100-150) = small gains, teaches the loop
+   * Optimal prestige (150+) = meaningful gains
+   */
+  
+  /** Minimum highestStage required before the player can prestige. */
+  minStageToOverclock: 100,
+  /** Number of stages required to earn 1 base OCP. */
+  stagesPerOCT: 50,
+  /** Number of prestige runs per tier progression. */
+  runsPerTier: 2,
   /** Maximum achievable tier. */
-  maxTier: 14,
-  /** OCT multiplier increase per tier (tier * this value added to base 1.0). */
-  tierMultiplierPerTier: 0.25,
+  maxTier: 10,
+  /** OCP multiplier increase per tier (tier * this value added to base 1.0). */
+  tierMultiplierPerTier: 0.20,
 
-  /** Milestone stage → bonus OCTs awarded on reaching that stage. */
+  /** Milestone stage → bonus OCPs awarded on reaching that stage. */
   milestones: [
-    { stage: 1000,   bonus: 1   },
-    { stage: 5000,   bonus: 2   },
-    { stage: 10000,  bonus: 3   },
-    { stage: 25000,  bonus: 5   },
-    { stage: 50000,  bonus: 10  },
-    { stage: 100000, bonus: 20  },
-    { stage: 250000, bonus: 50  },
-    { stage: 500000, bonus: 100 },
-    { stage: 999999, bonus: 500 },
+    { stage: 100,  bonus: 1  },
+    { stage: 125,  bonus: 2  },
+    { stage: 150,  bonus: 3  },
+    { stage: 175,  bonus: 5  },
+    { stage: 200,  bonus: 8  },
+    { stage: 250,  bonus: 15 },
+    { stage: 300,  bonus: 25 },
+    { stage: 400,  bonus: 50 },
+    { stage: 500,  bonus: 100 },
   ] as { stage: number; bonus: number }[],
 
   /** Display name for each tier (index = tier number). */
@@ -584,11 +640,7 @@ export const OVERCLOCK_CONFIG = {
     'DARK SILICON',    // 7
     'PHANTOM LOOP',    // 8
     'THE SINGULARITY', // 9
-    'GHOST STATE',     // 10
-    'DARK KERNEL',     // 11
-    'SYSTEM FRACTURE', // 12
-    'VOID ARCHITECT',  // 13
-    'THE ABSOLUTE',    // 14
+    'THE ABSOLUTE',    // 10
   ] as string[],
 
   branchColors: {
@@ -990,7 +1042,7 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ──────────────────────────────────────────��────────────��────────
+  // ── Basic ──────────────────────────────────────────��────────────��──────���─
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
   { type: 'use_skills',      label: 'Use skills {n} times',            targetFn: () => 5,                      rewardFn: s => 40  + s * 10  },
@@ -1267,7 +1319,7 @@ export const SET_CATALOG: SetDef[] = [
       { name: 'NEXUS_SYNAPSE',slot: 'GPU', flavorText: 'Renders destruction in parallel threads of neural fire.',               stats: [{ type: 'idle_dps', value: 2.0, isMultiplier: true }, { type: 'crit_multiplier', value: 1.6,  isMultiplier: true  }] },
     ],
   },
-  // ── GHOST PROTOCOL (Tap + Crit Focus) ────────��─────────────────────────────
+  // ── GHOST PROTOCOL (Tap + Crit Focus) ────────��───────────────────────��─────
   {
     id: 'ghost_protocol',
     name: 'GHOST PROTOCOL',

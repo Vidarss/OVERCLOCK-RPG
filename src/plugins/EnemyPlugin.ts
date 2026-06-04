@@ -3,46 +3,100 @@ import type { SkillPlugin } from './SkillPlugin';
 import { ENEMY_CONFIG } from '../config/game.config';
 
 /**
- * Calculate enemy HP based on stage progression.
- * Stages 1-500: Smooth scaling with linear growth + exponential every 50 stages.
- * Stages 500+: Steep exponential scaling requiring skills/combos.
+ * GOD FORMULA - Calculate enemy HP based on stage progression.
+ * 
+ * Phase 1 (1-50): Gentle introduction, learn mechanics
+ * Phase 2 (51-100): Requires upgrades and strategy  
+ * Phase 3 (101-150): Hard mode, need skills/combos
+ * Phase 4 (150+): Prestige territory, exponential wall
  */
 export function getEnemyHp(stage: number, phase: number): number {
-  const { normalHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage, phasesPerStage } = ENEMY_CONFIG;
+  const cfg = ENEMY_CONFIG;
+  const base = cfg.normalHpBase;
   
-  // Phase adds a small HP multiplier within the stage (later phases = slightly tankier)
-  const phaseMultiplier = 1 + (phase - 1) * 0.05; // +5% per phase
+  // Phase adds a small HP multiplier within the stage
+  const phaseMultiplier = 1 + (phase - 1) * 0.08; // +8% per phase
   
-  if (stage <= hardModeStage) {
-    const linearFactor = 1 + (stage - 1) * linearGrowth;
-    const expFactor = Math.pow(expE, (stage - 1) / 50);
-    return Math.floor(base * linearFactor * expFactor * phaseMultiplier);
+  let hp: number;
+  
+  if (stage <= cfg.phase1MaxStage) {
+    // Phase 1: Stages 1-50 (gentle learning curve)
+    const linear = 1 + stage * cfg.phase1LinearGrowth;
+    const exp = Math.pow(cfg.phase1Exponent, stage / cfg.phase1ExponentInterval);
+    hp = base * linear * exp;
+  } else if (stage <= cfg.phase2MaxStage) {
+    // Phase 2: Stages 51-100 (medium difficulty)
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const exp = Math.pow(cfg.phase2Exponent, (stage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    hp = hp50 * exp;
+  } else if (stage <= cfg.phase3MaxStage) {
+    // Phase 3: Stages 101-150 (hard mode)
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const hp100Exp = Math.pow(cfg.phase2Exponent, (cfg.phase2MaxStage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    const hp100 = hp50 * hp100Exp;
+    const exp = Math.pow(cfg.phase3Exponent, (stage - cfg.phase2MaxStage) / cfg.phase3ExponentInterval);
+    hp = hp100 * exp;
+  } else {
+    // Phase 4: Stages 150+ (prestige territory)
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const hp100Exp = Math.pow(cfg.phase2Exponent, (cfg.phase2MaxStage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    const hp100 = hp50 * hp100Exp;
+    const hp150Exp = Math.pow(cfg.phase3Exponent, (cfg.phase3MaxStage - cfg.phase2MaxStage) / cfg.phase3ExponentInterval);
+    const hp150 = hp100 * hp150Exp;
+    const exp = Math.pow(cfg.phase4Exponent, (stage - cfg.phase3MaxStage) / cfg.phase4ExponentInterval);
+    hp = hp150 * exp;
   }
   
-  const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
-  const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
-  const hp500 = base * hp500Linear * hp500Exp;
-  const lateExpFactor = Math.pow(expL, (stage - hardModeStage) / 10);
-  return Math.floor(hp500 * lateExpFactor * phaseMultiplier);
+  return Math.floor(hp * phaseMultiplier);
 }
 
 /**
- * Calculate boss HP based on stage progression.
+ * GOD FORMULA - Calculate boss HP based on stage progression.
+ * Bosses are 8x tankier than normal enemies.
  */
 export function getBossHp(stage: number): number {
-  const { bossHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage } = ENEMY_CONFIG;
+  const cfg = ENEMY_CONFIG;
+  const base = cfg.bossHpBase;
   
-  if (stage <= hardModeStage) {
-    const linearFactor = 1 + (stage - 1) * linearGrowth;
-    const expFactor = Math.pow(expE, (stage - 1) / 50);
-    return Math.floor(base * linearFactor * expFactor);
+  let hp: number;
+  
+  if (stage <= cfg.phase1MaxStage) {
+    const linear = 1 + stage * cfg.phase1LinearGrowth;
+    const exp = Math.pow(cfg.phase1Exponent, stage / cfg.phase1ExponentInterval);
+    hp = base * linear * exp;
+  } else if (stage <= cfg.phase2MaxStage) {
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const exp = Math.pow(cfg.phase2Exponent, (stage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    hp = hp50 * exp;
+  } else if (stage <= cfg.phase3MaxStage) {
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const hp100Exp = Math.pow(cfg.phase2Exponent, (cfg.phase2MaxStage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    const hp100 = hp50 * hp100Exp;
+    const exp = Math.pow(cfg.phase3Exponent, (stage - cfg.phase2MaxStage) / cfg.phase3ExponentInterval);
+    hp = hp100 * exp;
+  } else {
+    const hp50Linear = 1 + cfg.phase1MaxStage * cfg.phase1LinearGrowth;
+    const hp50Exp = Math.pow(cfg.phase1Exponent, cfg.phase1MaxStage / cfg.phase1ExponentInterval);
+    const hp50 = base * hp50Linear * hp50Exp;
+    const hp100Exp = Math.pow(cfg.phase2Exponent, (cfg.phase2MaxStage - cfg.phase1MaxStage) / cfg.phase2ExponentInterval);
+    const hp100 = hp50 * hp100Exp;
+    const hp150Exp = Math.pow(cfg.phase3Exponent, (cfg.phase3MaxStage - cfg.phase2MaxStage) / cfg.phase3ExponentInterval);
+    const hp150 = hp100 * hp150Exp;
+    const exp = Math.pow(cfg.phase4Exponent, (stage - cfg.phase3MaxStage) / cfg.phase4ExponentInterval);
+    hp = hp150 * exp;
   }
   
-  const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
-  const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
-  const hp500 = base * hp500Linear * hp500Exp;
-  const lateExpFactor = Math.pow(expL, (stage - hardModeStage) / 10);
-  return Math.floor(hp500 * lateExpFactor);
+  return Math.floor(hp);
 }
 
 /**

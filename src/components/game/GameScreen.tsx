@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
+import { CircuitBoard, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -8,9 +8,7 @@ import { ITEM_CONFIG } from '../../config/game.config';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
-import { OverclockPanel } from './OverclockPanel';
 import { MotherboardScreen } from './MotherboardScreen';
-import { OverclockScreen } from './OverclockScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { DailiesScreen } from './DailiesScreen';
 import { AchievementsScreen } from './AchievementsScreen';
@@ -34,7 +32,7 @@ interface GameScreenProps {
   player: Player;
 }
 
-type MobileDrawer = 'components' | 'overclock' | null;
+type MobileDrawer = 'components' | 'relics' | null;
 
 const MobileDrawerOverlay: React.FC<{
   open: boolean;
@@ -139,7 +137,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [offlineMsg, setOfflineMsg] = useState<string | null>(null);
   const [showMotherboard, setShowMotherboard] = useState(false);
-  const [showOverclockPopup, setShowOverclockPopup] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDailies, setShowDailies] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -185,7 +182,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const modals = (
     <>
       {showMotherboard && <MotherboardScreen engine={engine} onClose={() => setShowMotherboard(false)} />}
-      {showOverclockPopup && <OverclockScreen engine={engine} onClose={() => setShowOverclockPopup(false)} />}
       {showLeaderboard && <LeaderboardScreen engine={engine} onClose={() => setShowLeaderboard(false)} />}
       {showDailies && <DailiesScreen engine={engine} onClose={() => setShowDailies(false)} />}
       {showAchievements && <AchievementsScreen engine={engine} onClose={() => setShowAchievements(false)} />}
@@ -266,12 +262,19 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             onClick={() => setShowUpgrades(true)}
           />
           <MobileTab
-            icon={<Zap size={15} color={mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a'} />}
-            label="OVERCLOCK"
-            active={mobileDrawer === 'overclock'}
+            icon={<Sparkles size={15} color={mobileDrawer === 'relics' ? '#ff0080' : '#3a4a5a'} />}
+            label="RELICS"
+            active={mobileDrawer === 'relics'}
             activeColor="#ff0080"
             badge={availableOCT > 0 ? availableOCT : null}
-            onClick={() => openDrawer('overclock')}
+            onClick={() => setShowRelics(true)}
+          />
+          <MobileTab
+            icon={<TrendingUp size={15} color="#3a4a5a" />}
+            label="SKILLS"
+            activeColor="#00ff88"
+            badge={skillPoints > 0 ? skillPoints : null}
+            onClick={() => setShowSkillTree(true)}
           />
           <MobileTab
             icon={<Cpu size={15} color="#3a4a5a" />}
@@ -348,18 +351,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           accentColor="#00f5ff"
         >
           <ComponentPanel engine={engine} />
-        </MobileDrawerOverlay>
-
-        {/* Overclock drawer */}
-        <MobileDrawerOverlay
-          open={mobileDrawer === 'overclock'}
-          onClose={() => setMobileDrawer(null)}
-          title="OVERCLOCK TREE"
-          accentColor="#ff0080"
-        >
-          <div style={{ height: '100%', overflowY: 'auto', padding: 12 }}>
-            <OverclockPanel engine={engine} />
-          </div>
         </MobileDrawerOverlay>
       </div>
     );
@@ -481,10 +472,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             </button>
           </Tooltip>
 
-          {/* Overclock */}
-          <Tooltip content={<><TooltipLabel label="OVERCLOCK" color="#ff0080" /><TooltipText>Spend OCT on permanent upgrades.</TooltipText></>} position="left">
+          {/* Relics (Prestige System) */}
+          <Tooltip content={<><TooltipLabel label="RELICS" color="#ff0080" /><TooltipText>Prestige system: Reset for OC Points to unlock permanent relics.</TooltipText></>} position="left">
             <button
-              onClick={() => setShowOverclockPopup(true)}
+              onClick={() => setShowRelics(true)}
               style={{
                 width: '100%', background: availableOCT > 0 ? '#130010' : '#080808',
                 border: `1px solid ${availableOCT > 0 ? '#ff008055' : '#1a1a2a'}`,
@@ -495,32 +486,13 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff0080'; e.currentTarget.style.color = '#ff0080'; e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,128,0.25)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = availableOCT > 0 ? '#ff008055' : '#1a1a2a'; e.currentTarget.style.color = availableOCT > 0 ? '#ff0080' : '#2a2a3a'; e.currentTarget.style.boxShadow = availableOCT > 0 ? '0 0 10px rgba(255,0,128,0.12)' : 'none'; }}
             >
-              <Zap size={20} />
-              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>OVERCLOCK</div>
-              {availableOCT > 0 && (
-                <div style={{ background: '#ff0080', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-                  {availableOCT} OCT FREE
-                </div>
-              )}
-            </button>
-          </Tooltip>
-
-          {/* Relics */}
-          <Tooltip content={<><TooltipLabel label="RELICS" color="#00f5ff" /><TooltipText>Unlock permanent bonuses with OC Points.</TooltipText></>} position="left">
-            <button
-              onClick={() => setShowRelics(true)}
-              style={{
-                width: '100%', background: availableOCT > 0 ? '#001018' : '#080808',
-                border: `1px solid ${availableOCT > 0 ? '#00f5ff44' : '#1a1a2a'}`,
-                color: availableOCT > 0 ? '#00f5ff' : '#2a2a3a', padding: '12px 10px',
-                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                boxShadow: availableOCT > 0 ? '0 0 10px rgba(0,245,255,0.12)' : 'none', transition: 'all 0.15s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00f5ff'; e.currentTarget.style.color = '#00f5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,245,255,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = availableOCT > 0 ? '#00f5ff44' : '#1a1a2a'; e.currentTarget.style.color = availableOCT > 0 ? '#00f5ff' : '#2a2a3a'; e.currentTarget.style.boxShadow = availableOCT > 0 ? '0 0 10px rgba(0,245,255,0.12)' : 'none'; }}
-            >
               <Sparkles size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>RELICS</div>
+              {availableOCT > 0 && (
+                <div style={{ background: '#ff0080', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+                  {availableOCT} OCP
+                </div>
+              )}
             </button>
           </Tooltip>
 
