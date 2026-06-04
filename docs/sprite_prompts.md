@@ -41,47 +41,111 @@ Sprite Tier: [1-6]
 
 ## Tier Evolution Guide
 
-### Tier 1 — Base Form
-- SIZE: 30-40% of canvas (small, lots of empty space)
-- COLORS: 2-3 neon accents on dark base
-- GLOW: Faint or none
-- MOOD: Pathetic, funny, more annoying than dangerous
-- PERSONALITY: Confused, nervous, trying too hard
+### === TIER 1 CHARACTERISTICS ===
 
-### Tier 2 — Growing
-- SIZE: 40-50% of canvas
-- COLORS: 3-4 neon accents
-- GLOW: Subtle pulse, one glowing element
-- MOOD: Cocky, overconfident, partially threatening
-- PERSONALITY: Smug, taunting, flexing
+Theme: Baby viruses, annoying popups, amateur hacker creations
 
-### Tier 3 — Threatening
-- SIZE: 50-60% of canvas
-- COLORS: 4-5 neon accents, detailed shading
-- GLOW: Constant glow, data streams
-- MOOD: Cold, calculating, actual danger
-- PERSONALITY: Emotionless, efficient, predatory
+Vibe: Pathetic but persistent, more annoying than dangerous, like digital mosquitoes
 
-### Tier 4 — Powerful
-- SIZE: 60-75% of canvas
-- COLORS: 5-6 neon accents, particle effects
-- GLOW: Intense multi-colored, reality distortion
-- MOOD: Dread-inducing, beyond comprehension
-- PERSONALITY: Superior, patient, omniscient
+Personality: Confused, nervous, trying too hard to be scary but failing
 
-### Tier 5 — Terrifying
-- SIZE: 75-85% of canvas
-- COLORS: 6+ neon accents, maximum detail
-- GLOW: Blinding intensity, reality tearing
-- MOOD: Terror, fighting gods
-- PERSONALITY: Inevitable, absolute, consuming
+Threat Level: Joke enemies - player one-shots them
 
-### Tier 6 — Apocalyptic (Final Form)
-- SIZE: 85-95% of canvas (overwhelming)
-- COLORS: Full palette, animated effects suggested
-- GLOW: Reality itself corrupting around them
-- MOOD: End of all things
-- PERSONALITY: Beyond emotion - they ARE entropy
+SIZE: SMALL (takes up 30-40% of canvas, lots of empty space)
+
+COMPLEXITY: Simple shapes, 2-3 colors max, minimal detail
+
+GLOW: Faint or none
+
+---
+
+### === TIER 2 CHARACTERISTICS ===
+
+Theme: Teenage malware, awkward growth phase, discovering their powers
+
+Vibe: Cocky and overconfident, starting to pose a real nuisance, like digital bullies
+
+Personality: Smug, taunting, flexing abilities they barely understand
+
+Threat Level: Minor annoyance - takes a few hits but still weak
+
+SIZE: MEDIUM-SMALL (takes up 40-50% of canvas, some breathing room)
+
+COMPLEXITY: More defined shapes, 3-4 colors, basic shading
+
+GLOW: Subtle pulse, one glowing element (eyes or core)
+
+---
+
+### === TIER 3 CHARACTERISTICS ===
+
+Theme: Adult malware, fully operational threats, corporate-grade attacks
+
+Vibe: Cold and calculating, actual danger, like digital assassins
+
+Personality: Emotionless, efficient, predatory - no longer playing games
+
+Threat Level: Real threat - requires strategy to defeat
+
+SIZE: MEDIUM (takes up 50-60% of canvas, commanding presence)
+
+COMPLEXITY: Detailed shapes, 4-5 colors, proper shading and highlights
+
+GLOW: Constant glow, data streams, circuit patterns visible
+
+---
+
+### === TIER 4 CHARACTERISTICS ===
+
+Theme: Elite threats, ancient code entities, weapons-grade malware
+
+Vibe: Dread-inducing, beyond normal comprehension, like digital eldritch horrors
+
+Personality: Superior, patient, omniscient - they've seen players come and go
+
+Threat Level: Dangerous - can wipe unprepared players
+
+SIZE: LARGE (takes up 60-75% of canvas, imposing presence)
+
+COMPLEXITY: Intricate detail, 5-6 colors, particle effects, layered elements
+
+GLOW: Intense multi-colored, reality distortion effects around them
+
+---
+
+### === TIER 5 CHARACTERISTICS ===
+
+Theme: Legendary entities, primordial code, system-level threats
+
+Vibe: Terror incarnate, fighting gods, like digital cosmic horrors
+
+Personality: Inevitable, absolute, consuming - resistance is amusing to them
+
+Threat Level: Boss-tier - major encounter, demands respect
+
+SIZE: HUGE (takes up 75-85% of canvas, overwhelming presence)
+
+COMPLEXITY: Maximum detail, 6+ colors, multiple layers, animated elements suggested
+
+GLOW: Blinding intensity, reality tearing, corruption spreading from body
+
+---
+
+### === TIER 6 CHARACTERISTICS (FINAL FORM) ===
+
+Theme: Apocalyptic entities, universe-ending threats, the concept of malware given form
+
+Vibe: End of all things, beyond fear into awe, like digital heat death
+
+Personality: Beyond emotion - they ARE entropy, they ARE the end
+
+Threat Level: Endgame - the final challenge, overwhelming power
+
+SIZE: MASSIVE (takes up 85-95% of canvas, barely contained)
+
+COMPLEXITY: Full detail overload, full color palette, animated corruption effects
+
+GLOW: Reality itself corrupting around them, background distorts, edges bleed
 
 ---
 
