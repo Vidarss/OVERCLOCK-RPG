@@ -746,7 +746,7 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
   const TABS: ItemSlot[] = ['CPU', 'GPU', 'RAM', 'EXPANSION'];
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
       {/* Tab bar */}
       <div
         className="flex"
@@ -895,7 +895,7 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
       </div>
 
       {/* Storage list */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
         <div className="font-pixel mb-1" style={{ color: '#1a3a2a', fontSize: '6px', letterSpacing: '2px', flexShrink: 0 }}>
           STORAGE · {inventoryForSlot.length} {slot} ITEMS
         </div>
@@ -1090,7 +1090,7 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
             </button>
           </div>
 
-          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ flex: 1, minHeight: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {bottomMode === 'slots' ? (
               <SlotPanel
                 activeSlot={activeSlot}
