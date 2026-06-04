@@ -793,7 +793,7 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
       </div>
 
       {/* Installed slots */}
-      <div style={{ flexShrink: 0, borderBottom: '1px solid #0a0818', padding: '8px 12px', background: '#030010' }}>
+      <div style={{ flexShrink: 0, borderBottom: '1px solid #0a0818', padding: '8px 12px', background: '#030010', maxHeight: '35%', overflow: 'hidden' }}>
         <div className="font-pixel mb-2" style={{ color: `${color}55`, fontSize: '6px', letterSpacing: '2px' }}>
           INSTALLED ({slotArray.filter(Boolean).length}/{slotCount})
         </div>
@@ -801,9 +801,9 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
           display: 'flex', 
           gap: 6, 
           overflowX: 'auto', 
+          overflowY: 'hidden',
           paddingBottom: 4,
-          WebkitOverflowScrolling: 'touch' as React.CSSProperties['WebkitOverflowScrolling'],
-          scrollbarWidth: 'thin' as React.CSSProperties['scrollbarWidth'],
+          maxHeight: 'calc(100% - 20px)',
         }}>
           {Array.from({ length: slotCount }).map((_, i) => {
             const item = slotArray[i] ?? null;
@@ -895,10 +895,18 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
       </div>
 
       {/* Storage list */}
-      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 3 }}>
-        <div className="font-pixel mb-1" style={{ color: '#1a3a2a', fontSize: '6px', letterSpacing: '2px', flexShrink: 0 }}>
+      <div style={{ 
+        flex: 1, 
+        minHeight: 0, 
+        overflowY: 'auto', 
+        overflowX: 'hidden',
+        padding: '8px 12px', 
+      }}>
+        <div className="font-pixel mb-1" style={{ color: '#1a3a2a', fontSize: '6px', letterSpacing: '2px', position: 'sticky', top: 0, background: '#030010', paddingBottom: 4 }}>
           STORAGE · {inventoryForSlot.length} {slot} ITEMS
         </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
 
         {inventoryForSlot.length === 0 ? (
           <div style={{ color: '#1a2a1a', fontFamily: 'var(--font-mono)', fontSize: '9px', textAlign: 'center', marginTop: 20, lineHeight: 2 }}>
@@ -940,6 +948,7 @@ const SlotPanel: React.FC<SlotPanelProps> = ({
             </div>
           ))
         )}
+        </div>
       </div>
 
       {/* Enchant Panel Overlay */}
