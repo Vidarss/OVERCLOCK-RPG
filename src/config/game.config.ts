@@ -431,29 +431,37 @@ export const ENEMY_CONFIG = {
 
   /** 
    * Enemy name pools, indexed by tier (one tier = 50 stages).
-   * 5 unique enemies in Tier 1. Other tiers pending sprites.
-   * Within a stage, random enemies from the tier's pool are selected for phases 1-9.
+   * Stages 1-150 now have unique monster sprites!
    */
   enemyNamesByTier: [
     // Tier 1 (Stages 1-50): PERIMETER - Lesser malware, weak threats
-    ['GLITCH_BAT', 'DATA_WORM', 'PIXEL_SPIDER', 'ERROR_SKULL', 'VIRUS_BLOB'],
-    // Tier 2+ uses Tier 1 pool until more sprites are generated
+    ['NULL_PROCESS_ENTITY', 'CACHE_BREAKER', 'ADWARE_GLITCHLING', 'FIREWALL_ORPHAN', 'OVERCLOCK_ERROR'],
+    // Tier 2 (Stages 51-100): SUBNET - Evolved threats, system-level
+    ['KERNEL_LEAK_SPAWN', 'AUTOUPDATE_HORROR', 'DEBUG_SPECTER', 'SYSTEM_POPUP_PREDATOR', 'SYNC_FAILURE_CORE'],
+    // Tier 3 (Stages 101-150): Mix of all monsters
+    ['NULL_PROCESS_ENTITY', 'CACHE_BREAKER', 'KERNEL_LEAK_SPAWN', 'AUTOUPDATE_HORROR', 'DEBUG_SPECTER'],
   ] as string[][],
 
   /** 
-   * Elite enemy names - uses regular enemies with elite modifier for now.
+   * Elite enemy names - Unique elite sprites with stronger stats
    */
   eliteNames: [
-    'GLITCH_BAT', 'DATA_WORM', 'PIXEL_SPIDER', 'ERROR_SKULL', 'VIRUS_BLOB',
+    'RECURSIVE_UPGRADE_MISTAKE', 
+    'UNAUTHORIZED_PROCESS_AGENT', 
+    'MEMORY_DRIFT_ENFORCER', 
+    'PATCH_NOTES_ABERRATION', 
+    'SYNTHETIC_FAILURE_UNIT',
   ] as string[],
 
   /** 
-   * Boss names - 1 boss currently, more can be added.
+   * Boss names - 3 bosses for stages 1-150
    * Boss appears at phase 10 of each stage.
-   * Boss index = (stage - 1) % bossNames.length
+   * Boss index = floor((stage - 1) / 50) % bossNames.length
    */
   bossNames: [
-    'THE_FIREWALL',
+    'THE_PATCH_THAT_NEVER_FINISHED',
+    'CORE_SYSTEM_AUTONOMY',
+    'ADMINISTRATIVE_GOD_PROCESS',
   ] as string[],
 } as const;
 

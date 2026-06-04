@@ -57,8 +57,9 @@ export function getEnemyTier(stage: number): number {
  */
 function getEnemyName(stage: number, phase: number, isBoss: boolean): string {
   if (isBoss) {
-    // Boss index cycles through the 10 bosses based on stage
-    const idx = (stage - 1) % ENEMY_CONFIG.bossNames.length;
+    // Boss index based on tier (every 50 stages) for variety
+    const tier = Math.floor((stage - 1) / 50);
+    const idx = tier % ENEMY_CONFIG.bossNames.length;
     return ENEMY_CONFIG.bossNames[idx];
   }
   

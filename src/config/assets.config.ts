@@ -49,19 +49,40 @@ export interface MonsterSpriteDef {
 
 export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
-  // TIER 1 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
+  // TIER 1 MONSTERS (Stages 1-50: PERIMETER) - 5 enemies
   // Lesser malware, glitchy viruses, weak but hostile digital creatures
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'GLITCH_BAT', tiers: [{ tier: 1, src: '/assets/enemies/tier1/glitch_bat.png', scale: 1.0 }] },
-  { name: 'DATA_WORM', tiers: [{ tier: 1, src: '/assets/enemies/tier1/data_worm.png', scale: 1.0 }] },
-  { name: 'PIXEL_SPIDER', tiers: [{ tier: 1, src: '/assets/enemies/tier1/pixel_spider.png', scale: 1.0 }] },
-  { name: 'ERROR_SKULL', tiers: [{ tier: 1, src: '/assets/enemies/tier1/error_skull.png', scale: 1.0 }] },
-  { name: 'VIRUS_BLOB', tiers: [{ tier: 1, src: '/assets/enemies/tier1/virus_blob.png', scale: 1.0 }] },
+  { name: 'NULL_PROCESS_ENTITY', tiers: [{ tier: 1, src: '/assets/enemies/monsters/null_process_entity.png', scale: 1.0 }] },
+  { name: 'CACHE_BREAKER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/cache_breaker.png', scale: 1.0 }] },
+  { name: 'ADWARE_GLITCHLING', tiers: [{ tier: 1, src: '/assets/enemies/monsters/adware_glitchling.png', scale: 1.0 }] },
+  { name: 'FIREWALL_ORPHAN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/firewall_orphan.png', scale: 1.0 }] },
+  { name: 'OVERCLOCK_ERROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/overclock_error.png', scale: 1.0 }] },
 
   // ════════════════════════════════════════════════════════════════════════════
-  // BOSS SPRITES
+  // TIER 2 MONSTERS (Stages 51-100: SUBNET) - 5 enemies
+  // More evolved threats, system-level intrusions
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'THE_FIREWALL', tiers: [{ tier: 1, src: '/assets/enemies/boss/the_firewall.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/boss/the_firewall.png', scale: 1.3 }] },
+  { name: 'KERNEL_LEAK_SPAWN', tiers: [{ tier: 1, src: '/assets/enemies/monsters/kernel_leak_spawn.png', scale: 1.0 }] },
+  { name: 'AUTOUPDATE_HORROR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/autoupdate_horror.png', scale: 1.0 }] },
+  { name: 'DEBUG_SPECTER', tiers: [{ tier: 1, src: '/assets/enemies/monsters/debug_specter.png', scale: 1.0 }] },
+  { name: 'SYSTEM_POPUP_PREDATOR', tiers: [{ tier: 1, src: '/assets/enemies/monsters/system_popup_predator.png', scale: 1.0 }] },
+  { name: 'SYNC_FAILURE_CORE', tiers: [{ tier: 1, src: '/assets/enemies/monsters/sync_failure_core.png', scale: 1.0 }] },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // ELITE SPRITES - Stronger variants with unique appearances
+  // ════════════════════════════════════════════════════════════════════════════
+  { name: 'RECURSIVE_UPGRADE_MISTAKE', tiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/recursive_upgrade_mistake.png', scale: 1.1 }] },
+  { name: 'UNAUTHORIZED_PROCESS_AGENT', tiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/unauthorized_process_agent.png', scale: 1.1 }] },
+  { name: 'MEMORY_DRIFT_ENFORCER', tiers: [{ tier: 1, src: '/assets/enemies/elites/memory_drift_enforcer.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/memory_drift_enforcer.png', scale: 1.1 }] },
+  { name: 'PATCH_NOTES_ABERRATION', tiers: [{ tier: 1, src: '/assets/enemies/elites/patch_notes_aberration.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/patch_notes_aberration.png', scale: 1.1 }] },
+  { name: 'SYNTHETIC_FAILURE_UNIT', tiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }], eliteTiers: [{ tier: 1, src: '/assets/enemies/elites/synthetic_failure_unit.png', scale: 1.1 }] },
+
+  // ════════════════════════════════════════════════════════════════════════════
+  // BOSS SPRITES - Major threats at stage milestones
+  // ════════════════════════════════════════════════════════════════════════════
+  { name: 'THE_PATCH_THAT_NEVER_FINISHED', tiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/the_patch_that_never_finished.png', scale: 1.3 }] },
+  { name: 'CORE_SYSTEM_AUTONOMY', tiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/core_system_autonomy.png', scale: 1.3 }] },
+  { name: 'ADMINISTRATIVE_GOD_PROCESS', tiers: [{ tier: 1, src: '/assets/enemies/bosses/administrative_god_process.png', scale: 1.3 }], bossTiers: [{ tier: 1, src: '/assets/enemies/bosses/administrative_god_process.png', scale: 1.3 }] },
 ];
 
 // ── SPRITE LOOKUP FUNCTIONS ──────────────────────────────────────────────────
