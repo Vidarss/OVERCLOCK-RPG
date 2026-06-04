@@ -433,7 +433,7 @@ export const ENEMY_CONFIG = {
    */
   enemyNamesByTier: [
     // Tier 0 (Stages 1-50): PERIMETER - Lesser malware, weak threats
-    ['MALWARE.BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT'],
+    ['MALWARE_BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT'],
     // Tier 1 (Stages 51-100): FIREWALL - Growing malware, real threats
     ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'TROJAN_HORSE'],
     // Tier 2 (Stages 101-150): KERNEL - Adult malware, corporate-grade attacks
@@ -584,7 +584,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
   { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 3,  costPerLevel: 15, modifierType: 'crit_chance',     valuePerLevel: 0.15, isMultiplier: false, color: '#440077', requiresTier: 13, flavor: 'Reality destabilises around your attacks. Physics yields.', description: '+15% crit chance per level — quantum apex' },
 ];
 
-// ── SKILLS ────────────────────────────────────────────────────────────────────
+// ── SKILLS ───────────────────────────��────────────────────────────────────────
 
 export const BASE_SKILLS: SkillDef[] = [
   { id: 'surge',           name: 'SURGE',    description: 'Tap damage ×10 for 5s',       cooldown: 30,  duration: 5,  color: '#00f5ff',                            icon: 'Zap',      unlockStage: 1  },

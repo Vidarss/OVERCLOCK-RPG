@@ -4,7 +4,7 @@
 // This file centralizes all monster sprites and stage background images.
 // 
 // SPRITE SYSTEM:
-//   - Each monster has a unique name (e.g., "MALWARE.BAT", "VIRUS_V2")
+//   - Each monster has a unique name (e.g., "MALWARE_BAT", "VIRUS_V2")
 //   - Each monster can have multiple SPRITE TIERS (visual evolution)
 //   - Sprite tier determines which visual variant to show based on game progression
 //   - Higher sprite tiers = more evolved/menacing appearance
@@ -51,7 +51,7 @@ export const MONSTER_SPRITES: MonsterSpriteDef[] = [
   // ════════════════════════════════════════════════════════════════════════════
   // TIER 0 ENEMIES (Stages 1-50: PERIMETER) - 5 enemies
   // ════════════════════════════════════════════════════════════════════════════
-  { name: 'MALWARE.BAT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 }] },
+  { name: 'MALWARE_BAT', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/malware.bat-QlLlMhm1zUJU0XYHbSu1bS34rHLFUF.png', scale: 1.4 }] },
   { name: 'CORRUPT_PROC', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/corrupt%20proc-mei2JE2wxrsGoRt3K1iZH9N7fsOMOv.png', scale: 1.6 }] },
   { name: 'NULL_PTR', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/null%20ptr-9EIVZzWNy7ZqQjNwEmmCBpirXpKxXL.png', scale: 1.2 }] },
   { name: 'STACK_OVERFLOW', tiers: [{ tier: 1, src: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/stackoverflow.png-K241Fy8VF6Fi7MUKLOlKPy2Q7bbo5o.jpeg', scale: 1.1 }] },
