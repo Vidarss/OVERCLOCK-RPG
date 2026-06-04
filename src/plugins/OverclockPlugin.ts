@@ -127,6 +127,7 @@ export class OverclockPlugin implements IPlugin {
       overclockTier: newTier,
       totalOverclocks: newTotalOverclocks,
       stage: 1,
+      phase: 1,
       highestStage: 1,
       gold: 0,
     });

@@ -2,35 +2,42 @@ import type { IPlugin, IEngine, GameState, Enemy, GameEvent } from '../engine/ty
 import type { SkillPlugin } from './SkillPlugin';
 import { ENEMY_CONFIG } from '../config/game.config';
 
-export function getEnemyHp(stage: number): number {
-  const { normalHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage } = ENEMY_CONFIG;
+/**
+ * Calculate enemy HP based on stage progression.
+ * Stages 1-500: Smooth scaling with linear growth + exponential every 50 stages.
+ * Stages 500+: Steep exponential scaling requiring skills/combos.
+ */
+export function getEnemyHp(stage: number, phase: number): number {
+  const { normalHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage, phasesPerStage } = ENEMY_CONFIG;
+  
+  // Phase adds a small HP multiplier within the stage (later phases = slightly tankier)
+  const phaseMultiplier = 1 + (phase - 1) * 0.05; // +5% per phase
   
   if (stage <= hardModeStage) {
-    // Stages 1-500: Smooth scaling - linear growth with mild exponential every 50 stages
     const linearFactor = 1 + (stage - 1) * linearGrowth;
     const expFactor = Math.pow(expE, (stage - 1) / 50);
-    return Math.floor(base * linearFactor * expFactor);
+    return Math.floor(base * linearFactor * expFactor * phaseMultiplier);
   }
   
-  // Stages 500+: Steep exponential scaling requiring skills/combos
   const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
   const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
   const hp500 = base * hp500Linear * hp500Exp;
   const lateExpFactor = Math.pow(expL, (stage - hardModeStage) / 10);
-  return Math.floor(hp500 * lateExpFactor);
+  return Math.floor(hp500 * lateExpFactor * phaseMultiplier);
 }
 
+/**
+ * Calculate boss HP based on stage progression.
+ */
 export function getBossHp(stage: number): number {
   const { bossHpBase: base, linearGrowth, scalingExponentEarly: expE, scalingExponentLate: expL, hardModeStage } = ENEMY_CONFIG;
   
   if (stage <= hardModeStage) {
-    // Stages 1-500: Smooth scaling - linear growth with mild exponential every 50 stages
     const linearFactor = 1 + (stage - 1) * linearGrowth;
     const expFactor = Math.pow(expE, (stage - 1) / 50);
     return Math.floor(base * linearFactor * expFactor);
   }
   
-  // Stages 500+: Steep exponential scaling requiring skills/combos
   const hp500Linear = 1 + (hardModeStage - 1) * linearGrowth;
   const hp500Exp = Math.pow(expE, (hardModeStage - 1) / 50);
   const hp500 = base * hp500Linear * hp500Exp;
@@ -38,29 +45,44 @@ export function getBossHp(stage: number): number {
   return Math.floor(hp500 * lateExpFactor);
 }
 
+/**
+ * Get enemy tier (0-4) based on stage for name pool selection.
+ */
 export function getEnemyTier(stage: number): number {
   return Math.min(Math.floor((stage - 1) / ENEMY_CONFIG.stagesPerTier), ENEMY_CONFIG.enemyNamesByTier.length - 1);
 }
 
-function getEnemyName(stage: number, isBoss: boolean): string {
+/**
+ * Get enemy name based on stage, phase, and whether it's a boss.
+ */
+function getEnemyName(stage: number, phase: number, isBoss: boolean): string {
   if (isBoss) {
-    const idx = Math.floor((stage / 10 - 1)) % ENEMY_CONFIG.bossNames.length;
+    // Boss index cycles through the 10 bosses based on stage
+    const idx = (stage - 1) % ENEMY_CONFIG.bossNames.length;
     return ENEMY_CONFIG.bossNames[idx];
   }
-  const tier = Math.min(getEnemyTier(stage), ENEMY_CONFIG.enemyNamesByTier.length - 1);
+  
+  const tier = getEnemyTier(stage);
   const names = ENEMY_CONFIG.enemyNamesByTier[tier];
-  return names[Math.floor(Math.random() * names.length)];
+  // Use a seeded random based on stage + phase for consistency
+  const seed = (stage * 1000 + phase) % names.length;
+  return names[seed];
 }
 
-export function spawnEnemy(stage: number): Enemy {
-  const isBoss = stage % ENEMY_CONFIG.bossEveryNStages === 0;
+/**
+ * Spawn an enemy for a given stage and phase.
+ * Phase 1-9: Normal enemies (can be elite)
+ * Phase 10: Boss
+ */
+export function spawnEnemy(stage: number, phase: number): Enemy {
+  const isBoss = phase >= ENEMY_CONFIG.phasesPerStage;
   const isElite = !isBoss && stage > ENEMY_CONFIG.eliteMinStage && Math.random() < ENEMY_CONFIG.eliteChance;
   const hpMultiplier = isElite ? ENEMY_CONFIG.eliteHpMultiplier : 1;
-  const baseHp = isBoss ? getBossHp(stage) : getEnemyHp(stage) * hpMultiplier;
+  const baseHp = isBoss ? getBossHp(stage) : getEnemyHp(stage, phase) * hpMultiplier;
 
   return {
-    id: `enemy_${stage}_${Date.now()}`,
-    name: isElite ? `[E] ${getEnemyName(stage, false)}` : getEnemyName(stage, isBoss),
+    id: `enemy_${stage}_${phase}_${Date.now()}`,
+    name: isElite ? `[E] ${getEnemyName(stage, phase, false)}` : getEnemyName(stage, phase, isBoss),
     hp: baseHp,
     maxHp: baseHp,
     isBoss,
@@ -75,7 +97,7 @@ export function spawnEnemy(stage: number): Enemy {
 export class EnemyPlugin implements IPlugin {
   id = 'enemy';
   dependencies = ['stage'];
-  stateKeys = ['enemy', 'isBossActive', 'bossTimeRemaining', 'pendingBossReturn', 'pendingBossStage'] as (keyof GameState)[];
+  stateKeys = ['enemy', 'phase', 'isBossActive', 'bossTimeRemaining', 'pendingBossReturn', 'pendingBossStage'] as (keyof GameState)[];
 
   private engine!: IEngine;
   private bossTimer = 0;
@@ -85,36 +107,47 @@ export class EnemyPlugin implements IPlugin {
 
     engine.on('state_sync', (event: GameEvent<{ savedState: GameState } | null>) => {
       const stage = event.payload?.savedState?.stage ?? engine.state.stage;
-      this.spawnForStage(stage);
+      const phase = event.payload?.savedState?.phase ?? 1;
+      this.spawnForStagePhase(stage, phase);
     });
 
-    engine.on('stage_clear', (event: GameEvent<{ stage: number }>) => {
-      const clearedStage = event.payload.stage;
-      const nextStage = clearedStage + 1;
-      const pendingBoss = this.engine.state.pendingBossStage;
-      if (this.engine.state.pendingBossReturn && clearedStage >= (pendingBoss ?? 0)) {
-        // Player progressed past the pending boss stage legitimately — clear flag and advance
-        this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
-        this.spawnForStage(nextStage);
-      } else if (this.engine.state.pendingBossReturn && nextStage === pendingBoss) {
-        // Next stage is the pending boss — skip it, respawn same stage to keep farming
-        this.spawnForStage(clearedStage);
+    engine.on('phase_clear', (event: GameEvent<{ stage: number; phase: number }>) => {
+      const { stage, phase } = event.payload;
+      const nextPhase = phase + 1;
+      
+      if (nextPhase > ENEMY_CONFIG.phasesPerStage) {
+        // Boss defeated! Advance to next stage, phase 1
+        this.engine.emit('stage_clear', { stage, goldReward: 0 });
+        this.spawnForStagePhase(stage + 1, 1);
       } else {
-        this.spawnForStage(nextStage);
+        // Next phase in current stage
+        this.spawnForStagePhase(stage, nextPhase);
       }
+    });
+
+    // Handle boss timeout - player failed, goes back to phase 1 of current stage
+    engine.on('boss_timeout', (event: GameEvent<{ stage: number }>) => {
+      // Handled in onTick
     });
 
     engine.on('overclock', () => {
       this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
-      this.spawnForStage(1);
+      this.spawnForStagePhase(1, 1);
     });
   }
 
-  private spawnForStage(stage: number): void {
-    const enemy = spawnEnemy(stage);
+  private spawnForStagePhase(stage: number, phase: number): void {
+    const enemy = spawnEnemy(stage, phase);
     const highestStage = Math.max(stage, this.engine.state.highestStage ?? 1);
     const maxStage = Math.max(highestStage, this.engine.state.maxStage ?? 1);
-    this.engine.updateState({ enemy, stage, highestStage, maxStage });
+    
+    this.engine.updateState({ 
+      enemy, 
+      stage, 
+      phase,
+      highestStage, 
+      maxStage 
+    });
 
     if (enemy.isBoss) {
       this.bossTimer = ENEMY_CONFIG.bossTimeoutSeconds;
@@ -130,7 +163,8 @@ export class EnemyPlugin implements IPlugin {
     const bossStage = this.engine.state.pendingBossStage;
     if (!bossStage) return;
     this.engine.updateState({ pendingBossReturn: false, pendingBossStage: null });
-    this.spawnForStage(bossStage);
+    // Return to boss phase (phase 10) of the pending stage
+    this.spawnForStagePhase(bossStage, ENEMY_CONFIG.phasesPerStage);
   }
 
   applyDamage(amount: number, isCrit?: boolean): void {
@@ -167,11 +201,18 @@ export class EnemyPlugin implements IPlugin {
     const state = this.engine.state;
     if (!state.enemy) return;
 
-    const goldMultiplier = state.enemy.isBoss ? ENEMY_CONFIG.bossGoldMultiplier : state.enemy.isElite ? ENEMY_CONFIG.eliteGoldMultiplier : ENEMY_CONFIG.normalGoldMultiplier;
+    const goldMultiplier = state.enemy.isBoss 
+      ? ENEMY_CONFIG.bossGoldMultiplier 
+      : state.enemy.isElite 
+        ? ENEMY_CONFIG.eliteGoldMultiplier 
+        : ENEMY_CONFIG.normalGoldMultiplier;
     const goldReward = Math.floor(state.enemy.maxHp * goldMultiplier);
+    
     this.engine.emit('enemy_death', { enemy: state.enemy, goldReward });
     this.engine.updateState({ isBossActive: false });
-    this.engine.emit('stage_clear', { stage: state.stage, goldReward });
+    
+    // Emit phase_clear instead of stage_clear - let the event handler decide progression
+    this.engine.emit('phase_clear', { stage: state.stage, phase: state.phase ?? 1, goldReward });
   }
 
   onTick(delta: number, state: GameState): void {
@@ -199,8 +240,8 @@ export class EnemyPlugin implements IPlugin {
         pendingBossStage: state.stage,
       });
       this.engine.emit('boss_timeout', { stage: state.stage });
-      // Drop back one stage to farm normal enemies
-      this.spawnForStage(Math.max(1, state.stage - 1));
+      // Drop back to phase 1 of current stage to farm normal enemies
+      this.spawnForStagePhase(state.stage, 1);
     }
   }
 }
