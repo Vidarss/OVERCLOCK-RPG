@@ -131,11 +131,12 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
   if (customSprite) {
     const scale = customSprite.scale ?? 1;
     const offsetY = customSprite.offsetY ?? 0;
-    // Use responsive sizing - clamp between min/max for consistent appearance
-    const responsiveWidth = Math.max(140, Math.min(280, window.innerWidth * 0.18)) * scale;
+    // Increased base size for better visibility - bosses are larger
+    const baseSize = enemy.isBoss ? 220 : enemy.isElite ? 180 : 160;
+    const spriteSize = baseSize * scale;
     
     return (
-      <div style={{ position: 'relative', display: 'inline-block' }}>
+      <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Phase overlay aura */}
         {phaseStyle && (
           <div
@@ -152,9 +153,9 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
           <div
             className="font-pixel"
             style={{
-              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
-              color: '#ffaa00', fontSize: '6px', letterSpacing: '1px', whiteSpace: 'nowrap',
-              textShadow: '0 0 4px #ffaa00',
+              position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)',
+              color: '#ffaa00', fontSize: '8px', letterSpacing: '2px', whiteSpace: 'nowrap',
+              textShadow: '0 0 6px #ffaa00',
             }}
           >
             ELITE
@@ -166,10 +167,10 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
           <div
             className="font-pixel"
             style={{
-              position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+              position: 'absolute', top: -18, left: '50%', transform: 'translateX(-50%)',
               color: enemy.bossPhase === 'shield' ? '#00c8ff' : enemy.bossPhase === 'enrage' ? '#ff3200' : '#39ff14',
-              fontSize: '6px', letterSpacing: '1px', whiteSpace: 'nowrap',
-              textShadow: `0 0 4px currentColor`,
+              fontSize: '8px', letterSpacing: '2px', whiteSpace: 'nowrap',
+              textShadow: `0 0 6px currentColor`,
             }}
           >
             {enemy.bossPhase.toUpperCase()}
@@ -180,10 +181,10 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
           className={isDying ? 'animate-enemy-death' : isHit ? 'animate-enemy-hit' : ''}
           style={{
             filter: enemy.isBoss
-              ? `drop-shadow(0 0 16px ${colors.glow}) drop-shadow(0 0 32px ${colors.glow})`
+              ? `drop-shadow(0 0 20px ${colors.glow}) drop-shadow(0 0 40px ${colors.glow})`
               : enemy.isElite
-              ? `drop-shadow(0 0 12px #ffaa0088) drop-shadow(0 0 24px #ffaa0066)`
-              : `drop-shadow(0 0 8px ${colors.glow})`,
+              ? `drop-shadow(0 0 16px #ffaa0088) drop-shadow(0 0 32px #ffaa0066)`
+              : `drop-shadow(0 0 12px ${colors.glow})`,
             animation: enemy.isBoss && !isHit && !isDying ? 'boss-pulse 2s steps(4) infinite' : undefined,
             transform: `translateY(${offsetY}px)`,
           }}
@@ -192,10 +193,15 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
             src={customSprite.src}
             alt={enemy.name}
             style={{
-              width: `${responsiveWidth}px`,
-              height: 'auto',
+              width: `${spriteSize}px`,
+              height: `${spriteSize}px`,
+              objectFit: 'contain',
               imageRendering: 'pixelated',
               pointerEvents: 'none',
+            }}
+            onError={(e) => {
+              // Fallback if image fails to load
+              e.currentTarget.style.display = 'none';
             }}
           />
         </div>

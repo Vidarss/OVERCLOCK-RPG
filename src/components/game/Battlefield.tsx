@@ -160,100 +160,102 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         />
       )}
 
-      {/* Content above background — HP bar always at top */}
+      {/* Content above background — Stage info at top */}
       <div style={{ position: 'relative', zIndex: 3, width: '100%', maxWidth: 320 }}>
+        {/* Stage & Phase indicator */}
+        <div
+          className="font-pixel text-center"
+          style={{
+            color: zone.accentColor,
+            fontSize: '8px',
+            opacity: 0.6,
+            letterSpacing: 2,
+            padding: '4px 0',
+          }}
+        >
+          {zone.name} // STG {stage ?? 1} - {currentPhase}/{ENEMY_CONFIG.phasesPerStage}
+        </div>
+
+        {/* Enemy name */}
         {enemy && (
           <div
-            className="pixel-border"
+            className="font-pixel text-center"
             style={{
-              background: isBoss ? '#1a0010' : '#0a0f1a',
-              borderColor: isBoss ? '#ff0080' : zone.accentColor,
-              padding: '5px 10px',
-              marginBottom: 6,
+              color: isBoss ? '#ff0080' : zone.accentColor,
+              fontSize: isBoss ? '10px' : '9px',
+              letterSpacing: '2px',
+              textShadow: `0 0 8px ${isBoss ? '#ff0080' : zone.accentColor}, 0 0 16px ${isBoss ? 'rgba(255,0,128,0.4)' : zone.accentColor + '66'}`,
             }}
           >
-            <div className="flex justify-between items-center mb-1">
-              <span className="font-pixel" style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontSize: '7px' }}>
-                {isBoss ? 'BOSS HP' : 'HP'}
+            {enemy.name}
+            {isBoss && (
+              <span
+                className="font-pixel"
+                style={{ color: '#ff2222', fontSize: '8px', display: 'block', marginTop: 2, textShadow: '0 0 8px #ff2222' }}
+              >
+                {'[BOSS]'}
               </span>
-              <div className="flex items-center gap-2">
-                <span style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontFamily: 'var(--font-mono)', fontSize: '9px' }}>
-                  {formatNumber(enemy.hp)} / {formatNumber(enemy.maxHp)}
-                </span>
-                {isBoss && <BossTimer engine={engine} />}
-              </div>
-            </div>
-            <div style={{ background: isBoss ? '#3d0024' : '#0a0a0f', height: 6, position: 'relative' }}>
-              <div
-                className="hp-bar-fill"
-                style={{
-                  position: 'absolute',
-                  left: 0, top: 0, height: '100%',
-                  width: `${hpPct}%`,
-                  background: isBoss ? '#ff0080' : zone.accentColor,
-                  boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
-                }}
-              />
-            </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Stage & Phase indicator */}
-      <div
-        style={{
-          position: 'relative',
-          zIndex: 3,
-          fontFamily: 'var(--font-mono)',
-          fontSize: 10,
-          color: zone.accentColor,
-          opacity: 0.5,
-          letterSpacing: 2,
-        }}
-      >
-        {zone.name} // STG {stage ?? 1} - {currentPhase}/{ENEMY_CONFIG.phasesPerStage}
-      </div>
-
-      {/* Enemy name */}
-      {enemy && (
-        <div
-          className="font-pixel text-center"
-          style={{
-            position: 'relative',
-            zIndex: 3,
-            color: isBoss ? '#ff0080' : zone.accentColor,
-            fontSize: isBoss ? '9px' : '8px',
-            letterSpacing: '2px',
-            padding: '4px 0',
-            textShadow: `0 0 8px ${isBoss ? '#ff0080' : zone.accentColor}, 0 0 16px ${isBoss ? 'rgba(255,0,128,0.4)' : zone.accentColor + '66'}`,
-          }}
-        >
-          {enemy.name}
-          {isBoss && (
-            <span
-              className="font-pixel"
-              style={{ color: '#ff2222', fontSize: '7px', display: 'block', marginTop: 4, textShadow: '0 0 8px #ff2222' }}
-            >
-              {'[BOSS]'}
-            </span>
-          )}
-        </div>
-      )}
-
-      {/* Tap zone */}
+      {/* Tap zone with enemy sprite and integrated health */}
       <div
         ref={containerRef}
-        className="relative flex items-center justify-center"
-        style={{ flex: 1, width: '100%', cursor: 'crosshair', minHeight: 120, position: 'relative', zIndex: 3, userSelect: 'none' }}
+        className="relative flex flex-col items-center justify-center"
+        style={{ flex: 1, width: '100%', cursor: 'crosshair', minHeight: 200, position: 'relative', zIndex: 3, userSelect: 'none' }}
         onClick={handleTap}
         onTouchStart={handleTap}
       >
-        {enemy && !isDying && (
-          <EnemySprite enemy={enemy} isHit={isHit} isDying={false} zone={zone} overclockCount={overclockCount ?? 0} />
+        {enemy && (
+          <div className="flex flex-col items-center" style={{ gap: 8 }}>
+            {/* Enemy Sprite */}
+            {!isDying ? (
+              <EnemySprite enemy={enemy} isHit={isHit} isDying={false} zone={zone} overclockCount={overclockCount ?? 0} />
+            ) : (
+              <EnemySprite enemy={enemy} isHit={false} isDying={true} zone={zone} overclockCount={overclockCount ?? 0} />
+            )}
+            
+            {/* Health bar directly under sprite */}
+            <div
+              className="pixel-border"
+              style={{
+                background: isBoss ? '#1a0010' : '#0a0f1a',
+                borderColor: isBoss ? '#ff0080' : zone.accentColor,
+                padding: '4px 8px',
+                minWidth: 180,
+                maxWidth: 260,
+              }}
+            >
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-pixel" style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontSize: '6px' }}>
+                  {isBoss ? 'BOSS' : 'HP'}
+                </span>
+                <div className="flex items-center gap-2">
+                  <span style={{ color: isBoss ? '#ff0080' : zone.accentColor, fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
+                    {formatNumber(enemy.hp)} / {formatNumber(enemy.maxHp)}
+                  </span>
+                  {isBoss && <BossTimer engine={engine} />}
+                </div>
+              </div>
+              <div style={{ background: isBoss ? '#3d0024' : '#0a0a0f', height: 5, position: 'relative' }}>
+                <div
+                  className="hp-bar-fill"
+                  style={{
+                    position: 'absolute',
+                    left: 0, top: 0, height: '100%',
+                    width: `${hpPct}%`,
+                    background: isBoss ? '#ff0080' : zone.accentColor,
+                    boxShadow: `0 0 8px ${isBoss ? 'rgba(255,0,128,0.6)' : zone.accentColor + '99'}`,
+                    transition: 'width 0.15s ease-out',
+                  }}
+                />
+              </div>
+            </div>
+          </div>
         )}
-        {isDying && enemy && (
-          <EnemySprite enemy={enemy} isHit={false} isDying={true} zone={zone} overclockCount={overclockCount ?? 0} />
-        )}
+        
         {!enemy && (
           <div className="font-pixel animate-blink" style={{ color: zone.accentColor, fontSize: '8px', opacity: 0.7 }}>
             LOADING...
