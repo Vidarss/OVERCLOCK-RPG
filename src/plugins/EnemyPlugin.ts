@@ -63,10 +63,19 @@ function getEnemyName(stage: number, phase: number, isBoss: boolean): string {
   }
   
   const tier = getEnemyTier(stage);
-  const names = ENEMY_CONFIG.enemyNamesByTier[tier];
+  const names = ENEMY_CONFIG.enemyNamesByTier[tier] ?? ENEMY_CONFIG.enemyNamesByTier[0];
   // Use a seeded random based on stage + phase for consistency
   const seed = (stage * 1000 + phase) % names.length;
   return names[seed];
+}
+
+/**
+ * Get a random elite enemy name from the elite pool.
+ */
+function getEliteName(): string {
+  const names = ENEMY_CONFIG.eliteNames;
+  const idx = Math.floor(Math.random() * names.length);
+  return names[idx];
 }
 
 /**
@@ -82,7 +91,7 @@ export function spawnEnemy(stage: number, phase: number): Enemy {
 
   return {
     id: `enemy_${stage}_${phase}_${Date.now()}`,
-    name: isElite ? `[E] ${getEnemyName(stage, phase, false)}` : getEnemyName(stage, phase, isBoss),
+    name: isElite ? getEliteName() : getEnemyName(stage, phase, isBoss),
     hp: baseHp,
     maxHp: baseHp,
     isBoss,

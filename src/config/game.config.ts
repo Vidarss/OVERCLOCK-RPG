@@ -428,22 +428,29 @@ export const ENEMY_CONFIG = {
 
   /** 
    * Enemy name pools, indexed by tier (one tier = 50 stages).
-   * 25 unique enemies total, 5 per tier across 5 tiers.
+   * 25 unique enemies in Tier 1. Other tiers pending sprites.
    * Within a stage, random enemies from the tier's pool are selected for phases 1-9.
    */
   enemyNamesByTier: [
-    // Tier 0 (Stages 1-50): PERIMETER - Lesser malware, weak threats
-    ['MALWARE_BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT'],
-    // Tier 1 (Stages 51-100): FIREWALL - Growing malware, real threats
-    ['VIRUS_V2', 'RANSOMWARE', 'ROOTKIT', 'KEYLOGGER', 'TROJAN_HORSE'],
-    // Tier 2 (Stages 101-150): KERNEL - Adult malware, corporate-grade attacks
-    ['BOTNET_NODE', 'CRYPTOMINER', 'SQL_INJECT', 'XSS_WORM', 'DNS_POISON'],
-    // Tier 3 (Stages 151-200): CORE - Elite threats, weapons-grade malware
-    ['ZERO_DAY', 'APT_GHOST', 'KERNEL_PANIC', 'BUFFER_DEMON', 'MEMORY_LEAK'],
-    // Tier 4 (Stages 201-250): THE VOID - Legendary entities, primordial code
-    ['VOID_PROCESS', 'NULL_ENTITY', 'DARK_THREAD', 'SHADOW_DAEMON', 'ENTROPY_WORM'],
-    // Tier 5+ (Stages 251+): Repeats tier 4 with escalating difficulty
+    // Tier 1 (Stages 1-50): PERIMETER - Lesser malware, weak threats
+    [
+      'MALWARE_BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT',
+      'ADWARE_IMP', 'POPUP_GREMLIN', 'COOKIE_THIEF', 'SCRIPT_KIDDIE', 'TOOLBAR_WORM',
+      'CACHE_GOBLIN', 'PING_PHANTOM', 'SYNTAX_ERROR', 'BUG_SWARM', 'PIXEL_GLITCH',
+      'BYTE_MITE', 'DATA_LEECH', 'TEMP_FILE', 'JUNK_CODE', 'DEAD_LINK',
+      'BROKEN_PIPE', 'LOST_PACKET', 'GARBAGE_COLLECTOR', 'MEMORY_FRAGMENT', 'ORPHAN_PROCESS',
+    ],
+    // Tier 2+ uses Tier 1 pool until more sprites are generated
   ] as string[][],
+
+  /** 
+   * Elite enemy names - 10 unique elites that randomly replace normal enemies.
+   * Elite appears based on eliteChance (15% default).
+   */
+  eliteNames: [
+    'ALPHA_VIRUS', 'CHROME_HUNTER', 'NEON_WRAITH', 'DATA_REAPER', 'FIREWALL_BREAKER',
+    'QUANTUM_SHIFTER', 'CRYPT_SENTINEL', 'MEMORY_DEVOURER', 'PROXY_ASSASSIN', 'OVERCLOCK_DAEMON',
+  ] as string[],
 
   /** 
    * Boss names - 10 unique bosses that cycle through stages.
@@ -584,7 +591,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
   { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 3,  costPerLevel: 15, modifierType: 'crit_chance',     valuePerLevel: 0.15, isMultiplier: false, color: '#440077', requiresTier: 13, flavor: 'Reality destabilises around your attacks. Physics yields.', description: '+15% crit chance per level — quantum apex' },
 ];
 
-// ── SKILLS ───────────────────────────��────────────────────────────────────────
+// ── SKILLS ───────────────────────────���────────────────────────────────────────
 
 export const BASE_SKILLS: SkillDef[] = [
   { id: 'surge',           name: 'SURGE',    description: 'Tap damage ×10 for 5s',       cooldown: 30,  duration: 5,  color: '#00f5ff',                            icon: 'Zap',      unlockStage: 1  },
@@ -863,7 +870,7 @@ export const DIAMOND_CATALOG: ShopItemDef[] = [
 
 export const SHOP_CATALOG: ShopItemDef[] = [...OCT_CATALOG, ...DIAMOND_CATALOG];
 
-// ── DAILIES ───────────────────────────────────────────────────────────────────
+// ── DAILIES ─────────────────────────────────────────────────────────────���─────
 
 export interface ChallengeTemplateDef {
   type: string;
