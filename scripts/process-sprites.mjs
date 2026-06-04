@@ -4,11 +4,20 @@ import path from 'path';
 
 const ENEMIES_DIR = './public/assets/enemies';
 const OUTPUT_SIZE = 512;
-const BLACK_THRESHOLD = 30; // How close to black to remove
 
-function isCloseToBlack(r, g, b) {
-  // Remove pure black and near-black pixels
-  return r < BLACK_THRESHOLD && g < BLACK_THRESHOLD && b < BLACK_THRESHOLD;
+function isChromaKeyGreen(r, g, b) {
+  // Remove any greenish backgrounds - very aggressive
+  // This captures the teal/cyan greens that AI generates
+  // (~#3ED68C, ~#5FDAA3, ~#2ECC71, etc.)
+  
+  // If green is the strongest channel and reasonably bright
+  if (g > 150 && g > r && g > b) {
+    // And there's a significant gap between green and other channels
+    const greenDominance = g - Math.max(r, b);
+    if (greenDominance > 30) return true;
+  }
+  
+  return false;
 }
 
 async function processImage(filePath) {
@@ -30,7 +39,7 @@ async function processImage(filePath) {
     const g = pixels[i + 1];
     const b = pixels[i + 2];
     
-    if (isCloseToBlack(r, g, b)) {
+    if (isChromaKeyGreen(r, g, b)) {
       pixels[i + 3] = 0; // Set alpha to 0 (transparent)
     }
   }

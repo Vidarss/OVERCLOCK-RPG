@@ -428,46 +428,29 @@ export const ENEMY_CONFIG = {
 
   /** 
    * Enemy name pools, indexed by tier (one tier = 50 stages).
-   * 25 unique enemies in Tier 1. Other tiers pending sprites.
+   * 5 unique enemies in Tier 1. Other tiers pending sprites.
    * Within a stage, random enemies from the tier's pool are selected for phases 1-9.
    */
   enemyNamesByTier: [
     // Tier 1 (Stages 1-50): PERIMETER - Lesser malware, weak threats
-    [
-      'MALWARE_BAT', 'CORRUPT_PROC', 'NULL_PTR', 'STACK_OVERFLOW', 'SPAM_BOT',
-      'ADWARE_IMP', 'POPUP_GREMLIN', 'COOKIE_THIEF', 'SCRIPT_KIDDIE', 'TOOLBAR_WORM',
-      'CACHE_GOBLIN', 'PING_PHANTOM', 'SYNTAX_ERROR', 'BUG_SWARM', 'PIXEL_GLITCH',
-      'BYTE_MITE', 'DATA_LEECH', 'TEMP_FILE', 'JUNK_CODE', 'DEAD_LINK',
-      'BROKEN_PIPE', 'LOST_PACKET', 'GARBAGE_COLLECTOR', 'MEMORY_FRAGMENT', 'ORPHAN_PROCESS',
-    ],
+    ['GLITCH_BAT', 'DATA_WORM', 'PIXEL_SPIDER', 'ERROR_SKULL', 'VIRUS_BLOB'],
     // Tier 2+ uses Tier 1 pool until more sprites are generated
   ] as string[][],
 
   /** 
-   * Elite enemy names - 10 unique elites that randomly replace normal enemies.
-   * Elite appears based on eliteChance (15% default).
+   * Elite enemy names - uses regular enemies with elite modifier for now.
    */
   eliteNames: [
-    'ALPHA_VIRUS', 'CHROME_HUNTER', 'NEON_WRAITH', 'DATA_REAPER', 'FIREWALL_BREAKER',
-    'QUANTUM_SHIFTER', 'CRYPT_SENTINEL', 'MEMORY_DEVOURER', 'PROXY_ASSASSIN', 'OVERCLOCK_DAEMON',
+    'GLITCH_BAT', 'DATA_WORM', 'PIXEL_SPIDER', 'ERROR_SKULL', 'VIRUS_BLOB',
   ] as string[],
 
   /** 
-   * Boss names - 10 unique bosses that cycle through stages.
+   * Boss names - 1 boss currently, more can be added.
    * Boss appears at phase 10 of each stage.
-   * Boss index = (stage - 1) % 10
+   * Boss index = (stage - 1) % bossNames.length
    */
   bossNames: [
-    'THE_FIREWALL',       // Stage 1, 11, 21...
-    'DARK_ANTIVIRUS',     // Stage 2, 12, 22...
-    'CHAOS_KERNEL',       // Stage 3, 13, 23...
-    'OMEGA_ROOTKIT',      // Stage 4, 14, 24...
-    'SYSTEM32_WRAITH',    // Stage 5, 15, 25...
-    'BIOS_CORRUPTION',    // Stage 6, 16, 26...
-    'QUANTUM_MALWARE',    // Stage 7, 17, 27...
-    'THE_NULL_GOD',       // Stage 8, 18, 28...
-    'PHANTOM_OVERLORD',   // Stage 9, 19, 29...
-    'DEEP_PACKET_KING',   // Stage 10, 20, 30...
+    'THE_FIREWALL',
   ] as string[],
 } as const;
 
@@ -870,7 +853,7 @@ export const DIAMOND_CATALOG: ShopItemDef[] = [
 
 export const SHOP_CATALOG: ShopItemDef[] = [...OCT_CATALOG, ...DIAMOND_CATALOG];
 
-// ── DAILIES ─────────────────────────────────────────────────────────────���─────
+// ── DAILIES ───────────────────────��─────────────────────────────────────���─────
 
 export interface ChallengeTemplateDef {
   type: string;
@@ -912,7 +895,7 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ───────────────────────────────────────────────────────��────────
+  // ── Basic ──────────────────────────────────────────��────────────��────────
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
   { type: 'use_skills',      label: 'Use skills {n} times',            targetFn: () => 5,                      rewardFn: s => 40  + s * 10  },

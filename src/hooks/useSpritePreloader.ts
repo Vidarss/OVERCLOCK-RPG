@@ -40,15 +40,8 @@ function preloadSprite(src: string): Promise<void> {
  * Preload all sprites for a specific tier
  */
 export function preloadTierSprites(tier: number): void {
-  // Get all enemy names for this tier from game config
-  const tierEnemies = MONSTER_SPRITES.filter((_, index) => {
-    // Enemies are grouped by tier: 0-4 = tier 0, 5-9 = tier 1, etc.
-    const enemyTier = Math.floor(index / 5);
-    return enemyTier === tier && index < 25; // Only regular enemies, not bosses
-  });
-
-  // Preload all sprites for this tier
-  for (const enemy of tierEnemies) {
+  // Preload all monster sprites (we have a small set now)
+  for (const enemy of MONSTER_SPRITES) {
     for (const sprite of enemy.tiers) {
       preloadSprite(sprite.src);
     }
@@ -59,13 +52,10 @@ export function preloadTierSprites(tier: number): void {
  * Preload boss sprites
  */
 export function preloadBossSprites(): void {
-  // Bosses are at indices 25-34
-  const bosses = MONSTER_SPRITES.slice(25, 35);
+  // Find all monsters with bossTiers
+  const bosses = MONSTER_SPRITES.filter(m => m.bossTiers && m.bossTiers.length > 0);
   
   for (const boss of bosses) {
-    for (const sprite of boss.tiers) {
-      preloadSprite(sprite.src);
-    }
     if (boss.bossTiers) {
       for (const sprite of boss.bossTiers) {
         preloadSprite(sprite.src);

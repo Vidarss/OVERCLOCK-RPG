@@ -14,7 +14,7 @@ Sprite Tier: [1-5]
 - 32-bit retro pixel art style, clean edges, NO anti-aliasing, NO blur
 - IMAGE SIZE: 512x512 pixels (ALWAYS - no exceptions)
 - SPRITE SIZE: Monster centered, occupying tier-defined % of canvas
-- Background: SOLID BLACK (#000000)
+- Background: SOLID MAGENTA (#FF00FF) - chroma key for easy removal
 - NO compression artifacts, NO noise, NO grain
 - NO text, numbers, or symbols ON sprite body
 - NO UI elements, health bars, labels, watermarks
