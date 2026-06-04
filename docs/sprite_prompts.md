@@ -10,17 +10,18 @@ Sprite Tier: [1-6]
 
 === STYLE RULES (ALL TIERS) ===
 - 32-bit retro pixel art, clean edges, NO anti-aliasing
-- Size: 256x256 pixels
+- IMAGE SIZE: 512x512 pixels (ALWAYS - no exceptions)
+- SPRITE SIZE: Monster centered, occupying tier-defined % of canvas
 - Background: SOLID SINGLE COLOR (dark purple #1a0a2e or dark blue #0a0a2e)
 - NO text, numbers, or symbols ON sprite body
 - NO UI elements, health bars, labels, watermarks
-- PURE CHARACTER ONLY
+- PURE CHARACTER ONLY - centered in frame
 - MUST look like an ENEMY/THREAT/MONSTER - aggressive stance, hostile expression
 - NEVER cute, friendly, or sympathetic - these are hostile entities to be destroyed
 - Sharp edges, menacing features, combat-ready posture
 
 === TIER-SPECIFIC RULES ===
-[Apply the tier characteristics below]
+[Apply the tier characteristics below - SIZE refers to monster size within the 512x512 canvas]
 ```
 
 ---
