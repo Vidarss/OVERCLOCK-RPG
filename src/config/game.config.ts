@@ -205,17 +205,20 @@ export const HERO_CONFIG = {
   /** 
    * Hero upgrade definitions
    * Cost formula: baseCost * (costMultiplier ^ currentLevel)
+   * 
+   * BALANCE: Tap upgrades are the main early-game progression.
+   * Late-game requires OV perks and skills for meaningful damage.
    */
   upgrades: [
     {
       id: 'hero_tap_power',
       name: 'TAP POWER',
       description: 'Increase base tap damage',
-      baseCost: 15,
-      costMultiplier: 1.18,        // Steeper cost curve for balance
-      maxLevel: 500,               // Capped to prevent infinite scaling
+      baseCost: 20,
+      costMultiplier: 1.22,        // Steeper curve to limit late-game tap power
+      maxLevel: 300,               // Capped - OV perks take over late game
       modifierType: 'tap_damage',
-      valuePerLevel: 1,            // +1 tap damage per level (reduced from 2)
+      valuePerLevel: 1,            // +1 tap damage per level
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
@@ -224,9 +227,9 @@ export const HERO_CONFIG = {
       id: 'hero_crit_chance',
       name: 'CRIT CHANCE',
       description: 'Increase critical hit chance',
-      baseCost: 500,
-      costMultiplier: 1.28,        // Steeper cost curve
-      maxLevel: 20,                // Caps at +20% crit chance (30% total)
+      baseCost: 800,
+      costMultiplier: 1.30,        // Steeper curve
+      maxLevel: 15,                // Caps at +15% crit chance (25% total)
       modifierType: 'crit_chance',
       valuePerLevel: 0.01,         // +1% crit chance per level
       isMultiplier: false,
@@ -237,11 +240,11 @@ export const HERO_CONFIG = {
       id: 'hero_crit_damage',
       name: 'CRIT DAMAGE',
       description: 'Increase critical damage multiplier',
-      baseCost: 1000,
-      costMultiplier: 1.32,        // Steeper cost curve
-      maxLevel: 20,                // Caps at +1x crit damage (2.5x total)
+      baseCost: 1500,
+      costMultiplier: 1.35,        // Steeper curve
+      maxLevel: 15,                // Caps at +0.75x crit damage (2.25x total)
       modifierType: 'crit_multiplier',
-      valuePerLevel: 0.05,         // +5% crit damage per level (reduced from 10%)
+      valuePerLevel: 0.05,         // +5% crit damage per level
       isMultiplier: false,
       color: '#ffaa00',
       icon: '💥',
@@ -536,86 +539,108 @@ export const OVERCLOCK_CONFIG = {
   } as Record<PerkBranch, { skillId: SkillId; requiresRank: number; name: string; description: string }>,
 } as const;
 
+// ── OVERCLOCK PERKS ─────────────────────────────────────────────────────────
+//
+// STRATEGIC BUILD SYSTEM:
+// Each branch has a distinct playstyle. Late game requires choosing a focus:
+//
+// VOLTAGE (Blue)  - Active tap builds: Crit stacking, burst damage
+// SIGNAL (Gold)   - Economy builds: Fast progression, gold farming
+// THERMAL (Green) - Idle builds: AFK damage, passive income
+// ENTROPY (Red)   - Hybrid builds: Jack-of-all-trades, late unlocks
+// QUANTUM (Purple)- Synergy builds: Boost other branches, tier-gated
+//
+// Strategy: Players can't max everything. Must choose 2-3 branches to focus.
+
 export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
-  // ── VOLTAGE — raw damage, tap power, crit burst ──────────────────────────
-  { id: 'voltage_spike',    name: 'VOLTAGE_SPIKE',    branch: 'VOLTAGE', branchRank: 1, maxLevel: 12, costPerLevel: 1,  modifierType: 'tap_damage',      valuePerLevel: 0.35, isMultiplier: true,  color: '#00f5ff',            flavor: 'Raw current surges through every keystroke.',          description: '+35% tap damage per level' },
-  { id: 'zero_day',         name: 'ZERO_DAY',         branch: 'VOLTAGE', branchRank: 2, maxLevel: 6,  costPerLevel: 2,  modifierType: 'crit_chance',     valuePerLevel: 0.06, isMultiplier: false, color: '#00d4e8',            flavor: 'Exploit before the patch drops. Strike first.',         description: '+6% crit chance per level' },
-  { id: 'exploit_chain',    name: 'EXPLOIT_CHAIN',    branch: 'VOLTAGE', branchRank: 3, maxLevel: 5,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.60, isMultiplier: false, color: '#00b8cc', requiresTier: 2,  flavor: 'Cascade vulnerabilities. Each hit opens the next.',     description: '+60% crit damage per level' },
-  { id: 'voltage_overdrive',name: 'VOLTAGE_OVERDRIVE',branch: 'VOLTAGE', branchRank: 4, maxLevel: 6,  costPerLevel: 6,  modifierType: 'tap_damage',      valuePerLevel: 0.80, isMultiplier: true,  color: '#00a0bc', requiresTier: 9,  flavor: 'Fuse the limiter. The cap is gone. Pay the cost.',      description: '+80% tap damage per level' },
-  { id: 'arc_singularity',  name: 'ARC_SINGULARITY',  branch: 'VOLTAGE', branchRank: 5, maxLevel: 4,  costPerLevel: 10, modifierType: 'crit_chance',     valuePerLevel: 0.12, isMultiplier: false, color: '#0088aa', requiresTier: 12, flavor: 'The point where current becomes consciousness.',         description: '+12% crit chance per level' },
+  // ── VOLTAGE — Active tap builds, crit stacking ────────────────────────────
+  { id: 'voltage_spike',    name: 'VOLTAGE_SPIKE',    branch: 'VOLTAGE', branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'tap_damage',      valuePerLevel: 0.20, isMultiplier: true,  color: '#00f5ff',            flavor: 'Raw current through every keystroke.',    description: '+20% tap damage' },
+  { id: 'zero_day',         name: 'ZERO_DAY',         branch: 'VOLTAGE', branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'crit_chance',     valuePerLevel: 0.04, isMultiplier: false, color: '#00d4e8',            flavor: 'Exploit before the patch drops.',         description: '+4% crit chance' },
+  { id: 'exploit_chain',    name: 'EXPLOIT_CHAIN',    branch: 'VOLTAGE', branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.30, isMultiplier: false, color: '#00b8cc', requiresTier: 2,  flavor: 'Cascade vulnerabilities.',                description: '+30% crit damage' },
+  { id: 'voltage_overdrive',name: 'VOLTAGE_OVERDRIVE',branch: 'VOLTAGE', branchRank: 4, maxLevel: 4,  costPerLevel: 5,  modifierType: 'tap_damage',      valuePerLevel: 0.40, isMultiplier: true,  color: '#00a0bc', requiresTier: 6,  flavor: 'Fuse the limiter.',                       description: '+40% tap damage' },
+  { id: 'arc_singularity',  name: 'ARC_SINGULARITY',  branch: 'VOLTAGE', branchRank: 5, maxLevel: 3,  costPerLevel: 8,  modifierType: 'crit_chance',     valuePerLevel: 0.08, isMultiplier: false, color: '#0088aa', requiresTier: 10, flavor: 'Current becomes consciousness.',           description: '+8% crit chance' },
 
-  // ── SIGNAL — gold economy ─────────────────────────────────────────────────
-  { id: 'ghost_protocol',   name: 'GHOST_PROTOCOL',   branch: 'SIGNAL',  branchRank: 1, maxLevel: 12, costPerLevel: 1,  modifierType: 'gold_rate',       valuePerLevel: 0.25, isMultiplier: true,  color: '#ffaa00',            flavor: 'Route gold through untraceable channels.',              description: '+25% gold rate per level' },
-  { id: 'dead_drop',        name: 'DEAD_DROP',         branch: 'SIGNAL',  branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'gold_rate',       valuePerLevel: 0.40, isMultiplier: true,  color: '#e89500', requiresTier: 1,  flavor: 'Stashed cache. Every run starts with a head start.',    description: '+40% gold rate (stacks hard)' },
-  { id: 'data_launder',     name: 'DATA_LAUNDER',      branch: 'SIGNAL',  branchRank: 3, maxLevel: 4,  costPerLevel: 4,  modifierType: 'gold_rate',       valuePerLevel: 0.50, isMultiplier: true,  color: '#cc8400', requiresTier: 3,  flavor: 'Clean dirty signals into pure throughput.',             description: '+50% gold rate (endgame tier)' },
-  { id: 'signal_fracture',  name: 'SIGNAL_FRACTURE',   branch: 'SIGNAL',  branchRank: 4, maxLevel: 5,  costPerLevel: 7,  modifierType: 'gold_rate',       valuePerLevel: 0.70, isMultiplier: true,  color: '#aa7000', requiresTier: 9,  flavor: 'Shatter the carrier wave. Wealth floods through the cracks.', description: '+70% gold rate per level' },
-  { id: 'dark_signal',      name: 'DARK_SIGNAL',       branch: 'SIGNAL',  branchRank: 5, maxLevel: 3,  costPerLevel: 12, modifierType: 'gold_rate',       valuePerLevel: 1.0,  isMultiplier: true,  color: '#885c00', requiresTier: 12, flavor: 'Transmissions from a market that does not officially exist.', description: '+100% gold rate per level' },
+  // ── SIGNAL — Economy builds, gold farming ─────────────────────────────────
+  { id: 'ghost_protocol',   name: 'GHOST_PROTOCOL',   branch: 'SIGNAL',  branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'gold_rate',       valuePerLevel: 0.15, isMultiplier: true,  color: '#ffaa00',            flavor: 'Route gold through hidden channels.',     description: '+15% gold rate' },
+  { id: 'dead_drop',        name: 'DEAD_DROP',        branch: 'SIGNAL',  branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'gold_rate',       valuePerLevel: 0.25, isMultiplier: true,  color: '#e89500', requiresTier: 1,  flavor: 'Stashed cache for every run.',            description: '+25% gold rate' },
+  { id: 'data_launder',     name: 'DATA_LAUNDER',     branch: 'SIGNAL',  branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'gold_rate',       valuePerLevel: 0.35, isMultiplier: true,  color: '#cc8400', requiresTier: 3,  flavor: 'Clean dirty signals into throughput.',    description: '+35% gold rate' },
+  { id: 'signal_fracture',  name: 'SIGNAL_FRACTURE',  branch: 'SIGNAL',  branchRank: 4, maxLevel: 3,  costPerLevel: 6,  modifierType: 'gold_rate',       valuePerLevel: 0.50, isMultiplier: true,  color: '#aa7000', requiresTier: 7,  flavor: 'Shatter the carrier wave.',               description: '+50% gold rate' },
+  { id: 'dark_signal',      name: 'DARK_SIGNAL',      branch: 'SIGNAL',  branchRank: 5, maxLevel: 2,  costPerLevel: 10, modifierType: 'gold_rate',       valuePerLevel: 0.75, isMultiplier: true,  color: '#885c00', requiresTier: 11, flavor: 'Transmissions from the black market.',    description: '+75% gold rate' },
 
-  // ── THERMAL — sustained idle DPS ─────────────────────────────────────────
-  { id: 'phantom_thread',    name: 'PHANTOM_THREAD',    branch: 'THERMAL', branchRank: 1, maxLevel: 12, costPerLevel: 1,  modifierType: 'idle_dps', valuePerLevel: 0.30, isMultiplier: true, color: '#39ff14',            flavor: 'Silent processes eating cycles in the dark.',              description: '+30% idle DPS per level' },
-  { id: 'thermal_runaway',   name: 'THERMAL_RUNAWAY',   branch: 'THERMAL', branchRank: 2, maxLevel: 6,  costPerLevel: 2,  modifierType: 'idle_dps', valuePerLevel: 0.45, isMultiplier: true, color: '#29dd09', requiresTier: 1,  flavor: 'Controlled meltdown. Sustained burn into oblivion.',       description: '+45% idle DPS per level' },
-  { id: 'neural_overclock',  name: 'NEURAL_OVERCLOCK',  branch: 'THERMAL', branchRank: 3, maxLevel: 8,  costPerLevel: 4,  modifierType: 'idle_dps', valuePerLevel: 0.60, isMultiplier: true, color: '#19bb00', requiresTier: 3,  flavor: 'Fry your synapses. CPU and flesh become one.',             description: '+60% idle DPS — peak thermal output' },
-  { id: 'absolute_zero',     name: 'ABSOLUTE_ZERO',     branch: 'THERMAL', branchRank: 4, maxLevel: 5,  costPerLevel: 6,  modifierType: 'idle_dps', valuePerLevel: 0.80, isMultiplier: true, color: '#0d9900', requiresTier: 6,  flavor: 'Cool the silicon to the void. Nothing resists.',           description: '+80% idle DPS — deep endgame' },
-  { id: 'thermal_apotheosis',name: 'THERMAL_APOTHEOSIS',branch: 'THERMAL', branchRank: 5, maxLevel: 4,  costPerLevel: 10, modifierType: 'idle_dps', valuePerLevel: 1.20, isMultiplier: true, color: '#0a7700', requiresTier: 10, flavor: 'The machine transcends heat. It becomes the heat.',        description: '+120% idle DPS per level' },
-  { id: 'cascade_burn',      name: 'CASCADE_BURN',      branch: 'THERMAL', branchRank: 6, maxLevel: 3,  costPerLevel: 15, modifierType: 'idle_dps', valuePerLevel: 1.50, isMultiplier: true, color: '#075500', requiresTier: 13, flavor: 'One process ignites the next. Infinite recursion of destruction.', description: '+150% idle DPS — final thermal ascension' },
+  // ── THERMAL — Idle builds, passive damage ─────────────────────────────────
+  { id: 'phantom_thread',    name: 'PHANTOM_THREAD',    branch: 'THERMAL', branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'idle_dps', valuePerLevel: 0.20, isMultiplier: true, color: '#39ff14',            flavor: 'Silent processes in the dark.',           description: '+20% idle DPS' },
+  { id: 'thermal_runaway',   name: 'THERMAL_RUNAWAY',   branch: 'THERMAL', branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'idle_dps', valuePerLevel: 0.30, isMultiplier: true, color: '#29dd09', requiresTier: 1,  flavor: 'Controlled meltdown.',                    description: '+30% idle DPS' },
+  { id: 'neural_overclock',  name: 'NEURAL_OVERCLOCK',  branch: 'THERMAL', branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'idle_dps', valuePerLevel: 0.40, isMultiplier: true, color: '#19bb00', requiresTier: 3,  flavor: 'CPU and flesh become one.',               description: '+40% idle DPS' },
+  { id: 'absolute_zero',     name: 'ABSOLUTE_ZERO',     branch: 'THERMAL', branchRank: 4, maxLevel: 3,  costPerLevel: 6,  modifierType: 'idle_dps', valuePerLevel: 0.60, isMultiplier: true, color: '#0d9900', requiresTier: 6,  flavor: 'Cool silicon to the void.',               description: '+60% idle DPS' },
+  { id: 'thermal_apotheosis',name: 'THERMAL_APOTHEOSIS',branch: 'THERMAL', branchRank: 5, maxLevel: 2,  costPerLevel: 10, modifierType: 'idle_dps', valuePerLevel: 0.80, isMultiplier: true, color: '#0a7700', requiresTier: 10, flavor: 'The machine transcends heat.',            description: '+80% idle DPS' },
 
-  // ── ENTROPY — boss & elite power, late-game scaling ──────────────────────
-  { id: 'exploit_entropy',  name: 'EXPLOIT_ENTROPY',  branch: 'ENTROPY', branchRank: 1, maxLevel: 10, costPerLevel: 2,  modifierType: 'tap_damage',      valuePerLevel: 0.40, isMultiplier: true,  color: '#ff4444', requiresTier: 2,  flavor: 'Disorder is your weapon. Chaos scales with chaos.',      description: '+40% tap damage per level' },
-  { id: 'void_shell',       name: 'VOID_SHELL',        branch: 'ENTROPY', branchRank: 2, maxLevel: 7,  costPerLevel: 3,  modifierType: 'gold_rate',       valuePerLevel: 0.55, isMultiplier: true,  color: '#dd2222', requiresTier: 4,  flavor: 'Rip gold from the void between clock cycles.',           description: '+55% gold rate per level' },
-  { id: 'apex_protocol',    name: 'APEX_PROTOCOL',    branch: 'ENTROPY', branchRank: 3, maxLevel: 4,  costPerLevel: 8,  modifierType: 'tap_damage',      valuePerLevel: 0.90, isMultiplier: true,  color: '#bb0000', requiresTier: 7,  flavor: 'Endpoint achieved. All limits dissolved.',               description: '+90% tap damage per level' },
-  { id: 'entropy_cascade',  name: 'ENTROPY_CASCADE',  branch: 'ENTROPY', branchRank: 4, maxLevel: 4,  costPerLevel: 11, modifierType: 'tap_damage',      valuePerLevel: 1.10, isMultiplier: true,  color: '#990000', requiresTier: 10, flavor: 'The collapse becomes the weapon. Every ending is a strike.',description: '+110% tap damage per level' },
-  { id: 'null_storm',       name: 'NULL_STORM',        branch: 'ENTROPY', branchRank: 5, maxLevel: 3,  costPerLevel: 14, modifierType: 'crit_multiplier', valuePerLevel: 0.80, isMultiplier: false, color: '#770000', requiresTier: 13, flavor: 'Undefined behaviour at scale. The system deletes itself.', description: '+80% crit damage per level' },
+  // ── ENTROPY — Hybrid builds, late-game chaos ──────────────────────────────
+  { id: 'exploit_entropy',  name: 'EXPLOIT_ENTROPY',  branch: 'ENTROPY', branchRank: 1, maxLevel: 6,  costPerLevel: 2,  modifierType: 'tap_damage',      valuePerLevel: 0.25, isMultiplier: true,  color: '#ff4444', requiresTier: 2,  flavor: 'Chaos is your weapon.',                   description: '+25% tap damage' },
+  { id: 'void_shell',       name: 'VOID_SHELL',       branch: 'ENTROPY', branchRank: 2, maxLevel: 4,  costPerLevel: 3,  modifierType: 'gold_rate',       valuePerLevel: 0.30, isMultiplier: true,  color: '#dd2222', requiresTier: 4,  flavor: 'Rip gold from the void.',                 description: '+30% gold rate' },
+  { id: 'apex_protocol',    name: 'APEX_PROTOCOL',    branch: 'ENTROPY', branchRank: 3, maxLevel: 3,  costPerLevel: 5,  modifierType: 'idle_dps',        valuePerLevel: 0.40, isMultiplier: true,  color: '#bb0000', requiresTier: 6,  flavor: 'All limits dissolved.',                   description: '+40% idle DPS' },
+  { id: 'entropy_cascade',  name: 'ENTROPY_CASCADE',  branch: 'ENTROPY', branchRank: 4, maxLevel: 3,  costPerLevel: 8,  modifierType: 'crit_multiplier', valuePerLevel: 0.50, isMultiplier: false, color: '#990000', requiresTier: 9,  flavor: 'Every ending is a strike.',               description: '+50% crit damage' },
+  { id: 'null_storm',       name: 'NULL_STORM',       branch: 'ENTROPY', branchRank: 5, maxLevel: 2,  costPerLevel: 12, modifierType: 'tap_damage',      valuePerLevel: 0.60, isMultiplier: true,  color: '#770000', requiresTier: 12, flavor: 'The system deletes itself.',              description: '+60% tap damage' },
 
-  // ── QUANTUM — synergy perks, unlocked at tier 3 ──────────────────────────
-  { id: 'superposition',    name: 'SUPERPOSITION',    branch: 'QUANTUM', branchRank: 1, maxLevel: 8,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.50, isMultiplier: false, color: '#cc44ff', requiresTier: 3,  flavor: 'Strike from two states at once. Both deal damage.',       description: '+50% crit damage per level' },
-  { id: 'entanglement',     name: 'ENTANGLEMENT',     branch: 'QUANTUM', branchRank: 2, maxLevel: 6,  costPerLevel: 4,  modifierType: 'crit_chance',     valuePerLevel: 0.08, isMultiplier: false, color: '#aa22dd', requiresTier: 5,  flavor: 'Linked states. What hits one hits all.',                  description: '+8% crit chance per level' },
-  { id: 'wave_collapse',    name: 'WAVE_COLLAPSE',    branch: 'QUANTUM', branchRank: 3, maxLevel: 5,  costPerLevel: 7,  modifierType: 'tap_damage',      valuePerLevel: 0.70, isMultiplier: true,  color: '#8800bb', requiresTier: 8,  flavor: 'Probability collapses in your favour. Always.',           description: '+70% tap damage — final quantum form' },
-  { id: 'quantum_tunneling',name: 'QUANTUM_TUNNELING',branch: 'QUANTUM', branchRank: 4, maxLevel: 4,  costPerLevel: 10, modifierType: 'tap_damage',      valuePerLevel: 0.90, isMultiplier: true,  color: '#660099', requiresTier: 10, flavor: 'Pass through every defence. Barriers are imaginary.',     description: '+90% tap damage per level' },
-  { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 3,  costPerLevel: 15, modifierType: 'crit_chance',     valuePerLevel: 0.15, isMultiplier: false, color: '#440077', requiresTier: 13, flavor: 'Reality destabilises around your attacks. Physics yields.', description: '+15% crit chance per level — quantum apex' },
+  // ── QUANTUM — Synergy builds, multiplies other branches ───────────────────
+  { id: 'superposition',    name: 'SUPERPOSITION',    branch: 'QUANTUM', branchRank: 1, maxLevel: 5,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.25, isMultiplier: false, color: '#cc44ff', requiresTier: 3,  flavor: 'Strike from two states at once.',         description: '+25% crit damage' },
+  { id: 'entanglement',     name: 'ENTANGLEMENT',     branch: 'QUANTUM', branchRank: 2, maxLevel: 4,  costPerLevel: 4,  modifierType: 'idle_dps',        valuePerLevel: 0.35, isMultiplier: true,  color: '#aa22dd', requiresTier: 5,  flavor: 'Linked states share damage.',             description: '+35% idle DPS' },
+  { id: 'wave_collapse',    name: 'WAVE_COLLAPSE',    branch: 'QUANTUM', branchRank: 3, maxLevel: 3,  costPerLevel: 6,  modifierType: 'gold_rate',       valuePerLevel: 0.45, isMultiplier: true,  color: '#8800bb', requiresTier: 7,  flavor: 'Probability always favours you.',         description: '+45% gold rate' },
+  { id: 'quantum_tunneling',name: 'QUANTUM_TUNNELING',branch: 'QUANTUM', branchRank: 4, maxLevel: 3,  costPerLevel: 9,  modifierType: 'tap_damage',      valuePerLevel: 0.55, isMultiplier: true,  color: '#660099', requiresTier: 9,  flavor: 'Pass through every defence.',             description: '+55% tap damage' },
+  { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 2,  costPerLevel: 14, modifierType: 'crit_chance',     valuePerLevel: 0.10, isMultiplier: false, color: '#440077', requiresTier: 12, flavor: 'Reality yields to your attacks.',         description: '+10% crit chance' },
 ];
 
-// ── SKILLS ───────────────────────────���────────────────────────────────────────
+// ── SKILLS ────────────────────────────────────────────────────────────────────
+//
+// BALANCE NOTES - Skills are strategic with meaningful tradeoffs:
+// - SURGE: Moderate tap boost (x3), short duration, use for burst DPS
+// - OC PULSE: Idle boost (x3), longer duration, set-and-forget
+// - GOLD RUSH: Gold multiplier (x2), use before big kills
+// - FIREWALL: Boss timer freeze, critical for hard bosses
+// - CHAIN HACK: Auto-taps (~15/s), useful AFK or for rapid hits
+//
+// Late-game strategy: Combine skills with OV perks for synergies
+// Each skill has distinct purpose - no "always use" skill
 
 export const BASE_SKILLS: SkillDef[] = [
-  { id: 'surge',           name: 'SURGE',    description: 'Tap damage ×10 for 5s',       cooldown: 30,  duration: 5,  color: '#00f5ff',                            icon: 'Zap',      unlockStage: 1  },
-  { id: 'overclock_pulse', name: 'OC PULSE', description: 'Idle DPS ×5 for 8s',          cooldown: 45,  duration: 8,  color: '#ff0080',                            icon: 'Cpu',      unlockStage: 5  },
-  { id: 'gold_rush',       name: 'GOLD RUSH',description: 'Gold gain ×3 for 10s',         cooldown: 60,  duration: 10, color: '#ffaa00',                            icon: 'Coins',    unlockStage: 10 },
-  { id: 'firewall',        name: 'FIREWALL', description: 'Block boss timer for 8s',      cooldown: 90,  duration: 8,  color: '#39ff14',                            icon: 'Shield',   unlockStage: 15 },
-  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 20×/s for 6s',      cooldown: 50,  duration: 6,  color: '#ff4444',                            icon: 'Link',     unlockStage: 20 },
+  { id: 'surge',           name: 'SURGE',     description: 'Tap damage x3 for 6s',        cooldown: 25,  duration: 6,  color: '#00f5ff', icon: 'Zap',    unlockStage: 1  },
+  { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x3 for 10s',         cooldown: 40,  duration: 10, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
+  { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x2 for 12s',        cooldown: 50,  duration: 12, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
+  { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 10s',       cooldown: 75,  duration: 10, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
+  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 15x/s for 5s',       cooldown: 45,  duration: 5,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
 ];
 
 export const BRANCH_SKILLS: SkillDef[] = [
-  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 500× tap burst',           cooldown: 120, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
-  { id: 'signal_jam',      name: 'SIGNAL JAM',        description: '×2 gold rate for 15s',             cooldown: 90,  duration: 15, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
-  { id: 'meltdown',        name: 'MELTDOWN',          description: '×20 idle DPS for 10s',             cooldown: 100, duration: 10, color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
-  { id: 'entropy_burst',   name: 'ENTROPY BURST',     description: '×3 tap + ×3 gold for 8s',          cooldown: 110, duration: 8,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
-  { id: 'quantum_echo',    name: 'QUANTUM ECHO',      description: 'Activate all skills instantly',     cooldown: 180, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
+  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 200x tap burst',         cooldown: 100, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
+  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.5 gold for 20s',              cooldown: 80,  duration: 20, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
+  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x10 idle DPS for 8s',            cooldown: 90,  duration: 8,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
+  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x2 tap + x2 gold for 6s',        cooldown: 100, duration: 6,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
+  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',       cooldown: 150, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
 ];
 
 export const ALL_SKILLS: SkillDef[] = [...BASE_SKILLS, ...BRANCH_SKILLS];
 
 /** Modifiers applied when each skill is active (used by SkillPlugin). */
 export const SKILL_EFFECTS: Record<SkillId, { modifierType: ModifierDef['type']; value: number; isMultiplier: boolean }[]> = {
-  surge:            [{ modifierType: 'tap_damage', value: 10,  isMultiplier: true  }],
-  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 5,   isMultiplier: true  }],
-  gold_rush:        [{ modifierType: 'gold_rate',  value: 3,   isMultiplier: true  }],
+  surge:            [{ modifierType: 'tap_damage', value: 3,   isMultiplier: true  }],
+  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 3,   isMultiplier: true  }],
+  gold_rush:        [{ modifierType: 'gold_rate',  value: 2,   isMultiplier: true  }],
   firewall:         [],
   chain_hack:       [],
   static_discharge: [],
-  signal_jam:       [{ modifierType: 'gold_rate',  value: 2,   isMultiplier: true  }],
-  meltdown:         [{ modifierType: 'idle_dps',   value: 20,  isMultiplier: true  }],
+  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.5, isMultiplier: true  }],
+  meltdown:         [{ modifierType: 'idle_dps',   value: 10,  isMultiplier: true  }],
   entropy_burst:    [
-    { modifierType: 'tap_damage', value: 3, isMultiplier: true },
-    { modifierType: 'gold_rate',  value: 3, isMultiplier: true },
+    { modifierType: 'tap_damage', value: 2, isMultiplier: true },
+    { modifierType: 'gold_rate',  value: 2, isMultiplier: true },
   ],
   quantum_echo: [],
 };
 
-/** chain_hack fires one auto-tap every chainHackIntervalMs. */
-export const CHAIN_HACK_INTERVAL_MS = 50;
+/** chain_hack fires one auto-tap every chainHackIntervalMs (~15 per second). */
+export const CHAIN_HACK_INTERVAL_MS = 67;
 
 /** static_discharge burst multiplier (applied to current tap_damage modifier). */
-export const STATIC_DISCHARGE_BURST = 500;
+export const STATIC_DISCHARGE_BURST = 200;
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
 

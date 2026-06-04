@@ -1,4 +1,5 @@
 import type { IPlugin, IEngine, GameEvent, GameState } from '../engine/types';
+import type { DataPacketPlugin } from './DataPacketPlugin';
 
 export class GoldPlugin implements IPlugin {
   id = 'gold';
@@ -13,7 +14,12 @@ export class GoldPlugin implements IPlugin {
     engine.on('enemy_death', (event: GameEvent<{ goldReward: number }>) => {
       const state = engine.state;
       const goldRate = engine.getModifier('gold_rate');
-      const reward = Math.floor(event.payload.goldReward * goldRate);
+      
+      // Apply 3x boost from ad if active
+      const dataPacketPlugin = engine.getPlugin<DataPacketPlugin>('datapacket');
+      const boostMult = dataPacketPlugin?.getBoostMultiplier() ?? 1;
+      
+      const reward = Math.floor(event.payload.goldReward * goldRate * boostMult);
       const newGold = state.gold + reward;
       engine.updateState({ gold: newGold });
       engine.emit('gold_changed', { gold: newGold, delta: reward });

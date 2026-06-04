@@ -1,5 +1,10 @@
 // =====================================================================
 // DataPacketPlugin - Ad-reward system ("intercepted transmissions")
+// 
+// FEATURES:
+// - Basic packets: Small gold boost (no ad)
+// - Encrypted packets: Medium gold boost (watch ad)
+// - 3X Boost packets: Triple gold for 60 seconds (watch ad)
 // =====================================================================
 
 import type { IPlugin, IEngine, GameState } from '../engine/types';
@@ -16,6 +21,12 @@ export interface ActiveDataPacket {
   expiresAt: number;
 }
 
+export interface ActiveBoost {
+  type: 'gold_3x';
+  multiplier: number;
+  expiresAt: number;
+}
+
 export class DataPacketPlugin implements IPlugin {
   id = 'datapacket';
   dependencies = ['auth'];
@@ -28,6 +39,9 @@ export class DataPacketPlugin implements IPlugin {
   private lastCollectTime = 0;
   private isProcessing = false;
   private listeners: (() => void)[] = [];
+  
+  // Active boost from 3x ad
+  private activeBoost: ActiveBoost | null = null;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -45,6 +59,13 @@ export class DataPacketPlugin implements IPlugin {
 
   onTick(delta: number, state: GameState): void {
     const now = Date.now();
+
+    // Check if active boost has expired
+    if (this.activeBoost && now >= this.activeBoost.expiresAt) {
+      this.activeBoost = null;
+      this.engine.emit('boost_expired', { type: 'gold_3x' });
+      this.notifyListeners();
+    }
 
     // Check if active packet has expired
     if (this.activePacket && now >= this.activePacket.expiresAt) {
@@ -68,6 +89,23 @@ export class DataPacketPlugin implements IPlugin {
   }
 
   /**
+   * Get the active boost (if any)
+   */
+  getActiveBoost(): ActiveBoost | null {
+    return this.activeBoost;
+  }
+
+  /**
+   * Get the gold multiplier from active boost
+   */
+  getBoostMultiplier(): number {
+    if (this.activeBoost && Date.now() < this.activeBoost.expiresAt) {
+      return this.activeBoost.multiplier;
+    }
+    return 1;
+  }
+
+  /**
    * Check if currently processing (collecting/watching ad)
    */
   getIsProcessing(): boolean {
@@ -77,7 +115,7 @@ export class DataPacketPlugin implements IPlugin {
   /**
    * Get gold multiplier from active skills (gold_rush, signal_jam, etc.)
    */
-  private getGoldMultiplier(): number {
+  private getSkillGoldMultiplier(): number {
     const skillPlugin = this.engine.getPlugin<SkillPlugin>('skill');
     if (!skillPlugin) return 1;
 
@@ -100,18 +138,21 @@ export class DataPacketPlugin implements IPlugin {
     this.isProcessing = true;
     const reward = this.activePacket.goldReward;
 
-    // Add gold immediately (no skill multiplier for basic)
+    // Add gold immediately (no skill multiplier for basic, but boost applies)
+    const boostMult = this.getBoostMultiplier();
+    const finalReward = Math.floor(reward * boostMult);
+    
     this.engine.updateState({
-      gold: this.engine.state.gold + reward,
+      gold: this.engine.state.gold + finalReward,
     });
 
     this.engine.emit('datapacket_collected', {
       type: this.activePacket.type,
-      goldReward: reward,
+      goldReward: finalReward,
       wasAd: false,
     });
 
-    this.engine.emit('gold_changed', { delta: reward, reason: 'datapacket' });
+    this.engine.emit('gold_changed', { delta: finalReward, reason: 'datapacket' });
 
     // Clear packet and schedule next
     this.clearPacket();
@@ -121,7 +162,7 @@ export class DataPacketPlugin implements IPlugin {
   }
 
   /**
-   * Start watching an ad for encrypted packet
+   * Start watching an ad for encrypted packet or 3x boost
    * Ad rewards include skill multiplier bonus (gold_rush, signal_jam, entropy_burst)
    * Skill is not activated, just the gold amount gets the bonus
    */
@@ -138,23 +179,49 @@ export class DataPacketPlugin implements IPlugin {
       const adResult = await AdService.showRewardedAd();
 
       if (adResult.success && this.activePacket?.id === packet.id) {
-        const baseReward = packet.goldReward;
-        // Ad rewards get skill multiplier bonus as gold only (skill not actually activated)
-        const multiplier = this.getGoldMultiplier();
-        const reward = Math.floor(baseReward * multiplier);
+        // Check if this is a boost packet
+        if (packet.type === 'boost_3x' && packet.def.boostDuration && packet.def.boostMultiplier) {
+          // Activate the 3x boost
+          const now = Date.now();
+          this.activeBoost = {
+            type: 'gold_3x',
+            multiplier: packet.def.boostMultiplier,
+            expiresAt: now + (packet.def.boostDuration * 1000),
+          };
 
-        // Add gold
-        this.engine.updateState({
-          gold: this.engine.state.gold + reward,
-        });
+          this.engine.emit('boost_activated', {
+            type: 'gold_3x',
+            multiplier: packet.def.boostMultiplier,
+            duration: packet.def.boostDuration,
+          });
 
-        this.engine.emit('datapacket_collected', {
-          type: packet.type,
-          goldReward: reward,
-          wasAd: true,
-        });
+          this.engine.emit('datapacket_collected', {
+            type: packet.type,
+            goldReward: 0,
+            wasAd: true,
+            boostActivated: true,
+          });
+        } else {
+          // Normal encrypted packet - give gold
+          const baseReward = packet.goldReward;
+          // Ad rewards get skill multiplier bonus as gold only (skill not actually activated)
+          const skillMult = this.getSkillGoldMultiplier();
+          const boostMult = this.getBoostMultiplier();
+          const reward = Math.floor(baseReward * skillMult * boostMult);
 
-        this.engine.emit('gold_changed', { delta: reward, reason: 'datapacket_ad' });
+          // Add gold
+          this.engine.updateState({
+            gold: this.engine.state.gold + reward,
+          });
+
+          this.engine.emit('datapacket_collected', {
+            type: packet.type,
+            goldReward: reward,
+            wasAd: true,
+          });
+
+          this.engine.emit('gold_changed', { delta: reward, reason: 'datapacket_ad' });
+        }
 
         this.clearPacket();
         this.lastCollectTime = Date.now();
@@ -198,7 +265,9 @@ export class DataPacketPlugin implements IPlugin {
 
   private spawnPacket(currentStage: number): void {
     const packetDef = this.selectRandomPacketType();
-    const goldReward = DATAPACKET_CONFIG.formulas.calculateGold(currentStage, packetDef.enemyEquivalent);
+    const goldReward = packetDef.enemyEquivalent > 0 
+      ? DATAPACKET_CONFIG.formulas.calculateGold(currentStage, packetDef.enemyEquivalent)
+      : 0;
 
     const now = Date.now();
     this.activePacket = {
@@ -257,6 +326,7 @@ export class DataPacketPlugin implements IPlugin {
 
   cleanup(): void {
     this.activePacket = null;
+    this.activeBoost = null;
     this.listeners = [];
   }
 }

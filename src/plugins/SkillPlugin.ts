@@ -119,11 +119,11 @@ export class SkillPlugin implements IPlugin {
     }
 
     if (skill.id === 'quantum_echo') {
+      // Reset all base skill cooldowns only - does NOT auto-fire them
       const zeroed: Partial<GameState['skillCooldowns']> = {};
       for (const s of BASE_SKILLS) zeroed[s.id] = { readyAt: 0, activeUntil: 0 };
       this.engine.updateState({ skillCooldowns: { ...this.engine.state.skillCooldowns, ...zeroed } });
-      let delay = 10;
-      for (const s of BASE_SKILLS) { setTimeout(() => { this.activateSkill(s.id); }, delay); delay += 20; }
+      this.engine.emit('quantum_echo_triggered', {});
       return;
     }
 
