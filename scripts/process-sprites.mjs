@@ -3,32 +3,12 @@ import fs from 'fs';
 import path from 'path';
 
 const ENEMIES_DIR = './public/assets/enemies';
-const OUTPUT_SIZE = 512; // Final size
-const PURPLE_THRESHOLD = 40; // How close to purple to remove
+const OUTPUT_SIZE = 512;
+const BLACK_THRESHOLD = 30; // How close to black to remove
 
-// Purple backgrounds to remove: #1a0a2e and #0a0a2e
-const PURPLE_TARGETS = [
-  { r: 26, g: 10, b: 46 },   // #1a0a2e
-  { r: 10, g: 10, b: 46 },   // #0a0a2e
-  { r: 20, g: 10, b: 40 },   // close variants
-  { r: 15, g: 8, b: 35 },
-  { r: 25, g: 15, b: 50 },
-  { r: 30, g: 15, b: 55 },
-  { r: 18, g: 12, b: 42 },
-];
-
-function isCloseToBackground(r, g, b) {
-  for (const target of PURPLE_TARGETS) {
-    const dist = Math.sqrt(
-      Math.pow(r - target.r, 2) +
-      Math.pow(g - target.g, 2) +
-      Math.pow(b - target.b, 2)
-    );
-    if (dist < PURPLE_THRESHOLD) return true;
-  }
-  // Also check if it's very dark purple/blue (low R, low G, higher B)
-  if (r < 50 && g < 30 && b < 70 && b > g) return true;
-  return false;
+function isCloseToBlack(r, g, b) {
+  // Remove pure black and near-black pixels
+  return r < BLACK_THRESHOLD && g < BLACK_THRESHOLD && b < BLACK_THRESHOLD;
 }
 
 async function processImage(filePath) {
@@ -50,7 +30,7 @@ async function processImage(filePath) {
     const g = pixels[i + 1];
     const b = pixels[i + 2];
     
-    if (isCloseToBackground(r, g, b)) {
+    if (isCloseToBlack(r, g, b)) {
       pixels[i + 3] = 0; // Set alpha to 0 (transparent)
     }
   }
