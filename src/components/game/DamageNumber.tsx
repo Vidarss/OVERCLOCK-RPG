@@ -21,7 +21,8 @@ export const DamageNumber: React.FC<DamageNumberProps> = ({ event, onDone }) => 
 
   if (!visible) return null;
 
-  const color = DAMAGE_COLORS[event.type];
+  const isBlocked = event.type === 'blocked';
+  const color = isBlocked ? '#ff4444' : DAMAGE_COLORS[event.type];
   const isCrit = event.type === 'crit';
 
   return (
@@ -31,15 +32,16 @@ export const DamageNumber: React.FC<DamageNumberProps> = ({ event, onDone }) => 
         left: event.x ?? '50%',
         top: event.y ?? '50%',
         color,
-        fontSize: isCrit ? '12px' : '8px',
+        fontSize: isBlocked ? '8px' : isCrit ? '12px' : '8px',
         transform: 'translateX(-50%)',
         zIndex: 50,
         textShadow: `0 0 8px ${color}`,
         whiteSpace: 'nowrap',
       }}
     >
-      {isCrit && <span style={{ fontSize: '7px', display: 'block', color: '#ffaa00' }}>CRIT!</span>}
-      {event.type === 'idle' ? '' : ''}{formatNumber(event.value)}
+      {isBlocked && <span style={{ opacity: 0.8 }}>BLOCKED</span>}
+      {isCrit && !isBlocked && <span style={{ fontSize: '7px', display: 'block', color: '#ffaa00' }}>CRIT!</span>}
+      {!isBlocked && <>{event.type === 'idle' ? '' : ''}{formatNumber(event.value)}</>}
     </div>
   );
 };

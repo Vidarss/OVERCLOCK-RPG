@@ -143,41 +143,142 @@ export const SKILL_POINT_CONFIG = {
   ],
 } as const;
 
+// ── SKILL TREE ───────────────────────────────────────────────────────────────
+
+export interface SkillTreeNode {
+  id: string;
+  name: string;
+  description: string;
+  icon: string; // Lucide icon name
+  maxLevel: number;
+  costPerLevel: number; // SP cost per level
+  effect: {
+    type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'skill_cooldown' | 'boss_damage' | 'elite_damage' | 'all_damage';
+    valuePerLevel: number;
+    isMultiplier?: boolean; // true = multiplicative, false = additive
+    isPercent?: boolean; // for display purposes
+  };
+  requires?: string[]; // Node IDs that must be unlocked first
+  tier: 1 | 2 | 3 | 4 | 5; // Visual tier for positioning
+  branch: 'CORE' | 'OFFENSE' | 'DEFENSE' | 'UTILITY' | 'MASTERY';
+  color: string;
+}
+
+export const SKILL_TREE_CONFIG = {
+  nodes: [
+    // ════════════════════════════════════════════════════════���══════════════════
+    // TIER 1 - CORE (No requirements, starting nodes)
+    // ═══════════════════════════════════════════════════════════════════════════
+    { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
+    { id: 'gold_sense', name: 'GOLD SENSE', description: '+3% Gold per level', icon: 'Coins', maxLevel: 10, costPerLevel: 1, effect: { type: 'gold_bonus', valuePerLevel: 0.03, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#ffd700' },
+    { id: 'idle_protocol', name: 'IDLE PROTOCOL', description: '+5% Idle Damage per level', icon: 'Cpu', maxLevel: 10, costPerLevel: 1, effect: { type: 'idle_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00ff88' },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TIER 2 - OFFENSE (Requires Tier 1)
+    // ═══════════════════════════════════════════════════════════════════════════
+    { id: 'critical_systems', name: 'CRITICAL SYSTEMS', description: '+2% Crit Chance per level', icon: 'Crosshair', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_chance', valuePerLevel: 0.02, isMultiplier: false, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff4444' },
+    { id: 'amplifier', name: 'AMPLIFIER', description: '+10% Crit Damage per level', icon: 'Zap', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff8800' },
+    { id: 'wealth_algorithm', name: 'WEALTH ALGORITHM', description: '+5% Gold per level', icon: 'TrendingUp', maxLevel: 10, costPerLevel: 2, effect: { type: 'gold_bonus', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, requires: ['gold_sense'], tier: 2, branch: 'UTILITY', color: '#ffd700' },
+    { id: 'passive_income', name: 'PASSIVE INCOME', description: '+8% Idle Damage per level', icon: 'Activity', maxLevel: 10, costPerLevel: 2, effect: { type: 'idle_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['idle_protocol'], tier: 2, branch: 'UTILITY', color: '#00ff88' },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TIER 3 - SPECIALIZATION
+    // ═══════════════════════════════════════════════════════════════════════════
+    { id: 'boss_hunter', name: 'BOSS HUNTER', description: '+8% Boss Damage per level', icon: 'Skull', maxLevel: 10, costPerLevel: 3, effect: { type: 'boss_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['critical_systems', 'amplifier'], tier: 3, branch: 'OFFENSE', color: '#ff0080' },
+    { id: 'elite_slayer', name: 'ELITE SLAYER', description: '+10% Elite Damage per level', icon: 'Sword', maxLevel: 10, costPerLevel: 3, effect: { type: 'elite_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['critical_systems'], tier: 3, branch: 'OFFENSE', color: '#aa44ff' },
+    { id: 'skill_efficiency', name: 'SKILL EFFICIENCY', description: '-3% Skill Cooldowns per level', icon: 'Clock', maxLevel: 10, costPerLevel: 3, effect: { type: 'skill_cooldown', valuePerLevel: -0.03, isMultiplier: true, isPercent: true }, requires: ['wealth_algorithm', 'passive_income'], tier: 3, branch: 'UTILITY', color: '#00aaff' },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TIER 4 - ADVANCED
+    // ═══════════════════════════════════════════════════════════════════════════
+    { id: 'lethal_precision', name: 'LETHAL PRECISION', description: '+3% Crit Chance, +15% Crit Damage per level', icon: 'Target', maxLevel: 5, costPerLevel: 5, effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['boss_hunter'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
+    { id: 'power_surge', name: 'POWER SURGE', description: '+10% All Damage per level', icon: 'Flame', maxLevel: 5, costPerLevel: 5, effect: { type: 'all_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['elite_slayer'], tier: 4, branch: 'OFFENSE', color: '#ff6600' },
+    { id: 'golden_touch', name: 'GOLDEN TOUCH', description: '+10% Gold per level', icon: 'Gem', maxLevel: 5, costPerLevel: 5, effect: { type: 'gold_bonus', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['skill_efficiency'], tier: 4, branch: 'UTILITY', color: '#ffdd00' },
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // TIER 5 - MASTERY (Capstone nodes)
+    // ═══════════════════════════════════════════════════════════════════════════
+    { id: 'overclock_mastery', name: 'OVERCLOCK MASTERY', description: '+15% All Damage per level', icon: 'Rocket', maxLevel: 3, costPerLevel: 10, effect: { type: 'all_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['lethal_precision', 'power_surge'], tier: 5, branch: 'MASTERY', color: '#ff0080' },
+    { id: 'infinite_wealth', name: 'INFINITE WEALTH', description: '+15% Gold, +10% Idle Damage per level', icon: 'Crown', maxLevel: 3, costPerLevel: 10, effect: { type: 'gold_bonus', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['golden_touch'], tier: 5, branch: 'MASTERY', color: '#ffd700' },
+  ] as SkillTreeNode[],
+} as const;
+
 // ── TAP ──────────────────────────────────────────────────────────────────────
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA TAP BALANCE v2.0 - CRIT SYSTEM
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// CRIT DESIGN:
+// - Base crit chance is low (5%), making each crit feel special
+// - Max achievable crit chance: ~75% (requires HEAVY investment)
+// - Base crit damage: 2x (not 1.5x - crits should FEEL powerful)
+// - Max achievable crit damage: ~15x (with full set + relics + skills)
+//
+// CRIT SOURCES:
+// - Base: 5% chance, 2x damage
+// - Hero Upgrades: +25% chance (25 levels * 1%), +2x damage (40 levels * 5%)
+// - Skill Tree: +20% chance, +100% damage
+// - Items (CPU slot): +0-15% chance per item
+// - Set Bonuses: +20-45% chance, +150% damage (Entropy Engine set)
+// - Relics (OCT Shop): +15% chance, +200% damage (endgame)
+//
+// BALANCE PRINCIPLE:
+// - Crit builds should be VIABLE but not MANDATORY
+// - A 75% crit / 15x damage build does ~11x average damage
+// - A 5% crit / 2x damage build with high tap does ~1.05x average damage
+// - This means crit builds are ~10x stronger when fully invested
+// - BUT tap damage also scales, so both paths work
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export const TAP_CONFIG = {
   /** Raw tap damage before any modifiers. */
   baseDamage: 1,
-  /** Base crit chance (0–1). Additive with modifier stack. */
-  baseCritChance: 0.1,
+  /** Base crit chance (0–1). Additive with modifier stack. Cap: 0.85 (85%) */
+  baseCritChance: 0.03,
+  /** Maximum crit chance achievable (prevents 100% crit builds) */
+  maxCritChance: 0.65,
   /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
   baseCritMultiplier: 1.5,
+  /** Maximum crit damage multiplier (prevents one-shot everything builds) */
+  maxCritMultiplier: 10.0,
   /** Window (ms) within which rapid taps build a combo. */
-  comboWindowMs: 800,
+  comboWindowMs: 400,
   /** Number of taps within the window required to activate combo bonus. */
-  comboThreshold: 5,
+  comboThreshold: 8,
   /** Damage multiplier applied when the combo threshold is met. */
-  comboMultiplier: 2,
+  comboMultiplier: 1.15,
+  /** Combo max stacks (for potential future combo counter feature) */
+  comboMaxStacks: 10,
+  /** Damage bonus per additional combo stack above threshold */
+  comboBonusPerStack: 0.03,
 } as const;
 
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
 //
-// BALANCE NOTES:
-// - TAP POWER: Main progression curve. Cost grows exponentially (1.18^level).
-//   At level 50: cost ~3.9K gold, +50 tap damage
-//   At level 100: cost ~15M gold, +100 tap damage
-//   At level 200: cost ~59T gold, +200 tap damage
-//   Diminishing returns via cost scaling keeps progression in check
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA HERO UPGRADES v2.0 - BALANCED FOR 999,999 STAGES
+// ═══════════════════════════════════════════════════════════════════════════════
 //
-// - CRIT CHANCE: Caps at 30% total (10% base + 20 levels * 1%)
-//   Strategic choice, but not overpowered on its own
+// DESIGN:
+// - TAP POWER: Primary early-game scaling. Soft cap at level 500.
+// - CRIT CHANCE: Caps at +25% (level 25). Expensive but essential for crit builds.
+// - CRIT DAMAGE: Caps at +2x (level 40). Heavy investment for big payoff.
 //
-// - CRIT DAMAGE: Caps at 2.5x total (1.5x base + 20 levels * 0.05x)
-//   Crit is a multiplier, not a game-changer. Requires skill combos for real power.
-//   20 clicks/sec with 2.5x crit is manageable, not instant-kill.
+// COST SCALING (per 100 levels of TAP POWER):
+// Level 1: 15 gold
+// Level 100: ~6,000 gold
+// Level 200: ~2.4M gold
+// Level 300: ~960M gold
+// Level 400: ~384B gold
+// Level 500: ~154T gold (soft cap - need other systems)
 //
-// FORMULA: upgradeCost(level) = baseCost * costMultiplier^level
-// ─────────────────────────────────────────────────────────────────────────────
+// TAP POWER VALUE PER LEVEL:
+// Early (1-100): +2 damage per level (linear feels good)
+// Mid (101-300): +5 damage per level
+// Late (301-500): +10 damage per level
+// (Total at 500: 2*100 + 5*200 + 10*200 = 3,200 base tap damage)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export interface HeroUpgradeDef {
   id: string;
@@ -204,21 +305,18 @@ export interface HeroUpgradeDef {
 export const HERO_CONFIG = {
   /** 
    * Hero upgrade definitions
-   * Cost formula: baseCost * (costMultiplier ^ currentLevel)
-   * 
-   * BALANCE: Tap upgrades are the main early-game progression.
-   * Late-game requires OV perks and skills for meaningful damage.
+   * GOD FORMULA: Core progression with reasonable caps
    */
   upgrades: [
     {
       id: 'hero_tap_power',
       name: 'TAP POWER',
       description: 'Increase base tap damage',
-      baseCost: 20,
-      costMultiplier: 1.22,        // Steeper curve to limit late-game tap power
-      maxLevel: 300,               // Capped - OV perks take over late game
+      baseCost: 10,
+      costMultiplier: 1.12,        // Balanced curve - core progression
+      maxLevel: 500,               // Soft cap - need other systems beyond
       modifierType: 'tap_damage',
-      valuePerLevel: 1,            // +1 tap damage per level
+      valuePerLevel: 2,            // +2 tap damage per level
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
@@ -227,9 +325,9 @@ export const HERO_CONFIG = {
       id: 'hero_crit_chance',
       name: 'CRIT CHANCE',
       description: 'Increase critical hit chance',
-      baseCost: 800,
-      costMultiplier: 1.30,        // Steeper curve
-      maxLevel: 15,                // Caps at +15% crit chance (25% total)
+      baseCost: 250,
+      costMultiplier: 1.25,        // Moderate curve - crits are valuable
+      maxLevel: 25,                // Caps at +25% crit chance (30% total)
       modifierType: 'crit_chance',
       valuePerLevel: 0.01,         // +1% crit chance per level
       isMultiplier: false,
@@ -240,9 +338,9 @@ export const HERO_CONFIG = {
       id: 'hero_crit_damage',
       name: 'CRIT DAMAGE',
       description: 'Increase critical damage multiplier',
-      baseCost: 1500,
-      costMultiplier: 1.35,        // Steeper curve
-      maxLevel: 15,                // Caps at +0.75x crit damage (2.25x total)
+      baseCost: 500,
+      costMultiplier: 1.30,        // Steep - multipliers compound
+      maxLevel: 40,                // Caps at +2x crit damage (4x total)
       modifierType: 'crit_multiplier',
       valuePerLevel: 0.05,         // +5% crit damage per level
       isMultiplier: false,
@@ -255,7 +353,7 @@ export const HERO_CONFIG = {
    * Bulk purchase options (buy N levels at once)
    * UI shows these as quick-buy buttons
    */
-  bulkPurchaseOptions: [1, 10, 25, 100] as number[],
+  bulkPurchaseOptions: [1, 10, 25, 100, 'MAX'] as (number | 'MAX')[],
 } as const;
 
 /** Calculate cost for a specific hero upgrade at a given level */
@@ -391,6 +489,26 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 }
 
 // ── ENEMY ─────────────────────────────────────────────────────────────────────
+//
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA v2.0 - BALANCED FOR MAX STAGE 999,999
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// DESIGN PHILOSOPHY:
+// - Progress should feel EARNED, not automatic
+// - Each era has distinct gameplay and strategies
+// - Prestige is the solution to walls, not grinding
+// - Late game rewards investment across ALL systems
+//
+// ERA BREAKDOWN:
+// Era 1 (1-100):      Tutorial - Learn tapping, buy first upgrades
+// Era 2 (101-500):    Foundation - Skills, Hardware, basic combos
+// Era 3 (501-2000):   Growth - First prestige, relics, skill tree
+// Era 4 (2001-10000): Expansion - Multiple prestiges, set farming
+// Era 5 (10001-50000): Mastery - Full builds, optimal strategies
+// Era 6 (50001-200000): Endgame - Min-maxing, rare sets
+// Era 7 (200001-999999): Infinite - Prestige hunting, leaderboards
+// ═══════════════════════════════════════════════════════════════════════════════
 
 export const ENEMY_CONFIG = {
   /** Number of phases (enemies) per stage. Boss spawns at the last phase. */
@@ -398,72 +516,154 @@ export const ENEMY_CONFIG = {
   /** Seconds before a boss times out and the player is sent back. */
   bossTimeoutSeconds: 30,
   /** Minimum stage before elite enemies can appear. */
-  eliteMinStage: 3,
+  eliteMinStage: 10,
   /** Probability (0–1) that a non-boss enemy is elite. */
-  eliteChance: 0.15,
+  eliteChance: 0.08,
   /** HP multiplier for elite enemies. */
   eliteHpMultiplier: 3,
   /** Gold multiplier for elite kills. */
-  eliteGoldMultiplier: 3,
-  /** Gold multiplier for boss kills. */
+  eliteGoldMultiplier: 2,
+  /** Boss gold multiplier. */
   bossGoldMultiplier: 5,
   /** Gold multiplier for normal enemy kills. */
   normalGoldMultiplier: 1,
   /** Boss phase triggers when HP drops below this fraction of max. */
   bossPhaseThreshold: 0.5,
   /** Damage multiplier when boss is in shield phase. */
-  bossShieldDamageMultiplier: 0.3,
+  bossShieldDamageMultiplier: 0.2,
   /** Fraction of max HP regenerated per second in regen phase. */
   bossRegenRatePerSecond: 0.02,
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // GOD FORMULA - HP SCALING TO 999,999
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Formula: HP = base * linearFactor * expFactor
+  // linearFactor = 1 + stage * linearGrowth
+  // expFactor = exponent^(stage / interval)
+  //
+  // Each era has different exponent/interval ratios for smooth transitions.
+  // The key is: exponent^(100/interval) should roughly = 10x per era.
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  normalHpBase: 5,
+  bossHpBase: 40,
+  
+  // Era 1: Stages 1-100 (Tutorial)
+  // HP at 1: ~6, HP at 100: ~500
+  era1LinearGrowth: 0.25,
+  era1Exponent: 1.035,
+  era1ExponentInterval: 5,
+  era1MaxStage: 100,
+  
+  // Era 2: Stages 101-500 (Foundation)
+  // HP at 500: ~50,000
+  era2Exponent: 1.025,
+  era2ExponentInterval: 4,
+  era2MaxStage: 500,
+  
+  // Era 3: Stages 501-2000 (Growth)
+  // HP at 2000: ~5,000,000
+  era3Exponent: 1.018,
+  era3ExponentInterval: 3,
+  era3MaxStage: 2000,
+  
+  // Era 4: Stages 2001-10000 (Expansion)
+  // HP at 10000: ~500,000,000
+  era4Exponent: 1.012,
+  era4ExponentInterval: 2,
+  era4MaxStage: 10000,
+  
+  // Era 5: Stages 10001-50000 (Mastery)
+  // HP at 50000: ~50 trillion
+  era5Exponent: 1.008,
+  era5ExponentInterval: 2,
+  era5MaxStage: 50000,
+  
+  // Era 6: Stages 50001-200000 (Endgame)
+  // HP at 200000: ~5 quintillion
+  era6Exponent: 1.005,
+  era6ExponentInterval: 2,
+  era6MaxStage: 200000,
+  
+  // Era 7: Stages 200001-999999 (Infinite)
+  // HP at 999999: ~astronomical (10^30+)
+  era7Exponent: 1.003,
+  era7ExponentInterval: 2,
 
-  // HP scaling formula (see EnemyPlugin.ts for implementation):
-  //   stage ≤ 500 : base * (1 + (stage - 1) * linearGrowth) * scalingExponentEarly ^ ((stage - 1) / 50)
-  //   stage > 500 : hp500 * scalingExponentLate ^ ((stage - 500) / 10)
-  // This creates a smooth curve up to 500, then steep exponential requiring skills/combos
-  normalHpBase: 8,
-  bossHpBase: 50,
-  linearGrowth: 0.35,              // Linear growth factor per stage (higher = tankier enemies)
-  scalingExponentEarly: 1.12,      // Exponential every 50 stages (stages 1-500)
-  scalingExponentLate: 1.18,       // Steep exponential every 10 stages (stages 500+)
-  hardModeStage: 500,              // Stage where difficulty ramps up significantly
+  // Legacy (deprecated - kept for compatibility)
+  phase1MaxStage: 100,
+  phase2MaxStage: 500,
+  phase3MaxStage: 2000,
+  phase1LinearGrowth: 0.25,
+  phase1Exponent: 1.035,
+  phase1ExponentInterval: 5,
+  phase2Exponent: 1.025,
+  phase2ExponentInterval: 4,
+  phase3Exponent: 1.018,
+  phase3ExponentInterval: 3,
+  phase4Exponent: 1.012,
+  phase4ExponentInterval: 2,
+  linearGrowth: 0.25,
+  scalingExponentEarly: 1.035,
+  scalingExponentLate: 1.012,
+  hardModeStage: 500,
 
   /** 
    * Monster definitions with stage ranges.
-   * Monsters are randomly selected from those available at the current stage.
+   * Monsters rotate based on era for variety.
    */
   monsters: [
-    { name: 'NULL_PROCESS_ENTITY', minStage: 1, maxStage: 150 },
-    { name: 'CACHE_BREAKER', minStage: 1, maxStage: 150 },
-    { name: 'ADWARE_GLITCHLING', minStage: 1, maxStage: 150 },
-    { name: 'FIREWALL_ORPHAN', minStage: 1, maxStage: 150 },
-    { name: 'OVERCLOCK_ERROR', minStage: 1, maxStage: 150 },
-    { name: 'KERNEL_LEAK_SPAWN', minStage: 1, maxStage: 150 },
-    { name: 'AUTOUPDATE_HORROR', minStage: 1, maxStage: 150 },
-    { name: 'DEBUG_SPECTER', minStage: 1, maxStage: 150 },
-    { name: 'SYSTEM_POPUP_PREDATOR', minStage: 1, maxStage: 150 },
-    { name: 'SYNC_FAILURE_CORE', minStage: 1, maxStage: 150 },
+    // Era 1-2 (1-500)
+    { name: 'NULL_PROCESS_ENTITY', minStage: 1, maxStage: 500 },
+    { name: 'CACHE_BREAKER', minStage: 1, maxStage: 500 },
+    { name: 'ADWARE_GLITCHLING', minStage: 1, maxStage: 500 },
+    { name: 'FIREWALL_ORPHAN', minStage: 1, maxStage: 1000 },
+    { name: 'OVERCLOCK_ERROR', minStage: 1, maxStage: 1000 },
+    // Era 2-3 (101-2000)
+    { name: 'KERNEL_LEAK_SPAWN', minStage: 100, maxStage: 2000 },
+    { name: 'AUTOUPDATE_HORROR', minStage: 100, maxStage: 2000 },
+    { name: 'DEBUG_SPECTER', minStage: 200, maxStage: 5000 },
+    { name: 'SYSTEM_POPUP_PREDATOR', minStage: 200, maxStage: 5000 },
+    { name: 'SYNC_FAILURE_CORE', minStage: 500, maxStage: 10000 },
+    // Era 4-5 (2001-50000)
+    { name: 'MEMORY_CORRUPTION_WRAITH', minStage: 2000, maxStage: 50000 },
+    { name: 'STACK_OVERFLOW_DAEMON', minStage: 2000, maxStage: 50000 },
+    { name: 'RACE_CONDITION_PHANTOM', minStage: 5000, maxStage: 100000 },
+    { name: 'DEADLOCK_HORROR', minStage: 10000, maxStage: 200000 },
+    // Era 6-7 (50001-999999)
+    { name: 'QUANTUM_DECOHERENCE', minStage: 50000, maxStage: 999999 },
+    { name: 'ENTROPY_COLLAPSE', minStage: 100000, maxStage: 999999 },
+    { name: 'VOID_RECURSION', minStage: 200000, maxStage: 999999 },
+    { name: 'SINGULARITY_SPAWN', minStage: 500000, maxStage: 999999 },
   ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
    * Elite definitions with stage ranges.
-   * Elites are randomly selected from those available at the current stage.
    */
   elites: [
-    { name: 'RECURSIVE_UPGRADE_MISTAKE', minStage: 1, maxStage: 150 },
-    { name: 'UNAUTHORIZED_PROCESS_AGENT', minStage: 1, maxStage: 150 },
-    { name: 'MEMORY_DRIFT_ENFORCER', minStage: 1, maxStage: 150 },
-    { name: 'PATCH_NOTES_ABERRATION', minStage: 1, maxStage: 150 },
-    { name: 'SYNTHETIC_FAILURE_UNIT', minStage: 1, maxStage: 150 },
+    { name: 'RECURSIVE_UPGRADE_MISTAKE', minStage: 10, maxStage: 1000 },
+    { name: 'UNAUTHORIZED_PROCESS_AGENT', minStage: 10, maxStage: 2000 },
+    { name: 'MEMORY_DRIFT_ENFORCER', minStage: 100, maxStage: 5000 },
+    { name: 'PATCH_NOTES_ABERRATION', minStage: 500, maxStage: 20000 },
+    { name: 'SYNTHETIC_FAILURE_UNIT', minStage: 1000, maxStage: 50000 },
+    { name: 'QUANTUM_ENTANGLE_ELITE', minStage: 10000, maxStage: 200000 },
+    { name: 'DARK_MATTER_SENTINEL', minStage: 50000, maxStage: 999999 },
+    { name: 'OMEGA_PROCESS_GUARDIAN', minStage: 200000, maxStage: 999999 },
   ] as { name: string; minStage: number; maxStage: number }[],
 
   /** 
    * Boss definitions with stage ranges.
-   * Bosses are randomly selected from those available at the current stage.
    */
   bosses: [
-    { name: 'THE_PATCH_THAT_NEVER_FINISHED', minStage: 1, maxStage: 150 },
-    { name: 'CORE_SYSTEM_AUTONOMY', minStage: 1, maxStage: 150 },
-    { name: 'ADMINISTRATIVE_GOD_PROCESS', minStage: 1, maxStage: 150 },
+    { name: 'THE_PATCH_THAT_NEVER_FINISHED', minStage: 1, maxStage: 500 },
+    { name: 'CORE_SYSTEM_AUTONOMY', minStage: 1, maxStage: 1000 },
+    { name: 'ADMINISTRATIVE_GOD_PROCESS', minStage: 100, maxStage: 2000 },
+    { name: 'THE_INFINITE_LOOP', minStage: 500, maxStage: 10000 },
+    { name: 'KERNEL_PANIC_PRIME', minStage: 2000, maxStage: 50000 },
+    { name: 'STACK_SMASHER_SUPREME', minStage: 10000, maxStage: 200000 },
+    { name: 'QUANTUM_OBSERVER', minStage: 50000, maxStage: 500000 },
+    { name: 'THE_FINAL_SEGFAULT', minStage: 200000, maxStage: 999999 },
+    { name: 'OMEGA_NULL_ENTITY', minStage: 500000, maxStage: 999999 },
   ] as { name: string; minStage: number; maxStage: number }[],
 } as const;
 
@@ -487,48 +687,103 @@ export interface OverclockPerkDef {
   requiresTier?: number;
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA PRESTIGE SYSTEM v2.0 - BALANCED FOR 999,999 STAGES
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// PRESTIGE PROGRESSION:
+// - First prestige at stage 100 (tutorial complete)
+// - Optimal first prestige: stage 150-200 (1-3 OCP)
+// - Mid-game prestige: stage 500-1000 (10-20 OCP)
+// - Late-game prestige: stage 5000+ (100+ OCP)
+// - Endgame prestige: stage 50000+ (1000+ OCP)
+//
+// OCP FORMULA:
+// Base OCP = floor(stage / 50) for stages 100-500
+// Base OCP = floor(stage / 25) for stages 500-5000
+// Base OCP = floor(stage / 10) for stages 5000+
+// Tier multiplier: 1.0 + (tier * 0.25)
+// Milestone bonuses: Add significant jumps at key stages
+// ═══════════════════════════════════════════════════════════════════════════════
+
 export const OVERCLOCK_CONFIG = {
-  /** Minimum highestStage required before the player can overclock. */
-  minStageToOverclock: 500,
-  /** Number of stages required to earn 1 base OCT. Higher = harder to get points. */
-  stagesPerOCT: 500,
-  /** Number of overclock runs per tier progression. */
+  /** Minimum highestStage required before the player can prestige. */
+  minStageToOverclock: 50,
+  /** Base stages per OCP (era 1) */
+  stagesPerOCPEra1: 50,
+  /** Threshold for era 2 OCP scaling */
+  ocpEra2Stage: 500,
+  /** Base stages per OCP (era 2) */
+  stagesPerOCPEra2: 25,
+  /** Threshold for era 3 OCP scaling */
+  ocpEra3Stage: 5000,
+  /** Base stages per OCP (era 3) */
+  stagesPerOCPEra3: 10,
+  /** Threshold for era 4 OCP scaling */
+  ocpEra4Stage: 50000,
+  /** Base stages per OCP (era 4) */
+  stagesPerOCPEra4: 5,
+  /** Number of prestige runs per tier progression. */
   runsPerTier: 3,
   /** Maximum achievable tier. */
-  maxTier: 14,
-  /** OCT multiplier increase per tier (tier * this value added to base 1.0). */
+  maxTier: 20,
+  /** OCP multiplier increase per tier (tier * this value added to base 1.0). */
   tierMultiplierPerTier: 0.25,
-
-  /** Milestone stage → bonus OCTs awarded on reaching that stage. */
+  /** Legacy field - kept for compatibility */
+  stagesPerOCT: 50,
+  
+  /** Milestone stage -> bonus OCPs awarded on reaching that stage. */
   milestones: [
-    { stage: 1000,   bonus: 1   },
-    { stage: 5000,   bonus: 2   },
-    { stage: 10000,  bonus: 3   },
-    { stage: 25000,  bonus: 5   },
-    { stage: 50000,  bonus: 10  },
-    { stage: 100000, bonus: 20  },
-    { stage: 250000, bonus: 50  },
-    { stage: 500000, bonus: 100 },
-    { stage: 999999, bonus: 500 },
+    { stage: 100,    bonus: 1   },
+    { stage: 150,    bonus: 2   },
+    { stage: 200,    bonus: 3   },
+    { stage: 300,    bonus: 5   },
+    { stage: 500,    bonus: 10  },
+    { stage: 750,    bonus: 15  },
+    { stage: 1000,   bonus: 25  },
+    { stage: 1500,   bonus: 40  },
+    { stage: 2000,   bonus: 60  },
+    { stage: 3000,   bonus: 100 },
+    { stage: 5000,   bonus: 200 },
+    { stage: 7500,   bonus: 350 },
+    { stage: 10000,  bonus: 500 },
+    { stage: 15000,  bonus: 800 },
+    { stage: 20000,  bonus: 1200 },
+    { stage: 30000,  bonus: 2000 },
+    { stage: 50000,  bonus: 4000 },
+    { stage: 75000,  bonus: 7000 },
+    { stage: 100000, bonus: 12000 },
+    { stage: 150000, bonus: 20000 },
+    { stage: 200000, bonus: 35000 },
+    { stage: 300000, bonus: 60000 },
+    { stage: 500000, bonus: 120000 },
+    { stage: 750000, bonus: 200000 },
+    { stage: 999999, bonus: 500000 },
   ] as { stage: number; bonus: number }[],
-
+  
   /** Display name for each tier (index = tier number). */
   tierNames: [
-    'STOCK',           // 0
-    'OVERCLOCKED',     // 1
-    'MODDED',          // 2
-    'JAILBROKEN',      // 3
-    'KERNEL HACKED',   // 4
-    'SILICON GHOST',   // 5
-    'QUANTUM FORK',    // 6
-    'DARK SILICON',    // 7
-    'PHANTOM LOOP',    // 8
-    'THE SINGULARITY', // 9
-    'GHOST STATE',     // 10
-    'DARK KERNEL',     // 11
-    'SYSTEM FRACTURE', // 12
-    'VOID ARCHITECT',  // 13
-    'THE ABSOLUTE',    // 14
+    'STOCK',             // 0
+    'OVERCLOCKED',       // 1
+    'MODDED',            // 2
+    'JAILBROKEN',        // 3
+    'KERNEL HACKED',     // 4
+    'SILICON GHOST',     // 5
+    'QUANTUM FORK',      // 6
+    'DARK SILICON',      // 7
+    'PHANTOM LOOP',      // 8
+    'SINGULARITY',       // 9
+    'OMEGA PRIME',       // 10
+    'VOID WALKER',       // 11
+    'ENTROPY LORD',      // 12
+    'TIME BREAKER',      // 13
+    'DIMENSION SHIFTER', // 14
+    'REALITY HACKER',    // 15
+    'COSMIC ENTITY',     // 16
+    'INFINITE RECURSION',// 17
+    'THE ARCHITECT',     // 18
+    'GOD TIER',          // 19
+    'TRANSCENDENT',      // 20
   ] as string[],
 
   branchColors: {
@@ -732,49 +987,112 @@ export const MOBO_TIERS: MoboTierDef[] = [
 
 // ── ITEMS ─────────────────────────────────────────────────────────────────────
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA ITEM SYSTEM v2.0 - BALANCED FOR 999,999 STAGES
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// ITEM BALANCE:
+// - Items are the primary way to scale damage in late game
+// - Higher stages = higher tier items = better stats
+// - Rarity determines stat multiplier and secondary stat access
+// - Mythic items only come from SET drops (boss rewards)
+//
+// ITEM STAT SCALING:
+// Common:    1.0x base stats
+// Rare:      1.5x base stats + secondary stat
+// Epic:      2.5x base stats + secondary stat
+// Legendary: 5.0x base stats + secondary stat
+// Mythic:    10.0x base stats + secondary stat (SET ONLY)
+//
+// TIER SYSTEM (based on stage dropped):
+// Tier 0:  Stage 1-100      (base stats)
+// Tier 1:  Stage 101-500    (1.5x tier bonus)
+// Tier 2:  Stage 501-2000   (2.5x tier bonus)
+// Tier 3:  Stage 2001-10000 (5x tier bonus)
+// Tier 4:  Stage 10001-50000 (10x tier bonus)
+// Tier 5:  Stage 50001+      (25x tier bonus)
+//
+// Combined scaling example (Legendary T5):
+// 5.0 (rarity) * 25 (tier) = 125x base stats
+// This creates meaningful progression through ALL eras
+// ═══════════════════════════════════════════════════════════════════════════════
+
 export const ITEM_CONFIG = {
   /** Maximum items in the player's inventory before oldest are trimmed. */
   inventoryMax: 500,
   /** Inventory warning threshold (0.9 = 90%). Show warning to scrap items. */
   inventoryWarningThreshold: 0.9,
-
-  /** Base drop chance: 0.15 + tier * 0.05, capped at 0.60 (0.95 for bosses). */
-  baseDropChance: 0.15,
-  dropChancePerTier: 0.05,
-  normalDropCap: 0.60,
-  bossDropCap: 0.95,
+  
+  /** Base drop chance: 0.12 + tier * 0.02, capped at normalDropCap. */
+  baseDropChance: 0.12,
+  dropChancePerTier: 0.02,
+  normalDropCap: 0.40,
+  bossDropCap: 0.90,
   bossDropMultiplier: 3,
-
+  
   /** Rarity roll weights. Higher = more common. Boss/tier shift rolls left. */
   rarityWeights: [
-    ['Common',   60],
-    ['Rare',     28],
-    ['Epic',     10],
-    ['Legendary', 2],
+    ['Common',    55],
+    ['Rare',      30],
+    ['Epic',      12],
+    ['Legendary', 3],
   ] as [ItemRarity, number][],
-
+  
   /** Per-rarity primary-stat multiplier. */
-  rarityStatMultiplier: { Common: 1, Rare: 1.8, Epic: 3.2, Legendary: 6 } as Record<ItemRarity, number>,
-
+  rarityStatMultiplier: { 
+    Common: 1.0, 
+    Rare: 1.5, 
+    Epic: 2.5, 
+    Legendary: 5.0,
+    Mythic: 10.0,
+  } as Record<ItemRarity, number>,
+  
+  /** Tier-based stat multiplier (based on stage dropped) */
+  tierStatMultiplier: [
+    1.0,   // Tier 0: Stage 1-100
+    1.5,   // Tier 1: Stage 101-500
+    2.5,   // Tier 2: Stage 501-2000
+    5.0,   // Tier 3: Stage 2001-10000
+    10.0,  // Tier 4: Stage 10001-50000
+    25.0,  // Tier 5: Stage 50001+
+  ] as number[],
+  
+  /** Stage thresholds for tier calculation */
+  tierThresholds: [0, 100, 500, 2000, 10000, 50000] as number[],
+  
   /** Boss/tier rarity roll shift (reduces effective roll, yielding rarer items). */
-  bossRarityShift: 15,
-  tierRarityShiftPerTier: 3,
-
+  bossRarityShift: 20,
+  tierRarityShiftPerTier: 5,
+  
   /** Primary stat per slot. */
-  primaryStat: { RAM: 'idle_dps', GPU: 'tap_damage', CPU: 'crit_chance', EXPANSION: 'gold_rate' } as Record<ItemSlot, ModifierDef['type']>,
-
+  primaryStat: { 
+    RAM: 'idle_dps', 
+    GPU: 'tap_damage', 
+    CPU: 'crit_chance', 
+    EXPANSION: 'gold_rate' 
+  } as Record<ItemSlot, ModifierDef['type']>,
+  
   /** Secondary stat per slot (only Rare+ items get a secondary). */
-  secondaryStat: { RAM: 'tap_damage', GPU: 'idle_dps', CPU: 'crit_multiplier', EXPANSION: 'tap_damage' } as Record<ItemSlot, ModifierDef['type']>,
-
-  // Stat value formulas:
-  //   primary (non-crit_chance): 1 + 0.15 * (tier+1) * rarityMult
-  //   primary (crit_chance):     0.03 * (tier+1) * rarityMult
-  //   secondary (crit_multiplier): 0.2 * rarityMult
-  //   secondary (other):         1 + 0.08 * (tier+1) * rarityMult
-  primaryStatBase: 0.15,
-  primaryCritChanceBase: 0.03,
-  secondaryCritMultBase: 0.2,
-  secondaryStatBase: 0.08,
+  secondaryStat: { 
+    RAM: 'tap_damage', 
+    GPU: 'idle_dps', 
+    CPU: 'crit_multiplier', 
+    EXPANSION: 'tap_damage' 
+  } as Record<ItemSlot, ModifierDef['type']>,
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // STAT VALUE FORMULAS (GOD FORMULA v2.0)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Primary (non-crit):   1 + (base * tierMult * rarityMult)
+  // Primary (crit_chance): (critBase * tierMult * rarityMult), capped at 0.15
+  // Secondary (crit_mult): (critMultBase * rarityMult)
+  // Secondary (other):    1 + (secondaryBase * tierMult * rarityMult)
+  // ═══════════════════════════════════════════════════════════════════════════
+  primaryStatBase: 0.10,          // +10% per tier*rarity for multipliers
+  primaryCritChanceBase: 0.01,    // +1% crit chance per tier*rarity
+  primaryCritChanceCap: 0.15,     // Max 15% crit from single item
+  secondaryCritMultBase: 0.15,    // +15% crit damage per rarity
+  secondaryStatBase: 0.05,        // +5% per tier*rarity for secondary stats
 
   /** Item name pools per slot. */
   slotItems: {
@@ -930,7 +1248,7 @@ export const DAILY_CONFIG = {
 } as const;
 
 export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
-  // ── Basic ──────────────────────────────────────────��────────────��────────
+  // ── Basic ──────────────────────────────────────────��────────────��──────���─
   { type: 'kill_enemies',    label: 'Eliminate {n} enemies',          targetFn: s => 10 + s * 2,              rewardFn: s => 50  + s * 20  },
   { type: 'earn_gold',       label: 'Earn {n} gold',                   targetFn: s => 100 + s * 50,            rewardFn: s => 30  + s * 15  },
   { type: 'use_skills',      label: 'Use skills {n} times',            targetFn: () => 5,                      rewardFn: s => 40  + s * 10  },
@@ -990,7 +1308,7 @@ export const ACHIEVEMENT_CONFIG = {
   
   /** All achievement definitions. */
   achievements: [
-    // ── Kill Milestones ───────────────────────────────────────────────
+    // ─��� Kill Milestones ───────────────────────────────────────────────
     { id: 'first_blood',  name: 'FIRST BLOOD',      description: 'Defeat your first enemy',   icon: 'Crosshair', color: '#00f5ff', type: 'kills',      threshold: 1      },
     { id: 'kill_100',     name: 'CENTURION',        description: 'Defeat 100 enemies',        icon: 'Target',    color: '#39ff14', type: 'kills',      threshold: 100    },
     { id: 'kill_500',     name: 'KILL STREAK',      description: 'Defeat 500 enemies',        icon: 'Target',    color: '#39ff14', type: 'kills',      threshold: 500    },
@@ -1023,7 +1341,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'reboot_50',        name: 'ENDLESS LOOP',      description: 'Perform 50 Overclocks',        icon: 'RefreshCw', color: '#ff2200', type: 'overclocks', threshold: 50  },
     { id: 'reboot_100',       name: 'RECURSION GOD',     description: 'Perform 100 Overclocks',       icon: 'RefreshCw', color: '#dd0000', type: 'overclocks', threshold: 100 },
 
-    // ── Gold Achievements ────────────────────────────────────────────
+    // ── Gold Achievements ──────────────────────────────────────���─────
     { id: 'gold_10k',         name: 'SMALL STASH',       description: 'Earn 10,000 total gold',       icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 10000      },
     { id: 'gold_100k',        name: 'VAULT KEEPER',      description: 'Earn 100,000 total gold',      icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 100000     },
     { id: 'gold_1m',          name: 'MILLIONAIRE',       description: 'Earn 1,000,000 total gold',    icon: 'Coins', color: '#ff8800', type: 'gold', threshold: 1000000    },
@@ -1192,105 +1510,249 @@ export const UI_CONFIG = {
   tierProgressRuns: 3,
 } as const;
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// GOD FORMULA SET ITEM SYSTEM v2.0 - BOSS DROP RARE SETS
+// ═══════════════════════════════════════════════════════════════════════════════
+//
+// SET DROP MECHANICS:
+// - Set pieces ONLY drop from bosses (stage 10, 20, 30, etc.)
+// - Each set has a minimum stage requirement
+// - Drop chance is LOW but increases with stage and OC tier
+// - Sets are the ultimate endgame goal
+//
+// SET BALANCE:
+// - Early sets (Neural Nexus, Void Lattice): Available from stage 100+
+// - Mid sets (Ghost Protocol, Entropy Engine): Available from stage 500+
+// - Late sets (Singularity Core, Quantum Array): Available from stage 2000+
+// - Endgame sets (Omega Cascade, Infinite Loop): Available from stage 10000+
+// - Ultimate sets (Transcendence): Available from stage 100000+
+//
+// DROP CHANCE FORMULA:
+// baseChance = 0.5% (1/200 bosses)
+// stageBonus = +0.1% per 100 stages above requirement
+// tierBonus = +0.5% per OC tier
+// maxChance = 5% (1/20 bosses)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const SET_DROP_CONFIG = {
+  /** Base chance for a set piece to drop from a boss (0.005 = 0.5%) */
+  baseDropChance: 0.005,
+  /** Additional drop chance per 100 stages above set requirement */
+  stageDropBonus: 0.001,
+  /** Additional drop chance per OC tier */
+  tierDropBonus: 0.005,
+  /** Maximum drop chance for set pieces (0.05 = 5%) */
+  maxDropChance: 0.05,
+  /** If true, can only drop pieces you don't already own */
+  smartDrop: true,
+  /** If true, higher stage = higher chance for rare sets */
+  weightedRarity: true,
+} as const;
+
 export const SET_CATALOG: SetDef[] = [
+  // ═══════════════════════════════════════════════════════════════════════════
+  // EARLY GAME SETS (Stage 100+) - Starter sets to teach the system
+  // ═══════════════════════════════════════════════════════════════════════════
+  
   // ── NEURAL NEXUS (Idle DPS Focus) ──────────────────────────────────────────
   {
     id: 'neural_nexus',
     name: 'NEURAL NEXUS',
     description: 'Cerebral implants forged in the darkest server farms.',
     color: '#00f5ff',
-    setBonusDescription: 'Full set: +100% idle DPS (permanent)',
+    minStage: 100,
+    dropWeight: 100, // Higher = more common
+    setBonusDescription: 'Full set: x2 idle DPS',
     setBonus: [{ type: 'idle_dps', value: 2.0, isMultiplier: true }],
     pieces: [
-      { name: 'NEXUS_SPINE',  slot: 'CPU', flavorText: 'The backbone of a machine that should not think, but does.',             stats: [{ type: 'idle_dps', value: 1.8, isMultiplier: true }, { type: 'crit_chance',     value: 0.08, isMultiplier: false }] },
-      { name: 'NEXUS_CORTEX', slot: 'RAM', flavorText: 'Memory banks that remember attacks before they happen.',                 stats: [{ type: 'idle_dps', value: 1.8, isMultiplier: true }, { type: 'tap_damage',      value: 1.4,  isMultiplier: true  }] },
-      { name: 'NEXUS_SYNAPSE',slot: 'GPU', flavorText: 'Renders destruction in parallel threads of neural fire.',               stats: [{ type: 'idle_dps', value: 2.0, isMultiplier: true }, { type: 'crit_multiplier', value: 1.6,  isMultiplier: true  }] },
+      { name: 'NEXUS_SPINE',   slot: 'CPU', flavorText: 'The backbone of a machine that should not think, but does.',   stats: [{ type: 'idle_dps', value: 1.5, isMultiplier: true }, { type: 'crit_chance',     value: 0.05, isMultiplier: false }] },
+      { name: 'NEXUS_CORTEX',  slot: 'RAM', flavorText: 'Memory banks that remember attacks before they happen.',       stats: [{ type: 'idle_dps', value: 1.5, isMultiplier: true }, { type: 'tap_damage',      value: 1.3,  isMultiplier: true  }] },
+      { name: 'NEXUS_SYNAPSE', slot: 'GPU', flavorText: 'Renders destruction in parallel threads of neural fire.',     stats: [{ type: 'idle_dps', value: 1.6, isMultiplier: true }, { type: 'crit_multiplier', value: 1.4,  isMultiplier: true  }] },
     ],
   },
-  // ── GHOST PROTOCOL (Tap + Crit Focus) ────────��─────────────────────────────
+  
+  // ── VOID LATTICE (Hybrid Balanced) ─────────────────────────��───────────────
+  {
+    id: 'void_lattice',
+    name: 'VOID LATTICE',
+    description: 'Harvested from between dimensions. Perfectly balanced destruction.',
+    color: '#00ff88',
+    minStage: 100,
+    dropWeight: 100,
+    setBonusDescription: 'Full set: +40% ALL stats (tap, DPS, gold, crit)',
+    setBonus: [
+      { type: 'tap_damage', value: 1.4, isMultiplier: true },
+      { type: 'idle_dps', value: 1.4, isMultiplier: true },
+      { type: 'gold_rate', value: 1.4, isMultiplier: true },
+      { type: 'crit_chance', value: 0.08, isMultiplier: false },
+    ],
+    pieces: [
+      { name: 'VOID_NODE',   slot: 'CPU',       flavorText: 'A processing unit that exists in negative space.',      stats: [{ type: 'tap_damage', value: 1.4, isMultiplier: true }, { type: 'idle_dps',        value: 1.4, isMultiplier: true }] },
+      { name: 'VOID_CACHE',  slot: 'RAM',       flavorText: 'Memory that remembers what never happened.',             stats: [{ type: 'idle_dps',   value: 1.5, isMultiplier: true }, { type: 'gold_rate',       value: 1.3, isMultiplier: true }] },
+      { name: 'VOID_SHADER', slot: 'GPU',       flavorText: 'Renders attacks from impossible angles.',                stats: [{ type: 'tap_damage', value: 1.5, isMultiplier: true }, { type: 'crit_multiplier', value: 1.3, isMultiplier: true }] },
+      { name: 'VOID_BRIDGE', slot: 'EXPANSION', flavorText: 'Connects your rig to the space between spaces.',         stats: [{ type: 'gold_rate',  value: 1.5, isMultiplier: true }, { type: 'crit_chance',     value: 0.05, isMultiplier: false }] },
+    ],
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MID GAME SETS (Stage 500+) - Specialized builds
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // ── GHOST PROTOCOL (Tap + Crit Focus) ──────────────────────────────────────
   {
     id: 'ghost_protocol',
     name: 'GHOST PROTOCOL',
     description: 'Zero-trace equipment. No logs. No mercy.',
     color: '#ff0080',
-    setBonusDescription: 'Full set: +75% tap damage + +25% crit chance (permanent)',
+    minStage: 500,
+    dropWeight: 80,
+    setBonusDescription: 'Full set: +60% tap damage + +15% crit chance',
     setBonus: [
-      { type: 'tap_damage', value: 1.75, isMultiplier: true },
-      { type: 'crit_chance', value: 0.25, isMultiplier: false },
+      { type: 'tap_damage', value: 1.6, isMultiplier: true },
+      { type: 'crit_chance', value: 0.15, isMultiplier: false },
     ],
     pieces: [
-      { name: 'GHOST_BARREL',slot: 'GPU',       flavorText: 'Fires before the enemy has a threat model.',                       stats: [{ type: 'tap_damage', value: 2.0,  isMultiplier: true  }, { type: 'crit_chance',     value: 0.12, isMultiplier: false }] },
-      { name: 'GHOST_VEIL',  slot: 'EXPANSION', flavorText: 'Cloaks your attack vector in 128-bit silence.',                   stats: [{ type: 'tap_damage', value: 1.8,  isMultiplier: true  }, { type: 'gold_rate',       value: 1.4,  isMultiplier: true  }] },
-      { name: 'GHOST_BLADE', slot: 'CPU',       flavorText: 'Executes precision kills at the instruction level.',               stats: [{ type: 'tap_damage', value: 1.9,  isMultiplier: true  }, { type: 'crit_multiplier', value: 1.8,  isMultiplier: true  }] },
-      { name: 'GHOST_TRACE', slot: 'RAM',       flavorText: "Tracks enemies through memory they don't own.",                   stats: [{ type: 'tap_damage', value: 1.7,  isMultiplier: true  }, { type: 'crit_chance',     value: 0.10, isMultiplier: false }] },
+      { name: 'GHOST_BARREL', slot: 'GPU',       flavorText: 'Fires before the enemy has a threat model.',              stats: [{ type: 'tap_damage', value: 1.6,  isMultiplier: true  }, { type: 'crit_chance',     value: 0.08, isMultiplier: false }] },
+      { name: 'GHOST_VEIL',   slot: 'EXPANSION', flavorText: 'Cloaks your attack vector in 128-bit silence.',          stats: [{ type: 'tap_damage', value: 1.5,  isMultiplier: true  }, { type: 'gold_rate',       value: 1.3,  isMultiplier: true  }] },
+      { name: 'GHOST_BLADE',  slot: 'CPU',       flavorText: 'Executes precision kills at the instruction level.',      stats: [{ type: 'tap_damage', value: 1.6,  isMultiplier: true  }, { type: 'crit_multiplier', value: 1.5,  isMultiplier: true  }] },
+      { name: 'GHOST_TRACE',  slot: 'RAM',       flavorText: "Tracks enemies through memory they don't own.",          stats: [{ type: 'tap_damage', value: 1.5,  isMultiplier: true  }, { type: 'crit_chance',     value: 0.06, isMultiplier: false }] },
     ],
   },
-  // ── SINGULARITY CORE (Gold Focus) ──────────────────────────────────────────
-  {
-    id: 'singularity_core',
-    name: 'SINGULARITY CORE',
-    description: 'Beyond the event horizon of power.',
-    color: '#ffaa00',
-    setBonusDescription: 'Full set: x4 gold rate (permanent)',
-    setBonus: [{ type: 'gold_rate', value: 4.0, isMultiplier: true }],
-    pieces: [
-      { name: 'SINGULARITY_LENS',  slot: 'GPU',       flavorText: 'Focuses all available value through a single computational point.', stats: [{ type: 'gold_rate', value: 2.5, isMultiplier: true }, { type: 'idle_dps',        value: 1.6, isMultiplier: true }] },
-      { name: 'SINGULARITY_VAULT', slot: 'EXPANSION', flavorText: 'Stores wealth in a dimension with no withdrawal limits.',            stats: [{ type: 'gold_rate', value: 2.5, isMultiplier: true }, { type: 'tap_damage',      value: 1.5, isMultiplier: true }] },
-      { name: 'SINGULARITY_MATRIX',slot: 'RAM',       flavorText: 'A memory system that converts computation directly into wealth.',    stats: [{ type: 'gold_rate', value: 2.2, isMultiplier: true }, { type: 'crit_multiplier', value: 1.7, isMultiplier: true }] },
-      { name: 'SINGULARITY_ANCHOR',slot: 'CPU',       flavorText: 'Tethers your rig to the most profitable timeline.',                  stats: [{ type: 'gold_rate', value: 2.0, isMultiplier: true }, { type: 'idle_dps',        value: 1.8, isMultiplier: true }] },
-      { name: 'SINGULARITY_CROWN', slot: 'GPU',       flavorText: 'The sovereign piece. Alone it is powerful. Together it is absolute.',stats: [{ type: 'gold_rate', value: 3.0, isMultiplier: true }, { type: 'tap_damage',      value: 2.0, isMultiplier: true }] },
-    ],
-  },
+  
   // ── ENTROPY ENGINE (Crit Damage Focus) ─────────────────────────────────────
   {
     id: 'entropy_engine',
     name: 'ENTROPY ENGINE',
     description: 'Chaos weaponized. Every hit is a dice roll against oblivion.',
     color: '#9933ff',
-    setBonusDescription: 'Full set: +150% crit damage + +20% crit chance (permanent)',
+    minStage: 500,
+    dropWeight: 80,
+    setBonusDescription: 'Full set: x2 crit damage + +12% crit chance',
     setBonus: [
-      { type: 'crit_multiplier', value: 2.5, isMultiplier: true },
-      { type: 'crit_chance', value: 0.20, isMultiplier: false },
+      { type: 'crit_multiplier', value: 2.0, isMultiplier: true },
+      { type: 'crit_chance', value: 0.12, isMultiplier: false },
     ],
     pieces: [
-      { name: 'ENTROPY_CORE',   slot: 'CPU', flavorText: 'Processes randomness into pure destruction.',                    stats: [{ type: 'crit_multiplier', value: 2.2, isMultiplier: true }, { type: 'crit_chance', value: 0.15, isMultiplier: false }] },
-      { name: 'ENTROPY_FLUX',   slot: 'GPU', flavorText: 'Renders probability collapse in real-time.',                     stats: [{ type: 'crit_multiplier', value: 2.0, isMultiplier: true }, { type: 'tap_damage',  value: 1.8,  isMultiplier: true  }] },
-      { name: 'ENTROPY_BUFFER', slot: 'RAM', flavorText: 'Stores infinite potential outcomes. Delivers the worst one.',    stats: [{ type: 'crit_multiplier', value: 1.9, isMultiplier: true }, { type: 'idle_dps',    value: 1.6,  isMultiplier: true  }] },
+      { name: 'ENTROPY_CORE',   slot: 'CPU', flavorText: 'Processes randomness into pure destruction.',                 stats: [{ type: 'crit_multiplier', value: 1.8, isMultiplier: true }, { type: 'crit_chance', value: 0.10, isMultiplier: false }] },
+      { name: 'ENTROPY_FLUX',   slot: 'GPU', flavorText: 'Renders probability collapse in real-time.',                  stats: [{ type: 'crit_multiplier', value: 1.7, isMultiplier: true }, { type: 'tap_damage',  value: 1.5,  isMultiplier: true  }] },
+      { name: 'ENTROPY_BUFFER', slot: 'RAM', flavorText: 'Stores infinite potential outcomes. Delivers the worst one.', stats: [{ type: 'crit_multiplier', value: 1.6, isMultiplier: true }, { type: 'idle_dps',    value: 1.4,  isMultiplier: true  }] },
     ],
   },
-  // ── VOID LATTICE (Hybrid Balanced) ─────────────────────────────────────────
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // LATE GAME SETS (Stage 2000+) - Powerful specialized builds
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // ── SINGULARITY CORE (Gold Focus) ──────────────────────────────────────────
   {
-    id: 'void_lattice',
-    name: 'VOID LATTICE',
-    description: 'Harvested from between dimensions. Perfectly balanced destruction.',
-    color: '#00ff88',
-    setBonusDescription: 'Full set: +50% ALL stats (tap, DPS, gold, crit) (permanent)',
-    setBonus: [
-      { type: 'tap_damage', value: 1.5, isMultiplier: true },
-      { type: 'idle_dps', value: 1.5, isMultiplier: true },
-      { type: 'gold_rate', value: 1.5, isMultiplier: true },
-      { type: 'crit_chance', value: 0.10, isMultiplier: false },
-    ],
+    id: 'singularity_core',
+    name: 'SINGULARITY CORE',
+    description: 'Beyond the event horizon of power.',
+    color: '#ffaa00',
+    minStage: 2000,
+    dropWeight: 60,
+    setBonusDescription: 'Full set: x3 gold rate',
+    setBonus: [{ type: 'gold_rate', value: 3.0, isMultiplier: true }],
     pieces: [
-      { name: 'VOID_NODE',    slot: 'CPU',       flavorText: 'A processing unit that exists in negative space.',           stats: [{ type: 'tap_damage', value: 1.6, isMultiplier: true }, { type: 'idle_dps',        value: 1.6, isMultiplier: true }] },
-      { name: 'VOID_CACHE',   slot: 'RAM',       flavorText: 'Memory that remembers what never happened.',                  stats: [{ type: 'idle_dps',   value: 1.7, isMultiplier: true }, { type: 'gold_rate',       value: 1.5, isMultiplier: true }] },
-      { name: 'VOID_SHADER',  slot: 'GPU',       flavorText: 'Renders attacks from impossible angles.',                     stats: [{ type: 'tap_damage', value: 1.8, isMultiplier: true }, { type: 'crit_multiplier', value: 1.5, isMultiplier: true }] },
-      { name: 'VOID_BRIDGE',  slot: 'EXPANSION', flavorText: 'Connects your rig to the space between spaces.',              stats: [{ type: 'gold_rate',  value: 1.8, isMultiplier: true }, { type: 'crit_chance',     value: 0.08, isMultiplier: false }] },
+      { name: 'SINGULARITY_LENS',   slot: 'GPU',       flavorText: 'Focuses all available value through a single computational point.', stats: [{ type: 'gold_rate', value: 2.0, isMultiplier: true }, { type: 'idle_dps',        value: 1.4, isMultiplier: true }] },
+      { name: 'SINGULARITY_VAULT',  slot: 'EXPANSION', flavorText: 'Stores wealth in a dimension with no withdrawal limits.',            stats: [{ type: 'gold_rate', value: 2.0, isMultiplier: true }, { type: 'tap_damage',      value: 1.4, isMultiplier: true }] },
+      { name: 'SINGULARITY_MATRIX', slot: 'RAM',       flavorText: 'A memory system that converts computation directly into wealth.',    stats: [{ type: 'gold_rate', value: 1.8, isMultiplier: true }, { type: 'crit_multiplier', value: 1.5, isMultiplier: true }] },
+      { name: 'SINGULARITY_ANCHOR', slot: 'CPU',       flavorText: 'Tethers your rig to the most profitable timeline.',                  stats: [{ type: 'gold_rate', value: 1.7, isMultiplier: true }, { type: 'idle_dps',        value: 1.5, isMultiplier: true }] },
+      { name: 'SINGULARITY_CROWN',  slot: 'GPU',       flavorText: 'The sovereign piece. Alone it is powerful. Together it is absolute.',stats: [{ type: 'gold_rate', value: 2.5, isMultiplier: true }, { type: 'tap_damage',      value: 1.6, isMultiplier: true }] },
     ],
   },
-  // ── QUANTUM ARRAY (Late-game Tap Focus) ────────────────────────────────────
+  
+  // ── QUANTUM ARRAY (Tap Focus) ──────────────────────────────────────────────
   {
     id: 'quantum_array',
     name: 'QUANTUM ARRAY',
     description: 'Each tap exists in all states until observed. Then it destroys.',
     color: '#ff6600',
-    setBonusDescription: 'Full set: x3 tap damage (permanent)',
-    setBonus: [{ type: 'tap_damage', value: 3.0, isMultiplier: true }],
+    minStage: 2000,
+    dropWeight: 60,
+    setBonusDescription: 'Full set: x2.5 tap damage',
+    setBonus: [{ type: 'tap_damage', value: 2.5, isMultiplier: true }],
     pieces: [
-      { name: 'QUANTUM_PROCESSOR', slot: 'CPU',       flavorText: 'Computes attacks across parallel timelines.',               stats: [{ type: 'tap_damage', value: 2.5, isMultiplier: true }, { type: 'crit_chance',     value: 0.12, isMultiplier: false }] },
-      { name: 'QUANTUM_BUFFER',    slot: 'RAM',       flavorText: 'Holds superposition states until collapse.',                 stats: [{ type: 'tap_damage', value: 2.2, isMultiplier: true }, { type: 'idle_dps',        value: 1.5,  isMultiplier: true  }] },
-      { name: 'QUANTUM_RENDERER',  slot: 'GPU',       flavorText: 'Visualizes every possible outcome. Selects the lethal one.',stats: [{ type: 'tap_damage', value: 2.8, isMultiplier: true }, { type: 'crit_multiplier', value: 1.9,  isMultiplier: true  }] },
-      { name: 'QUANTUM_ENTANGLER', slot: 'EXPANSION', flavorText: 'Links your attacks to distant, unsuspecting targets.',       stats: [{ type: 'tap_damage', value: 2.0, isMultiplier: true }, { type: 'gold_rate',       value: 1.6,  isMultiplier: true  }] },
+      { name: 'QUANTUM_PROCESSOR', slot: 'CPU',       flavorText: 'Computes attacks across parallel timelines.',               stats: [{ type: 'tap_damage', value: 2.0, isMultiplier: true }, { type: 'crit_chance',     value: 0.08, isMultiplier: false }] },
+      { name: 'QUANTUM_BUFFER',    slot: 'RAM',       flavorText: 'Holds superposition states until collapse.',                 stats: [{ type: 'tap_damage', value: 1.8, isMultiplier: true }, { type: 'idle_dps',        value: 1.4,  isMultiplier: true  }] },
+      { name: 'QUANTUM_RENDERER',  slot: 'GPU',       flavorText: 'Visualizes every possible outcome. Selects the lethal one.',stats: [{ type: 'tap_damage', value: 2.2, isMultiplier: true }, { type: 'crit_multiplier', value: 1.6,  isMultiplier: true  }] },
+      { name: 'QUANTUM_ENTANGLER', slot: 'EXPANSION', flavorText: 'Links your attacks to distant, unsuspecting targets.',       stats: [{ type: 'tap_damage', value: 1.7, isMultiplier: true }, { type: 'gold_rate',       value: 1.4,  isMultiplier: true  }] },
+    ],
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ENDGAME SETS (Stage 10000+) - Extremely powerful, rare drops
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // ── OMEGA CASCADE (Ultimate DPS) ───────────────────────────────────────────
+  {
+    id: 'omega_cascade',
+    name: 'OMEGA CASCADE',
+    description: 'The final evolution of destruction. Each piece amplifies the others.',
+    color: '#ff2222',
+    minStage: 10000,
+    dropWeight: 40,
+    setBonusDescription: 'Full set: x3 tap + x3 idle + +20% crit chance',
+    setBonus: [
+      { type: 'tap_damage', value: 3.0, isMultiplier: true },
+      { type: 'idle_dps', value: 3.0, isMultiplier: true },
+      { type: 'crit_chance', value: 0.20, isMultiplier: false },
+    ],
+    pieces: [
+      { name: 'OMEGA_CORE',     slot: 'CPU',       flavorText: 'The processor that ends all processes.',                 stats: [{ type: 'tap_damage', value: 2.5, isMultiplier: true }, { type: 'idle_dps',        value: 2.0,  isMultiplier: true }] },
+      { name: 'OMEGA_MATRIX',   slot: 'RAM',       flavorText: 'Memory that forgets nothing. Forgives less.',            stats: [{ type: 'idle_dps',   value: 2.5, isMultiplier: true }, { type: 'tap_damage',      value: 2.0,  isMultiplier: true }] },
+      { name: 'OMEGA_RENDERER', slot: 'GPU',       flavorText: 'Draws destruction in infinite resolution.',              stats: [{ type: 'tap_damage', value: 3.0, isMultiplier: true }, { type: 'crit_multiplier', value: 2.0,  isMultiplier: true }] },
+      { name: 'OMEGA_BRIDGE',   slot: 'EXPANSION', flavorText: 'Connects all systems to maximum output.',                stats: [{ type: 'gold_rate',  value: 2.0, isMultiplier: true }, { type: 'crit_chance',     value: 0.12, isMultiplier: false }] },
+    ],
+  },
+  
+  // ── INFINITE LOOP (Ultimate Crit) ──────────────────────────────────────────
+  {
+    id: 'infinite_loop',
+    name: 'INFINITE LOOP',
+    description: 'An endless cycle of critical devastation.',
+    color: '#cc00ff',
+    minStage: 10000,
+    dropWeight: 40,
+    setBonusDescription: 'Full set: x4 crit damage + +25% crit chance',
+    setBonus: [
+      { type: 'crit_multiplier', value: 4.0, isMultiplier: true },
+      { type: 'crit_chance', value: 0.25, isMultiplier: false },
+    ],
+    pieces: [
+      { name: 'LOOP_INITIATOR', slot: 'CPU',       flavorText: 'Begins the sequence. Ends all enemies.',                 stats: [{ type: 'crit_multiplier', value: 2.5, isMultiplier: true }, { type: 'crit_chance', value: 0.15, isMultiplier: false }] },
+      { name: 'LOOP_CACHE',     slot: 'RAM',       flavorText: 'Remembers every critical hit. Amplifies the next.',      stats: [{ type: 'crit_multiplier', value: 2.2, isMultiplier: true }, { type: 'tap_damage',  value: 2.0,  isMultiplier: true  }] },
+      { name: 'LOOP_SHADER',    slot: 'GPU',       flavorText: 'Renders criticals in an endless fractal of pain.',       stats: [{ type: 'crit_multiplier', value: 2.8, isMultiplier: true }, { type: 'idle_dps',    value: 2.0,  isMultiplier: true  }] },
+      { name: 'LOOP_EXPANDER',  slot: 'EXPANSION', flavorText: 'Extends the loop to all connected systems.',             stats: [{ type: 'crit_chance',     value: 0.18, isMultiplier: false }, { type: 'gold_rate', value: 2.0,  isMultiplier: true  }] },
+    ],
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ULTIMATE SETS (Stage 100000+) - The rarest, most powerful equipment
+  // ═══════════════════════════════════════════════════════════════════════════
+  
+  // ── TRANSCENDENCE (GOD SET) ────────────────────────────────────────────────
+  {
+    id: 'transcendence',
+    name: 'TRANSCENDENCE',
+    description: 'Beyond hardware. Beyond software. Beyond comprehension.',
+    color: '#ffffff',
+    minStage: 100000,
+    dropWeight: 10,
+    setBonusDescription: 'Full set: x5 ALL damage + x5 gold + +30% crit + x5 crit damage',
+    setBonus: [
+      { type: 'tap_damage', value: 5.0, isMultiplier: true },
+      { type: 'idle_dps', value: 5.0, isMultiplier: true },
+      { type: 'gold_rate', value: 5.0, isMultiplier: true },
+      { type: 'crit_chance', value: 0.30, isMultiplier: false },
+      { type: 'crit_multiplier', value: 5.0, isMultiplier: true },
+    ],
+    pieces: [
+      { name: 'TRANS_MIND',     slot: 'CPU',       flavorText: 'Processes thoughts that should not exist.',              stats: [{ type: 'tap_damage', value: 4.0, isMultiplier: true }, { type: 'idle_dps',        value: 4.0, isMultiplier: true }] },
+      { name: 'TRANS_MEMORY',   slot: 'RAM',       flavorText: 'Remembers the future. Forgets the impossible.',          stats: [{ type: 'idle_dps',   value: 4.5, isMultiplier: true }, { type: 'gold_rate',       value: 3.0, isMultiplier: true }] },
+      { name: 'TRANS_VISION',   slot: 'GPU',       flavorText: 'Sees all timelines. Chooses the one where you win.',     stats: [{ type: 'tap_damage', value: 4.5, isMultiplier: true }, { type: 'crit_multiplier', value: 3.0, isMultiplier: true }] },
+      { name: 'TRANS_LINK',     slot: 'EXPANSION', flavorText: 'Connects to everything. Limited by nothing.',            stats: [{ type: 'gold_rate',  value: 4.0, isMultiplier: true }, { type: 'crit_chance',     value: 0.20, isMultiplier: false }] },
+      { name: 'TRANS_CORE',     slot: 'CPU',       flavorText: 'The heart of a god. Beats with infinite power.',         stats: [{ type: 'crit_multiplier', value: 4.0, isMultiplier: true }, { type: 'crit_chance', value: 0.18, isMultiplier: false }] },
     ],
   },
 ];

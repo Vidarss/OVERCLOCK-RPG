@@ -137,7 +137,6 @@ export class DataPacketPlugin implements IPlugin {
 
     this.isProcessing = true;
     const reward = this.activePacket.goldReward;
-    console.log('[v0] collectBasicPacket reward:', reward, 'gold before:', this.engine.state.gold);
 
     // Add gold immediately (no skill multiplier for basic, but boost applies)
     const boostMult = this.getBoostMultiplier();
@@ -266,11 +265,9 @@ export class DataPacketPlugin implements IPlugin {
 
   private spawnPacket(currentStage: number): void {
     const packetDef = this.selectRandomPacketType();
-    console.log('[v0] spawnPacket stage:', currentStage, 'type:', packetDef.type, 'enemyEquivalent:', packetDef.enemyEquivalent);
     const goldReward = packetDef.enemyEquivalent > 0 
       ? DATAPACKET_CONFIG.formulas.calculateGold(currentStage, packetDef.enemyEquivalent)
       : 0;
-    console.log('[v0] spawnPacket goldReward:', goldReward);
 
     const now = Date.now();
     this.activePacket = {

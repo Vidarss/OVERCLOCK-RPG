@@ -1,8 +1,73 @@
 import type { IPlugin, IEngine, GameState, GameEvent, Player, HardwareItem } from '../engine/types';
 import type { AuthPlugin } from './AuthPlugin';
-import { SET_CATALOG } from '../config/game.config';
+import { SET_CATALOG, SET_DROP_CONFIG } from '../config/game.config';
 
 export { SET_CATALOG };
+
+/**
+ * Calculate set piece drop chance based on stage, OC tier, and set rarity
+ */
+function calculateSetDropChance(stage: number, ocTier: number, setMinStage: number): number {
+  const cfg = SET_DROP_CONFIG;
+  
+  // Base chance
+  let chance = cfg.baseDropChance;
+  
+  // Stage bonus: +0.1% per 100 stages above requirement
+  const stageAboveReq = Math.max(0, stage - setMinStage);
+  chance += (stageAboveReq / 100) * cfg.stageDropBonus;
+  
+  // OC tier bonus: +0.5% per tier
+  chance += ocTier * cfg.tierDropBonus;
+  
+  // Cap at max
+  return Math.min(chance, cfg.maxDropChance);
+}
+
+/**
+ * Select a random set that can drop at the current stage
+ */
+function selectRandomSet(stage: number, ownedPieceNames: Set<string>): { setId: string; pieceName: string } | null {
+  // Filter sets available at this stage
+  const availableSets = SET_CATALOG.filter(set => {
+    const minStage = (set as { minStage?: number }).minStage ?? 0;
+    return stage >= minStage;
+  });
+  
+  if (availableSets.length === 0) return null;
+  
+  // Weight by dropWeight and filter to sets with unowned pieces
+  const setsWithUnownedPieces = availableSets.filter(set => {
+    return set.pieces.some(piece => !ownedPieceNames.has(piece.name));
+  });
+  
+  if (setsWithUnownedPieces.length === 0) return null;
+  
+  // Weighted random selection
+  const totalWeight = setsWithUnownedPieces.reduce((sum, set) => {
+    const weight = (set as { dropWeight?: number }).dropWeight ?? 50;
+    return sum + weight;
+  }, 0);
+  
+  let roll = Math.random() * totalWeight;
+  let selectedSet = setsWithUnownedPieces[0];
+  
+  for (const set of setsWithUnownedPieces) {
+    const weight = (set as { dropWeight?: number }).dropWeight ?? 50;
+    roll -= weight;
+    if (roll <= 0) {
+      selectedSet = set;
+      break;
+    }
+  }
+  
+  // Select random unowned piece from the set
+  const unownedPieces = selectedSet.pieces.filter(piece => !ownedPieceNames.has(piece.name));
+  if (unownedPieces.length === 0) return null;
+  
+  const selectedPiece = unownedPieces[Math.floor(Math.random() * unownedPieces.length)];
+  return { setId: selectedSet.id, pieceName: selectedPiece.name };
+}
 
 export class SetPlugin implements IPlugin {
   id = 'sets';
@@ -33,6 +98,13 @@ export class SetPlugin implements IPlugin {
     this.unsubs.push(engine.on('state_sync', () => {
       this.applySetBonuses();
     }));
+    
+    // Listen for boss deaths to potentially drop set pieces
+    this.unsubs.push(engine.on('enemy_death', (event: GameEvent<{ enemy: { isBoss: boolean }; goldReward: number }>) => {
+      if (event.payload.enemy.isBoss) {
+        void this.tryDropSetPiece();
+      }
+    }));
   }
 
   private async loadSetItems(): Promise<void> {
@@ -56,6 +128,43 @@ export class SetPlugin implements IPlugin {
       result[set.id] = set.pieces.every(p => ownedNames.has(p.name));
     }
     return result;
+  }
+  
+  /**
+   * Attempt to drop a set piece from a boss kill
+   * Called automatically when a boss is defeated
+   */
+  private async tryDropSetPiece(): Promise<void> {
+    if (!this.userId) return;
+    
+    const state = this.engine.state;
+    const stage = state.stage ?? 1;
+    const ocTier = state.overclockTier ?? 0;
+    
+    // Get owned piece names for smart drop
+    const ownedPieceNames = new Set(state.setItems?.map(i => i.name) ?? []);
+    
+    // Find available sets for this stage
+    const availableSets = SET_CATALOG.filter(set => {
+      const minStage = (set as { minStage?: number }).minStage ?? 0;
+      return stage >= minStage;
+    });
+    
+    if (availableSets.length === 0) return;
+    
+    // Use the lowest minStage among available sets for drop chance calculation
+    const lowestMinStage = Math.min(...availableSets.map(s => (s as { minStage?: number }).minStage ?? 0));
+    const dropChance = calculateSetDropChance(stage, ocTier, lowestMinStage);
+    
+    // Roll for drop
+    if (Math.random() > dropChance) return;
+    
+    // Select a random set and piece
+    const selection = selectRandomSet(stage, ownedPieceNames);
+    if (!selection) return;
+    
+    // Award the piece
+    await this.awardSetPiece(selection.setId, selection.pieceName);
   }
 
   applySetBonuses(): void {
@@ -132,6 +241,29 @@ export class SetPlugin implements IPlugin {
     const items = this.engine.state.setItems;
     const ownedPieces = items.filter(i => i.setId === setId).map(i => i.name);
     return { owned: ownedPieces.length, total: set.pieces.length, ownedPieces };
+  }
+  
+  /**
+   * Get info about set drop chances at current stage
+   */
+  getSetDropInfo(): { availableSets: string[]; dropChance: number } {
+    const state = this.engine.state;
+    const stage = state.stage ?? 1;
+    const ocTier = state.overclockTier ?? 0;
+    
+    const availableSets = SET_CATALOG
+      .filter(set => stage >= ((set as { minStage?: number }).minStage ?? 0))
+      .map(s => s.name);
+    
+    const lowestMinStage = availableSets.length > 0
+      ? Math.min(...SET_CATALOG
+          .filter(set => stage >= ((set as { minStage?: number }).minStage ?? 0))
+          .map(s => (s as { minStage?: number }).minStage ?? 0))
+      : 0;
+    
+    const dropChance = calculateSetDropChance(stage, ocTier, lowestMinStage);
+    
+    return { availableSets, dropChance };
   }
 
   subscribe(listener: () => void): () => void {

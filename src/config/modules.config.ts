@@ -62,7 +62,7 @@ export const MODULES_CONFIG: ModulesConfiguration = {
   shop: {
     enabled: true,
     order: 6,
-    label: 'SHOP',
+    label: 'PASS',
   },
 };
 

@@ -54,7 +54,9 @@ export type GameEventType =
   | 'skill_upgrade'
   | 'datapacket_spawned'
   | 'datapacket_collected'
-  | 'datapacket_expired';
+  | 'datapacket_expired'
+  | 'battle_pass_tier_up'
+  | 'battle_pass_purchased';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
@@ -147,6 +149,10 @@ export interface SetDef {
   pieces: SetPieceDef[];
   setBonusDescription: string;
   setBonus: ModifierDef[];
+  /** Minimum stage required for this set to drop from bosses */
+  minStage?: number;
+  /** Drop weight (higher = more common). Default: 50 */
+  dropWeight?: number;
 }
 
 export interface OverclockUpgrade {
@@ -211,6 +217,7 @@ export interface GameState {
   diamonds: number;
   skillPoints: number;
   claimedSkillPointMilestones: number[];
+  skillTreeNodes: Record<string, number>; // nodeId -> level purchased
   setItems: HardwareItem[];
   collectedSets: Record<string, boolean>;
   scrap: number;
@@ -218,6 +225,10 @@ export interface GameState {
   heroUpgrades: Record<string, number>;
   // Skill level upgrades
   skillUpgrades: Record<SkillId, number>;
+  // Relics system
+  unlockedRelics: string[];
+  equippedRelics: string[];
+  lifetimeGold: number;
   lastSaveTime: number;
   lastTickTime: number;
   schemaVersion: number;
@@ -226,7 +237,7 @@ export interface GameState {
 export interface DamageNumberEvent {
   id: string;
   value: number;
-  type: 'normal' | 'crit' | 'idle' | 'boss';
+  type: 'normal' | 'crit' | 'idle' | 'boss' | 'blocked';
   x?: number;
   y?: number;
 }

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, Zap, ChevronDown, Trophy, Clock, Award, ShoppingBag, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle } from 'lucide-react';
+import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp, Zap } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -8,9 +8,7 @@ import { ITEM_CONFIG } from '../../config/game.config';
 import { CyberHUD } from './CyberHUD';
 import { Battlefield } from './Battlefield';
 import { ComponentPanel } from './ComponentPanel';
-import { OverclockPanel } from './OverclockPanel';
 import { MotherboardScreen } from './MotherboardScreen';
-import { OverclockScreen } from './OverclockScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { DailiesScreen } from './DailiesScreen';
 import { AchievementsScreen } from './AchievementsScreen';
@@ -20,6 +18,9 @@ import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
+import { RelicsScreen } from './RelicsScreen';
+import { OverclockScreen } from './OverclockScreen';
+import { SkillTreeScreen } from './SkillTreeScreen';
 import { DataPacketPopup } from './DataPacketPopup';
 import { useGameState } from '../../hooks/useGameState';
 import { usePreloadAllSprites } from '../../hooks/useSpritePreloader';
@@ -32,7 +33,7 @@ interface GameScreenProps {
   player: Player;
 }
 
-type MobileDrawer = 'components' | 'overclock' | null;
+type MobileDrawer = 'components' | 'relics' | null;
 
 const MobileDrawerOverlay: React.FC<{
   open: boolean;
@@ -137,7 +138,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [offlineMsg, setOfflineMsg] = useState<string | null>(null);
   const [showMotherboard, setShowMotherboard] = useState(false);
-  const [showOverclockPopup, setShowOverclockPopup] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showDailies, setShowDailies] = useState(false);
   const [showAchievements, setShowAchievements] = useState(false);
@@ -146,6 +146,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showClan, setShowClan] = useState(false);
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
+  const [showRelics, setShowRelics] = useState(false);
+  const [showOverclock, setShowOverclock] = useState(false);
+  const [showSkillTree, setShowSkillTree] = useState(false);
   const [mobileDrawer, setMobileDrawer] = useState<MobileDrawer>(null);
 
   // Preload all enemy sprites on mount to prevent loading delays
@@ -164,7 +167,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const inventoryNearFull = inventoryCount >= inventoryMax * inventoryWarningThreshold;
   const inventoryFull = inventoryCount >= inventoryMax;
   const overclockCount = useGameState(engine, s => s.overclockCount);
+  const skillPoints = useGameState(engine, s => s.skillPoints ?? 0);
   const availableOCT = engine.getPlugin<OverclockPlugin>('overclock')?.getAvailableOCT() ?? overclockCount;
+  
+  // Check if motherboard upgrade is available
+  const diamonds = useGameState(engine, s => s.diamonds ?? 0);
+  const motherboardTier = useGameState(engine, s => s.motherboardTier ?? 0);
+  const nextMoboTier = motherboardTier < 7 ? motherboardTier + 1 : null;
+  const moboUpgradeAvailable = nextMoboTier !== null && diamonds >= ([0, 5, 10, 25, 50, 100, 200, 500][nextMoboTier] ?? 999999);
 
   useEffect(() => {
     const unsub = engine.on<{ goldEarned: number }>('offline_progress', event => {
@@ -180,7 +190,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const modals = (
     <>
       {showMotherboard && <MotherboardScreen engine={engine} onClose={() => setShowMotherboard(false)} />}
-      {showOverclockPopup && <OverclockScreen engine={engine} onClose={() => setShowOverclockPopup(false)} />}
       {showLeaderboard && <LeaderboardScreen engine={engine} onClose={() => setShowLeaderboard(false)} />}
       {showDailies && <DailiesScreen engine={engine} onClose={() => setShowDailies(false)} />}
       {showAchievements && <AchievementsScreen engine={engine} onClose={() => setShowAchievements(false)} />}
@@ -189,6 +198,9 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
+      {showRelics && <RelicsScreen engine={engine} onClose={() => setShowRelics(false)} />}
+      {showOverclock && <OverclockScreen engine={engine} onClose={() => setShowOverclock(false)} />}
+      {showSkillTree && <SkillTreeScreen engine={engine} onClose={() => setShowSkillTree(false)} />}
       <AchievementToast engine={engine} />
       <DataPacketPopup engine={engine} />
     </>
@@ -259,24 +271,37 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             onClick={() => setShowUpgrades(true)}
           />
           <MobileTab
-            icon={<Zap size={15} color={mobileDrawer === 'overclock' ? '#ff0080' : '#3a4a5a'} />}
-            label="OVERCLOCK"
-            active={mobileDrawer === 'overclock'}
+            icon={<Sparkles size={15} color={mobileDrawer === 'relics' ? '#ff0080' : '#3a4a5a'} />}
+            label="RELICS"
+            active={mobileDrawer === 'relics'}
             activeColor="#ff0080"
             badge={availableOCT > 0 ? availableOCT : null}
-            onClick={() => openDrawer('overclock')}
+            onClick={() => setShowRelics(true)}
+          />
+          <MobileTab
+            icon={<Zap size={15} color="#3a4a5a" />}
+            label="OVERCLOCK"
+            activeColor="#ff0080"
+            onClick={() => setShowOverclock(true)}
+          />
+          <MobileTab
+            icon={<TrendingUp size={15} color="#3a4a5a" />}
+            label="SKILLS"
+            activeColor="#00ff88"
+            badge={skillPoints > 0 ? skillPoints : null}
+            onClick={() => setShowSkillTree(true)}
           />
           <MobileTab
             icon={<Cpu size={15} color="#3a4a5a" />}
             label="HARDWARE"
             activeColor="#39ff14"
-            badge={inventoryCount > 0 ? inventoryCount : null}
+            badge={moboUpgradeAvailable ? '↑' : (inventoryCount > 0 ? inventoryCount : null)}
             onClick={() => setShowMotherboard(true)}
           />
           <MobileTab
-            icon={<ShoppingBag size={15} color="#3a4a5a" />}
-            label={MODULES_CONFIG.shop.label ?? 'SHOP'}
-            activeColor="#00e5ff"
+            icon={<Sparkles size={15} color="#3a4a5a" />}
+            label={MODULES_CONFIG.shop.label ?? 'PASS'}
+            activeColor="#9933ff"
             onClick={() => setShowShop(true)}
           />
           {MODULES_CONFIG.tournaments.enabled && (
@@ -341,18 +366,6 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           accentColor="#00f5ff"
         >
           <ComponentPanel engine={engine} />
-        </MobileDrawerOverlay>
-
-        {/* Overclock drawer */}
-        <MobileDrawerOverlay
-          open={mobileDrawer === 'overclock'}
-          onClose={() => setMobileDrawer(null)}
-          title="OVERCLOCK TREE"
-          accentColor="#ff0080"
-        >
-          <div style={{ height: '100%', overflowY: 'auto', padding: 12 }}>
-            <OverclockPanel engine={engine} />
-          </div>
         </MobileDrawerOverlay>
       </div>
     );
@@ -432,22 +445,37 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
           )}
 
           {/* Motherboard / Hardware */}
-          <Tooltip content={<><TooltipLabel label="HARDWARE" color="#39ff14" /><TooltipText>Equip dropped items to boost stats.</TooltipText></>} position="left">
+          <Tooltip content={<><TooltipLabel label="HARDWARE" color="#39ff14" /><TooltipText>Equip dropped items to boost stats. {moboUpgradeAvailable ? 'UPGRADE AVAILABLE!' : ''}</TooltipText></>} position="left">
             <button
               onClick={() => setShowMotherboard(true)}
               style={{
-                width: '100%', background: inventoryCount > 0 ? '#031a10' : '#080810',
-                border: `1px solid ${inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'}`,
-                color: inventoryCount > 0 ? '#39ff14' : '#2a3a4a', padding: '12px 10px',
+                width: '100%', background: moboUpgradeAvailable ? '#051a05' : (inventoryCount > 0 ? '#031a10' : '#080810'),
+                border: `1px solid ${moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff1455' : '#1a2a2a')}`,
+                color: moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff14' : '#2a3a4a'), padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
-                boxShadow: inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none', transition: 'all 0.15s',
+                boxShadow: moboUpgradeAvailable ? '0 0 15px rgba(57,255,20,0.3)' : (inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'), transition: 'all 0.15s',
+                position: 'relative',
               }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#39ff14'; e.currentTarget.style.color = '#39ff14'; e.currentTarget.style.boxShadow = '0 0 14px rgba(57,255,20,0.25)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'; e.currentTarget.style.color = inventoryCount > 0 ? '#39ff14' : '#2a3a4a'; e.currentTarget.style.boxShadow = inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff1455' : '#1a2a2a'); e.currentTarget.style.color = moboUpgradeAvailable ? '#39ff14' : (inventoryCount > 0 ? '#39ff14' : '#2a3a4a'); e.currentTarget.style.boxShadow = moboUpgradeAvailable ? '0 0 15px rgba(57,255,20,0.3)' : (inventoryCount > 0 ? '0 0 10px rgba(57,255,20,0.12)' : 'none'); }}
             >
+              {moboUpgradeAvailable && (
+                <div style={{
+                  position: 'absolute', top: 4, right: 4,
+                  background: '#39ff14', color: '#000',
+                  padding: '1px 4px', fontSize: '6px', fontFamily: 'var(--font-mono)',
+                  animation: 'pulse 1.5s ease-in-out infinite',
+                }}>
+                  ↑
+                </div>
+              )}
               <CircuitBoard size={20} />
               <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>HARDWARE</div>
-              {inventoryCount > 0 && (
+              {moboUpgradeAvailable ? (
+                <div style={{ background: '#39ff14', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+                  UPGRADE!
+                </div>
+              ) : inventoryCount > 0 && (
                 <div style={{ background: '#39ff14', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
                   {inventoryCount} IN STORAGE
                 </div>
@@ -474,10 +502,10 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
             </button>
           </Tooltip>
 
-          {/* Overclock */}
-          <Tooltip content={<><TooltipLabel label="OVERCLOCK" color="#ff0080" /><TooltipText>Spend OCT on permanent upgrades.</TooltipText></>} position="left">
+          {/* Relics (Prestige System) */}
+          <Tooltip content={<><TooltipLabel label="RELICS" color="#ff0080" /><TooltipText>Prestige system: Reset for OC Points to unlock permanent relics.</TooltipText></>} position="left">
             <button
-              onClick={() => setShowOverclockPopup(true)}
+              onClick={() => setShowRelics(true)}
               style={{
                 width: '100%', background: availableOCT > 0 ? '#130010' : '#080808',
                 border: `1px solid ${availableOCT > 0 ? '#ff008055' : '#1a1a2a'}`,
@@ -488,32 +516,75 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff0080'; e.currentTarget.style.color = '#ff0080'; e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,128,0.25)'; }}
               onMouseLeave={e => { e.currentTarget.style.borderColor = availableOCT > 0 ? '#ff008055' : '#1a1a2a'; e.currentTarget.style.color = availableOCT > 0 ? '#ff0080' : '#2a2a3a'; e.currentTarget.style.boxShadow = availableOCT > 0 ? '0 0 10px rgba(255,0,128,0.12)' : 'none'; }}
             >
-              <Zap size={20} />
-              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>OVERCLOCK</div>
+              <Sparkles size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>RELICS</div>
               {availableOCT > 0 && (
                 <div style={{ background: '#ff0080', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
-                  {availableOCT} OCT FREE
+                  {availableOCT} OCP
                 </div>
               )}
             </button>
           </Tooltip>
 
-          {/* Shop */}
-          <Tooltip content={<><TooltipLabel label="BLACK MARKET" color="#00e5ff" /><TooltipText>Spend OC tokens and Diamonds on permanent upgrades.</TooltipText></>} position="left">
+          {/* Overclock / Prestige */}
+          <Tooltip content={<><TooltipLabel label="OVERCLOCK" color="#ff0080" /><TooltipText>Reset progress to earn OCT and unlock permanent perks. Requires Stage 50+.</TooltipText></>} position="left">
             <button
-              onClick={() => setShowShop(true)}
+              onClick={() => setShowOverclock(true)}
               style={{
-                width: '100%', background: '#080810',
-                border: '1px solid #0a1a28',
-                color: '#2a3a5a', padding: '12px 10px',
+                width: '100%', background: 'linear-gradient(135deg, #100010 0%, #1a0018 100%)',
+                border: '1px solid #3a0030',
+                color: '#8a4080', padding: '12px 10px',
                 cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
                 transition: 'all 0.15s',
               }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00e5ff'; e.currentTarget.style.color = '#00e5ff'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,229,255,0.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = '#0a1a28'; e.currentTarget.style.color = '#2a3a5a'; e.currentTarget.style.boxShadow = 'none'; }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff0080'; e.currentTarget.style.color = '#ff0080'; e.currentTarget.style.boxShadow = '0 0 20px rgba(255,0,128,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#3a0030'; e.currentTarget.style.color = '#8a4080'; e.currentTarget.style.boxShadow = 'none'; }}
             >
-              <ShoppingBag size={20} />
-              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SHOP</div>
+              <Zap size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>OVERCLOCK</div>
+            </button>
+          </Tooltip>
+
+          {/* Skill Tree */}
+          <Tooltip content={<><TooltipLabel label="SKILL TREE" color="#00ff88" /><TooltipText>Spend Skill Points on permanent stat bonuses.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowSkillTree(true)}
+              style={{
+                width: '100%', background: skillPoints > 0 ? '#001810' : '#080810',
+                border: `1px solid ${skillPoints > 0 ? '#00ff8866' : '#0a2a1a'}`,
+                color: skillPoints > 0 ? '#00ff88' : '#1a5a3a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                boxShadow: skillPoints > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none', transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#00ff88'; e.currentTarget.style.color = '#00ff88'; e.currentTarget.style.boxShadow = '0 0 14px rgba(0,255,136,0.25)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = skillPoints > 0 ? '#00ff8866' : '#0a2a1a'; e.currentTarget.style.color = skillPoints > 0 ? '#00ff88' : '#1a5a3a'; e.currentTarget.style.boxShadow = skillPoints > 0 ? '0 0 10px rgba(0,255,136,0.15)' : 'none'; }}
+            >
+              <TrendingUp size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>SKILLS</div>
+              {skillPoints > 0 && (
+                <div style={{ background: '#00ff88', color: '#000', padding: '1px 6px', fontSize: '7px', lineHeight: '14px', fontFamily: 'var(--font-mono)', textAlign: 'center' }}>
+                  {skillPoints} SP
+                </div>
+              )}
+            </button>
+          </Tooltip>
+
+          {/* Battle Pass */}
+          <Tooltip content={<><TooltipLabel label="BATTLE PASS" color="#9933ff" /><TooltipText>Seasonal progression with premium rewards. $7.99 unlocks all premium tiers.</TooltipText></>} position="left">
+            <button
+              onClick={() => setShowShop(true)}
+              style={{
+                width: '100%', background: 'linear-gradient(135deg, #0a0020 0%, #100030 100%)',
+                border: '1px solid #2a1a5a',
+                color: '#6a4a9a', padding: '12px 10px',
+                cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#9933ff'; e.currentTarget.style.color = '#9933ff'; e.currentTarget.style.boxShadow = '0 0 20px rgba(153,51,255,0.3)'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a1a5a'; e.currentTarget.style.color = '#6a4a9a'; e.currentTarget.style.boxShadow = 'none'; }}
+            >
+              <Sparkles size={20} />
+              <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>PASS</div>
             </button>
           </Tooltip>
 
