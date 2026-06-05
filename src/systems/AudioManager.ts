@@ -2,6 +2,14 @@
 // OVERCLOCK Audio System - Synthesized Cyberpunk SFX using Web Audio API
 // ══════════════════════════════════════════════════════════════════════════════
 
+import { 
+  AUDIO_CONFIG, 
+  getTrack, 
+  getZoneTrack, 
+  getBossTrack,
+  type MusicTrackDef 
+} from '../config/audio.config';
+
 type SoundType = 
   | 'click' | 'critical' | 'enemy_death' | 'level_up' | 'gold' 
   | 'boss_spawn' | 'boss_death' | 'stage_clear' | 'damage' | 'purchase'
@@ -10,10 +18,13 @@ type SoundType =
 class AudioManager {
   private ctx: AudioContext | null = null;
   private masterGain: GainNode | null = null;
-  private enabled: boolean = true;
-  private volume: number = 0.5;
+  private enabled: boolean = AUDIO_CONFIG.defaultEnabled;
+  private volume: number = AUDIO_CONFIG.defaultMasterVolume;
   private bgmAudio: HTMLAudioElement | null = null;
   private bgmGain: GainNode | null = null;
+  private currentTrackId: string | null = null;
+  private currentZoneId: number = 0;
+  private isBossFight: boolean = false;
 
   private getContext(): AudioContext {
     if (!this.ctx) {
@@ -41,22 +52,116 @@ class AudioManager {
   setEnabled(e: boolean) {
     this.enabled = e;
     if (this.bgmAudio) {
-      this.bgmAudio.volume = e ? this.volume : 0;
+      this.bgmAudio.volume = e ? this.volume * AUDIO_CONFIG.defaultBgmVolume : 0;
     }
   }
 
-  // ── Background Music ────────────────────────────────────────────────────────
+  // ── Background Music (Config-Driven) ────────────────────────────────────────
 
+  /**
+   * Play a track by its id from audio.config.ts
+   */
+  playTrackById(trackId: string) {
+    if (!this.enabled) return;
+    
+    const track = getTrack(trackId);
+    if (!track) {
+      console.warn('[AudioManager] Track not found:', trackId);
+      return;
+    }
+    
+    this.playTrack(track);
+  }
+
+  /**
+   * Play a track definition
+   */
+  private playTrack(track: MusicTrackDef) {
+    if (!this.enabled) return;
+    
+    // Don't restart if same track
+    if (this.currentTrackId === track.id && this.bgmAudio && !this.bgmAudio.paused) {
+      return;
+    }
+    
+    if (!this.bgmAudio) {
+      this.bgmAudio = new Audio();
+    }
+    
+    this.bgmAudio.loop = track.loop;
+    this.bgmAudio.volume = this.volume * track.volume * AUDIO_CONFIG.defaultBgmVolume;
+    this.bgmAudio.src = track.src;
+    this.currentTrackId = track.id;
+    
+    this.bgmAudio.play().catch(e => console.log('[AudioManager] BGM play failed:', e.message));
+  }
+
+  /**
+   * Play the appropriate music for a zone
+   */
+  playZoneMusic(zoneId: number, stage?: number) {
+    if (!this.enabled) return;
+    
+    this.currentZoneId = zoneId;
+    this.isBossFight = false;
+    
+    const track = getZoneTrack(zoneId);
+    if (track) {
+      this.playTrack(track);
+    }
+  }
+
+  /**
+   * Play boss music for current zone
+   */
+  playBossMusic(stage?: number) {
+    if (!this.enabled) return;
+    
+    this.isBossFight = true;
+    
+    const track = getBossTrack(this.currentZoneId, stage);
+    if (track) {
+      this.playTrack(track);
+    }
+  }
+
+  /**
+   * Return to zone music after boss is defeated
+   */
+  resumeZoneMusic() {
+    if (this.isBossFight) {
+      this.playZoneMusic(this.currentZoneId);
+    }
+  }
+
+  /**
+   * Play menu/main theme
+   */
+  playMenuMusic() {
+    this.playTrackById(AUDIO_CONFIG.menuTrackId);
+  }
+
+  /**
+   * Play shop music
+   */
+  playShopMusic() {
+    this.playTrackById(AUDIO_CONFIG.shopTrackId);
+  }
+
+  /**
+   * Legacy method for backwards compatibility
+   */
   playBGM(src: string = '/audio/bgm-main.mp3') {
     if (!this.enabled) return;
     
     if (!this.bgmAudio) {
       this.bgmAudio = new Audio();
       this.bgmAudio.loop = true;
-      this.bgmAudio.volume = this.volume * 0.7; // Slightly quieter to allow SFX to stand out
+      this.bgmAudio.volume = this.volume * AUDIO_CONFIG.defaultBgmVolume;
     }
     
     this.bgmAudio.src = src;
+    this.currentTrackId = null; // Unknown track
     this.bgmAudio.play().catch(e => console.log('[AudioManager] BGM play failed:', e.message));
   }
 
@@ -64,6 +169,7 @@ class AudioManager {
     if (this.bgmAudio) {
       this.bgmAudio.pause();
       this.bgmAudio.currentTime = 0;
+      this.currentTrackId = null;
     }
   }
 
