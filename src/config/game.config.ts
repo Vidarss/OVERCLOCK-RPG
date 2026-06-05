@@ -166,7 +166,7 @@ export interface SkillTreeNode {
 
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ════════════════════════════════════════════════════════���══════════════════
+    // ════════════════════════════════════════════════════════����══════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
@@ -545,14 +545,14 @@ export const ENEMY_CONFIG = {
   // The key is: exponent^(100/interval) should roughly = 10x per era.
   // ═══════════════════════════════════════════════════════════════════════════
   
-  normalHpBase: 8,
-  bossHpBase: 60,
+  normalHpBase: 15,
+  bossHpBase: 100,
   
   // Era 1: Stages 1-100 (Tutorial)
-  // HP at 1: ~10, HP at 50: ~200, HP at 100: ~800
-  era1LinearGrowth: 0.35,
-  era1Exponent: 1.045,
-  era1ExponentInterval: 4,
+  // HP at 1: ~18, HP at 50: ~600, HP at 100: ~2500
+  era1LinearGrowth: 0.5,
+  era1Exponent: 1.055,
+  era1ExponentInterval: 3,
   era1MaxStage: 100,
   
   // Era 2: Stages 101-500 (Foundation)

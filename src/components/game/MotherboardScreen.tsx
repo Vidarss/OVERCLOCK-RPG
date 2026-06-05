@@ -1121,8 +1121,8 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
           </button>
         </div>
 
-        {/* TOP 35%: PCB board — always visible */}
-        <div style={{ height: '35%', minHeight: 120, flexShrink: 0, borderBottom: '1px solid #0f0820', overflow: 'hidden' }}>
+        {/* TOP: PCB board — always visible */}
+        <div style={{ height: 180, flexShrink: 0, borderBottom: '1px solid #0f0820', overflow: 'hidden' }}>
           <BoardPanel
             engine={engine}
             equipped={equipped}
