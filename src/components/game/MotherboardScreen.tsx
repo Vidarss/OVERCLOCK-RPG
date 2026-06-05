@@ -202,7 +202,7 @@ const BoardPanel: React.FC<BoardPanelProps> = ({
       style={{
         height: '100%', display: 'flex', flexDirection: 'column',
         background: 'radial-gradient(ellipse at 50% 40%, #031203 0%, #020708 100%)',
-        position: 'relative', overflow: 'hidden',
+        position: 'relative', overflow: 'visible',
       }}
     >
       <PCBTraces />
@@ -1122,7 +1122,7 @@ export const MotherboardScreen: React.FC<MotherboardScreenProps> = ({ engine, on
         </div>
 
         {/* TOP 35%: PCB board — always visible */}
-        <div style={{ height: '35%', flexShrink: 0, borderBottom: '1px solid #0f0820', overflow: 'hidden' }}>
+        <div style={{ height: '35%', minHeight: 140, flexShrink: 0, borderBottom: '1px solid #0f0820', overflow: 'visible', position: 'relative' }}>
           <BoardPanel
             engine={engine}
             equipped={equipped}
