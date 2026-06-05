@@ -235,23 +235,23 @@ export const TAP_CONFIG = {
   /** Raw tap damage before any modifiers. */
   baseDamage: 1,
   /** Base crit chance (0–1). Additive with modifier stack. Cap: 0.85 (85%) */
-  baseCritChance: 0.03,
+  baseCritChance: 0.01,
   /** Maximum crit chance achievable (prevents 100% crit builds) */
-  maxCritChance: 0.65,
+  maxCritChance: 0.40,
   /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
-  baseCritMultiplier: 1.5,
+  baseCritMultiplier: 1.25,
   /** Maximum crit damage multiplier (prevents one-shot everything builds) */
-  maxCritMultiplier: 10.0,
+  maxCritMultiplier: 5.0,
   /** Window (ms) within which rapid taps build a combo. */
-  comboWindowMs: 400,
+  comboWindowMs: 300,
   /** Number of taps within the window required to activate combo bonus. */
-  comboThreshold: 8,
+  comboThreshold: 12,
   /** Damage multiplier applied when the combo threshold is met. */
-  comboMultiplier: 1.15,
+  comboMultiplier: 1.08,
   /** Combo max stacks (for potential future combo counter feature) */
-  comboMaxStacks: 10,
+  comboMaxStacks: 5,
   /** Damage bonus per additional combo stack above threshold */
-  comboBonusPerStack: 0.03,
+  comboBonusPerStack: 0.01,
 } as const;
 
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
@@ -545,14 +545,14 @@ export const ENEMY_CONFIG = {
   // The key is: exponent^(100/interval) should roughly = 10x per era.
   // ═══════════════════════════════════════════════════════════════════════════
   
-  normalHpBase: 5,
-  bossHpBase: 40,
+  normalHpBase: 8,
+  bossHpBase: 60,
   
   // Era 1: Stages 1-100 (Tutorial)
-  // HP at 1: ~6, HP at 100: ~500
-  era1LinearGrowth: 0.25,
-  era1Exponent: 1.035,
-  era1ExponentInterval: 5,
+  // HP at 1: ~10, HP at 50: ~200, HP at 100: ~800
+  era1LinearGrowth: 0.35,
+  era1Exponent: 1.045,
+  era1ExponentInterval: 4,
   era1MaxStage: 100,
   
   // Era 2: Stages 101-500 (Foundation)
@@ -867,42 +867,42 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
 // Each skill has distinct purpose - no "always use" skill
 
 export const BASE_SKILLS: SkillDef[] = [
-  { id: 'surge',           name: 'SURGE',     description: 'Tap damage x3 for 6s',        cooldown: 25,  duration: 6,  color: '#00f5ff', icon: 'Zap',    unlockStage: 1  },
-  { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x3 for 10s',         cooldown: 40,  duration: 10, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
-  { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x2 for 12s',        cooldown: 50,  duration: 12, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
-  { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 10s',       cooldown: 75,  duration: 10, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
-  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 15x/s for 5s',       cooldown: 45,  duration: 5,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
-];
+  { id: 'surge',           name: 'SURGE',     description: 'Tap damage x2 for 5s',        cooldown: 30,  duration: 5,  color: '#00f5ff', icon: 'Zap',    unlockStage: 1  },
+  { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x2 for 8s',         cooldown: 45,  duration: 8, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
+  { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x1.5 for 10s',        cooldown: 55,  duration: 10, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
+  { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 8s',       cooldown: 80,  duration: 8, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
+  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 10x/s for 4s',       cooldown: 50,  duration: 4,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
+  ];
 
 export const BRANCH_SKILLS: SkillDef[] = [
-  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 200x tap burst',         cooldown: 100, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
-  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.5 gold for 20s',              cooldown: 80,  duration: 20, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
-  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x10 idle DPS for 8s',            cooldown: 90,  duration: 8,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
-  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x2 tap + x2 gold for 6s',        cooldown: 100, duration: 6,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
-  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',       cooldown: 150, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
-];
+  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 50x tap burst',         cooldown: 120, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
+  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.25 gold for 15s',              cooldown: 90,  duration: 15, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
+  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x5 idle DPS for 6s',            cooldown: 100,  duration: 6,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
+  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x1.5 tap + x1.5 gold for 5s',        cooldown: 110, duration: 5,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
+  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',       cooldown: 180, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
+  ];
 
 export const ALL_SKILLS: SkillDef[] = [...BASE_SKILLS, ...BRANCH_SKILLS];
 
 /** Modifiers applied when each skill is active (used by SkillPlugin). */
 export const SKILL_EFFECTS: Record<SkillId, { modifierType: ModifierDef['type']; value: number; isMultiplier: boolean }[]> = {
-  surge:            [{ modifierType: 'tap_damage', value: 3,   isMultiplier: true  }],
-  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 3,   isMultiplier: true  }],
-  gold_rush:        [{ modifierType: 'gold_rate',  value: 2,   isMultiplier: true  }],
+  surge:            [{ modifierType: 'tap_damage', value: 2,   isMultiplier: true  }],
+  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 2,   isMultiplier: true  }],
+  gold_rush:        [{ modifierType: 'gold_rate',  value: 1.5,   isMultiplier: true  }],
   firewall:         [],
   chain_hack:       [],
   static_discharge: [],
-  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.5, isMultiplier: true  }],
-  meltdown:         [{ modifierType: 'idle_dps',   value: 10,  isMultiplier: true  }],
+  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.25, isMultiplier: true  }],
+  meltdown:         [{ modifierType: 'idle_dps',   value: 5,  isMultiplier: true  }],
   entropy_burst:    [
-    { modifierType: 'tap_damage', value: 2, isMultiplier: true },
-    { modifierType: 'gold_rate',  value: 2, isMultiplier: true },
+  { modifierType: 'tap_damage', value: 1.5, isMultiplier: true },
+  { modifierType: 'gold_rate',  value: 1.5, isMultiplier: true },
   ],
   quantum_echo: [],
-};
+  };
 
-/** chain_hack fires one auto-tap every chainHackIntervalMs (~15 per second). */
-export const CHAIN_HACK_INTERVAL_MS = 67;
+/** chain_hack fires one auto-tap every chainHackIntervalMs (~10 per second). */
+  export const CHAIN_HACK_INTERVAL_MS = 100;
 
 /** static_discharge burst multiplier (applied to current tap_damage modifier). */
 export const STATIC_DISCHARGE_BURST = 200;
@@ -1217,7 +1217,7 @@ export interface ChallengeTemplateDef {
 
 export const DAILY_CONFIG = {
   /** Number of daily challenges generated per day per player. */
-  challengesPerDay: 20,
+  challengesPerDay: 30,
   /** Maximum diamonds awarded per completed challenge. */
   maxDiamondReward: 10,
   /** Diamond reward scales with highestStage / this divisor. */
@@ -1235,9 +1235,9 @@ export const DAILY_CONFIG = {
     overclock_tap:   1.5,
     clear_stages:    1.5,
     boss_streak:     3,
-    spend_gold:      1,
-    collect_crits:   2,
-    idle_kills:      1,
+  spend_gold:      0,
+  collect_crits:   2,
+  idle_kills:      0,
     skill_combos:    2.5,
     tap_frenzy:      1.5,
     reach_overclock: 3,
@@ -1260,9 +1260,7 @@ export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
   { type: 'overclock_tap',   label: 'Land {n} critical taps',          targetFn: s => 10 + s * 2,             rewardFn: s => 75  + s * 20  },
   { type: 'clear_stages',    label: 'Clear {n} stages',                targetFn: () => 3,                      rewardFn: s => 60  + s * 20  },
   { type: 'boss_streak',     label: 'Defeat {n} bosses in a row',      targetFn: () => 3,                      rewardFn: s => 120 + s * 50  },
-  { type: 'spend_gold',      label: 'Spend {n} gold on upgrades',      targetFn: s => 150 + s * 60,           rewardFn: s => 40  + s * 15  },
   { type: 'collect_crits',   label: 'Land {n} critical hits',          targetFn: s => 20 + s * 4,             rewardFn: s => 80  + s * 25  },
-  { type: 'idle_kills',      label: 'Get {n} idle kills',              targetFn: s => 30 + s * 5,             rewardFn: s => 50  + s * 15  },
   // ── Hard ──────────────────────────────────────────────────────────────────
   { type: 'skill_combos',    label: 'Chain {n} skills without missing', targetFn: () => 4,                    rewardFn: s => 130 + s * 45  },
   { type: 'tap_frenzy',      label: 'Deal {n} total damage tapping',   targetFn: s => 500 + s * 200,          rewardFn: s => 90  + s * 30  },

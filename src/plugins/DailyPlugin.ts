@@ -100,8 +100,6 @@ export class DailyPlugin implements IPlugin {
   private lastSkillTime = 0;
   private skillChain = 0;
   private consecutiveTaps = 0;
-  private idleKills = 0;
-  private goldSpent = 0;
   private stagesCleared = 0;
   private wavesEndured = 0;
 
@@ -138,11 +136,6 @@ export class DailyPlugin implements IPlugin {
           this.incrementChallenge('boss_streak', 1);
         } else {
           this.consecutiveBosses = 0;
-        }
-        // idle kills: enemies killed without tapping (tap_damage hasn't changed)
-        if (this.tapDamage === 0) {
-          this.idleKills++;
-          this.incrementChallenge('idle_kills', 1);
         }
       })
     );
@@ -187,13 +180,6 @@ export class DailyPlugin implements IPlugin {
           this.incrementChallenge('overclock_tap', 1);
           this.incrementChallenge('collect_crits', 1);
         }
-      })
-    );
-
-    this.unsubs.push(
-      engine.on('gold_spent', (event: GameEvent<{ amount: number }>) => {
-        this.goldSpent += event.payload.amount;
-        this.incrementChallenge('spend_gold', event.payload.amount);
       })
     );
 
