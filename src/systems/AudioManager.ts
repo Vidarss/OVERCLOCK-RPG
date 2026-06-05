@@ -7,6 +7,7 @@ import {
   getTrack, 
   getZoneTrack, 
   getBossTrack,
+  getStageTrack,
   type MusicTrackDef 
 } from '../config/audio.config';
 
@@ -24,6 +25,7 @@ class AudioManager {
   private bgmGain: GainNode | null = null;
   private currentTrackId: string | null = null;
   private currentZoneId: number = 0;
+  private currentStage: number = 1;
   private isBossFight: boolean = false;
 
   private getContext(): AudioContext {
@@ -97,7 +99,22 @@ class AudioManager {
   }
 
   /**
-   * Play the appropriate music for a zone
+   * Play the appropriate music for a stage (primary method)
+   */
+  playStageMusic(stage: number) {
+    if (!this.enabled) return;
+    
+    this.currentStage = stage;
+    this.isBossFight = false;
+    
+    const track = getStageTrack(stage);
+    if (track) {
+      this.playTrack(track);
+    }
+  }
+
+  /**
+   * Play the appropriate music for a zone (fallback if stage music not configured)
    */
   playZoneMusic(zoneId: number, stage?: number) {
     if (!this.enabled) return;
@@ -105,6 +122,17 @@ class AudioManager {
     this.currentZoneId = zoneId;
     this.isBossFight = false;
     
+    // Prefer stage-based music if stage is provided
+    if (stage !== undefined) {
+      const stageTrack = getStageTrack(stage);
+      if (stageTrack) {
+        this.currentStage = stage;
+        this.playTrack(stageTrack);
+        return;
+      }
+    }
+    
+    // Fall back to zone-based music
     const track = getZoneTrack(zoneId);
     if (track) {
       this.playTrack(track);
