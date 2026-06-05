@@ -166,7 +166,7 @@ export interface SkillTreeNode {
 
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ════════════════════════════════════════════════════════����══════════════════
+    // ════════════════════════════════════════════════════════�����══════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
     { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
@@ -227,31 +227,33 @@ export const SKILL_TREE_CONFIG = {
 // - Crit builds should be VIABLE but not MANDATORY
 // - A 75% crit / 15x damage build does ~11x average damage
 // - A 5% crit / 2x damage build with high tap does ~1.05x average damage
-// - This means crit builds are ~10x stronger when fully invested
-// - BUT tap damage also scales, so both paths work
+// ═══════════════════════════════════════════════════════════════════════════════
+// BALANCING NOTE: Players tap at ~12 clicks/second (720 clicks/minute)
+// Base DPS from tapping alone = baseDamage * 12 = 12 DPS at level 0
+// All damage calculations must account for this high tap rate!
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const TAP_CONFIG = {
   /** Raw tap damage before any modifiers. */
   baseDamage: 1,
-  /** Base crit chance (0–1). Additive with modifier stack. Cap: 0.85 (85%) */
-  baseCritChance: 0.01,
-  /** Maximum crit chance achievable (prevents 100% crit builds) */
-  maxCritChance: 0.40,
-  /** Base crit damage multiplier. Multiplicative with crit_multiplier modifiers. */
-  baseCritMultiplier: 1.25,
-  /** Maximum crit damage multiplier (prevents one-shot everything builds) */
-  maxCritMultiplier: 5.0,
+  /** Base crit chance (0–1). Very low - crits are a luxury, not baseline */
+  baseCritChance: 0.005,
+  /** Maximum crit chance achievable (hard cap prevents perma-crit) */
+  maxCritChance: 0.25,
+  /** Base crit damage multiplier. Crits hurt but don't one-shot */
+  baseCritMultiplier: 1.15,
+  /** Maximum crit damage multiplier */
+  maxCritMultiplier: 2.5,
   /** Window (ms) within which rapid taps build a combo. */
-  comboWindowMs: 300,
+  comboWindowMs: 250,
   /** Number of taps within the window required to activate combo bonus. */
-  comboThreshold: 12,
+  comboThreshold: 15,
   /** Damage multiplier applied when the combo threshold is met. */
-  comboMultiplier: 1.08,
-  /** Combo max stacks (for potential future combo counter feature) */
-  comboMaxStacks: 5,
+  comboMultiplier: 1.03,
+  /** Combo max stacks */
+  comboMaxStacks: 3,
   /** Damage bonus per additional combo stack above threshold */
-  comboBonusPerStack: 0.01,
+  comboBonusPerStack: 0.005,
 } as const;
 
 // ── HERO / TAP UPGRADES ──────────────────────────────────────────────────────
@@ -305,18 +307,18 @@ export interface HeroUpgradeDef {
 export const HERO_CONFIG = {
   /** 
    * Hero upgrade definitions
-   * GOD FORMULA: Core progression with reasonable caps
+   * BALANCED FOR 12 TAPS/SECOND - progression must be earned
    */
   upgrades: [
     {
       id: 'hero_tap_power',
       name: 'TAP POWER',
       description: 'Increase base tap damage',
-      baseCost: 10,
-      costMultiplier: 1.12,        // Balanced curve - core progression
+      baseCost: 15,
+      costMultiplier: 1.15,        // Steeper curve - upgrades matter more
       maxLevel: 500,               // Soft cap - need other systems beyond
       modifierType: 'tap_damage',
-      valuePerLevel: 2,            // +2 tap damage per level
+      valuePerLevel: 1,            // +1 tap damage per level (was 2)
       isMultiplier: false,
       color: '#00f5ff',
       icon: '👆',
@@ -325,11 +327,11 @@ export const HERO_CONFIG = {
       id: 'hero_crit_chance',
       name: 'CRIT CHANCE',
       description: 'Increase critical hit chance',
-      baseCost: 250,
-      costMultiplier: 1.25,        // Moderate curve - crits are valuable
-      maxLevel: 25,                // Caps at +25% crit chance (30% total)
+      baseCost: 500,
+      costMultiplier: 1.35,        // Steep - crits are powerful with 12 taps/s
+      maxLevel: 20,                // Caps at +10% crit chance (10.5% total)
       modifierType: 'crit_chance',
-      valuePerLevel: 0.01,         // +1% crit chance per level
+      valuePerLevel: 0.005,        // +0.5% crit chance per level (was 1%)
       isMultiplier: false,
       color: '#ff0080',
       icon: '⚡',
@@ -338,11 +340,11 @@ export const HERO_CONFIG = {
       id: 'hero_crit_damage',
       name: 'CRIT DAMAGE',
       description: 'Increase critical damage multiplier',
-      baseCost: 500,
-      costMultiplier: 1.30,        // Steep - multipliers compound
-      maxLevel: 40,                // Caps at +2x crit damage (4x total)
+      baseCost: 800,
+      costMultiplier: 1.40,        // Very steep - multipliers are dangerous
+      maxLevel: 25,                // Caps at +0.625x crit damage (1.775x total)
       modifierType: 'crit_multiplier',
-      valuePerLevel: 0.05,         // +5% crit damage per level
+      valuePerLevel: 0.025,        // +2.5% crit damage per level (was 5%)
       isMultiplier: false,
       color: '#ffaa00',
       icon: '💥',
@@ -537,21 +539,19 @@ export const ENEMY_CONFIG = {
   // ═══════════════════════════════════════════════════════════════════════════
   // GOD FORMULA - HP SCALING TO 999,999
   // ═══════════════════════════════════════════════════════════════════════════
-  // Formula: HP = base * linearFactor * expFactor
-  // linearFactor = 1 + stage * linearGrowth
-  // expFactor = exponent^(stage / interval)
-  //
-  // Each era has different exponent/interval ratios for smooth transitions.
-  // The key is: exponent^(100/interval) should roughly = 10x per era.
+  // BALANCED FOR 12 TAPS/SECOND (720 taps/minute)
+  // At stage 1: Player does ~12 DPS, enemy has ~50 HP = ~4 seconds to kill
+  // At stage 50: Player does ~50-100 DPS, enemy has ~2000 HP = ~20-40 seconds
+  // At stage 100: Player does ~150 DPS, enemy has ~8000 HP = ~50+ seconds (need upgrades)
   // ═══════════════════════════════════════════════════════════════════════════
   
-  normalHpBase: 15,
-  bossHpBase: 100,
+  normalHpBase: 50,
+  bossHpBase: 300,
   
   // Era 1: Stages 1-100 (Tutorial)
-  // HP at 1: ~18, HP at 50: ~600, HP at 100: ~2500
-  era1LinearGrowth: 0.5,
-  era1Exponent: 1.055,
+  // HP at 1: ~55, HP at 50: ~2000, HP at 100: ~8000
+  era1LinearGrowth: 0.8,
+  era1Exponent: 1.065,
   era1ExponentInterval: 3,
   era1MaxStage: 100,
   
@@ -867,45 +867,45 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
 // Each skill has distinct purpose - no "always use" skill
 
 export const BASE_SKILLS: SkillDef[] = [
-  { id: 'surge',           name: 'SURGE',     description: 'Tap damage x2 for 5s',        cooldown: 30,  duration: 5,  color: '#00f5ff', icon: 'Zap',    unlockStage: 1  },
-  { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x2 for 8s',         cooldown: 45,  duration: 8, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
-  { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x1.5 for 10s',        cooldown: 55,  duration: 10, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
-  { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 8s',       cooldown: 80,  duration: 8, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
-  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 10x/s for 4s',       cooldown: 50,  duration: 4,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
+  { id: 'surge',           name: 'SURGE',     description: 'Tap damage x1.5 for 4s',      cooldown: 45,  duration: 4,  color: '#00f5ff', icon: 'Zap',    unlockStage: 1  },
+  { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x1.5 for 6s',       cooldown: 60,  duration: 6, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
+  { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x1.25 for 8s',     cooldown: 70,  duration: 8, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
+  { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 5s',       cooldown: 100, duration: 5, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
+  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 6x/s for 3s',       cooldown: 70,  duration: 3,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
   ];
 
 export const BRANCH_SKILLS: SkillDef[] = [
-  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 50x tap burst',         cooldown: 120, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
-  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.25 gold for 15s',              cooldown: 90,  duration: 15, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
-  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x5 idle DPS for 6s',            cooldown: 100,  duration: 6,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
-  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x1.5 tap + x1.5 gold for 5s',        cooldown: 110, duration: 5,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
-  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',       cooldown: 180, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
+  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 20x tap burst',         cooldown: 150, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
+  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.15 gold for 10s',            cooldown: 110, duration: 10, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
+  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x2 idle DPS for 5s',            cooldown: 120, duration: 5,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
+  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x1.25 tap + x1.25 gold for 4s', cooldown: 130, duration: 4,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
+  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',      cooldown: 200, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
   ];
 
 export const ALL_SKILLS: SkillDef[] = [...BASE_SKILLS, ...BRANCH_SKILLS];
 
 /** Modifiers applied when each skill is active (used by SkillPlugin). */
 export const SKILL_EFFECTS: Record<SkillId, { modifierType: ModifierDef['type']; value: number; isMultiplier: boolean }[]> = {
-  surge:            [{ modifierType: 'tap_damage', value: 2,   isMultiplier: true  }],
-  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 2,   isMultiplier: true  }],
-  gold_rush:        [{ modifierType: 'gold_rate',  value: 1.5,   isMultiplier: true  }],
+  surge:            [{ modifierType: 'tap_damage', value: 1.5,  isMultiplier: true  }],
+  overclock_pulse:  [{ modifierType: 'idle_dps',   value: 1.5,  isMultiplier: true  }],
+  gold_rush:        [{ modifierType: 'gold_rate',  value: 1.25, isMultiplier: true  }],
   firewall:         [],
   chain_hack:       [],
   static_discharge: [],
-  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.25, isMultiplier: true  }],
-  meltdown:         [{ modifierType: 'idle_dps',   value: 5,  isMultiplier: true  }],
+  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.15, isMultiplier: true  }],
+  meltdown:         [{ modifierType: 'idle_dps',   value: 2,    isMultiplier: true  }],
   entropy_burst:    [
-  { modifierType: 'tap_damage', value: 1.5, isMultiplier: true },
-  { modifierType: 'gold_rate',  value: 1.5, isMultiplier: true },
+  { modifierType: 'tap_damage', value: 1.25, isMultiplier: true },
+  { modifierType: 'gold_rate',  value: 1.25, isMultiplier: true },
   ],
   quantum_echo: [],
   };
 
-/** chain_hack fires one auto-tap every chainHackIntervalMs (~10 per second). */
-  export const CHAIN_HACK_INTERVAL_MS = 100;
+/** chain_hack fires one auto-tap every chainHackIntervalMs (~6 per second). */
+  export const CHAIN_HACK_INTERVAL_MS = 166;
 
 /** static_discharge burst multiplier (applied to current tap_damage modifier). */
-export const STATIC_DISCHARGE_BURST = 200;
+export const STATIC_DISCHARGE_BURST = 20;
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
 
@@ -1272,7 +1272,7 @@ export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
 
 // ── SETS ──────────────────────────────────────────────────────────────────────
 
-// ── ACHIEVEMENTS ──────────────────────────────────────────────────────────────
+// ── ACHIEVEMENTS ───────────────────────────────��──────────────────────────────
 
 export interface AchievementDef {
   id: string;
@@ -1592,7 +1592,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ════════════════════════════════════���══════════════════════════════════════
   // MID GAME SETS (Stage 500+) - Specialized builds
   // ═══════════════════════════════════════════════════════════════════════════
   
