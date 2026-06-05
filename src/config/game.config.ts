@@ -1,21 +1,25 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// OVERCLOCK — Central Game Config (v1.1)
+// OVERCLOCK — Central Game Config (v2.0 - Data-Driven Edition)
 //
 // Every tunable constant in the game lives here. Plugins import from this file;
 // they never declare their own magic numbers.
 //
-// Sections:
-//   ENGINE       — tick rate, boot, save
-//   TAP          — base tap damage, crit, combo
-//   ENEMY        — HP scaling, boss spawn, elite chance, names
-//   OVERCLOCK    — tiers, perks, gain formula, milestones
-//   SKILLS       — all 10 skill definitions
-//   COMPONENTS   — all 50 idle-DPS components
-//   MOTHERBOARD  — all 8 board tiers
-//   ITEMS        — loot drop, rarity, stat formulas, name pools
-//   SHOP         — OCT and diamond catalog (26 items)
-//   DAILIES      — challenge templates and reward formulas
-//   SETS         — the 3 set item collections
+// ════════════════════════════════════════════════════════════════════════════
+// HOW TO MODIFY GAME CONTENT (QUICK REFERENCE)
+// ════════════════════════════════════════════════════════════════════════════
+//
+// ITEMS:         Scroll to ITEM_CONFIG → ITEM_NAME_POOLS, STAT_CONFIG
+// ENEMIES:       Scroll to ENEMY_CONFIG → ENEMY_NAMES
+// ZONES/STAGES:  Scroll to ZONE_CONFIG (or see audio.config.ts for music)
+// SKILLS:        Scroll to BASE_SKILLS, BRANCH_SKILLS, SKILL_EFFECTS
+// COMPONENTS:    Scroll to COMPONENTS (50 idle DPS upgrades)
+// SETS:          Scroll to SET_DEFINITIONS
+// SHOP:          Scroll to SHOP_CONFIG
+// INVENTORY:     See INVENTORY_CONFIG below
+// AUDIO:         See audio.config.ts
+// PLUGINS:       See plugins.config.ts
+//
+// Each section includes a schema comment explaining the data format.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type {
@@ -27,6 +31,27 @@ import type {
   SetDef,
   SkillId,
 } from '../engine/types';
+
+// ── INVENTORY CONFIG ──────────────────────────────────────────────────────────
+//
+// SCHEMA:
+// {
+//   baseSlots: number      - Starting inventory slots
+//   maxSlots: number       - Maximum inventory slots (with upgrades)
+//   slotsPerUpgrade: number - Slots added per inventory upgrade purchase
+//   searchableFields: string[] - Which item fields are searchable
+// }
+
+export const INVENTORY_CONFIG = {
+  /** Starting inventory slots for new players */
+  baseSlots: 50,
+  /** Maximum inventory slots achievable */
+  maxSlots: 500,
+  /** Slots added per inventory upgrade */
+  slotsPerUpgrade: 10,
+  /** Fields that can be searched in inventory */
+  searchableFields: ['name', 'slot', 'rarity', 'setId', 'id'] as const,
+} as const;
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 
@@ -511,6 +536,27 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 // Era 6 (50001-200000): Endgame - Min-maxing, rare sets
 // Era 7 (200001-999999): Infinite - Prestige hunting, leaderboards
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ── ENEMY CONFIG ──────────────────────────────────────────────────────────────
+//
+// HOW TO ADD NEW ENEMIES:
+// 1. Add new name to ENEMY_NAMES arrays below (normalNames, bossNames, eliteNames)
+// 2. Names are randomly picked based on zone - add zone-specific variants as needed
+//
+// HOW TO ADD ENEMY TYPES WITH SPECIAL BEHAVIOR:
+// 1. Add to ENEMY_TYPE_DEFS with unique id, display name, and modifiers
+// 2. Reference the type in EnemyPlugin spawn logic
+//
+// SCHEMA for ENEMY_NAMES entries: string[] - Just add names to the array
+// SCHEMA for ENEMY_TYPE_DEFS (future):
+// {
+//   id: string           - Unique enemy type id
+//   name: string         - Display name prefix
+//   hpMultiplier: number - HP multiplier (1.0 = normal)
+//   goldMultiplier: number - Gold drop multiplier
+//   dropRateBonus: number - Added to drop chance
+//   abilities?: string[] - Special ability ids
+// }
 
 export const ENEMY_CONFIG = {
   /** Number of phases (enemies) per stage. Boss spawns at the last phase. */
@@ -1017,9 +1063,45 @@ export const MOBO_TIERS: MoboTierDef[] = [
 // This creates meaningful progression through ALL eras
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// ── ITEM CONFIG ───────────────────────────────────────────────────────────────
+//
+// HOW TO ADD NEW ITEMS:
+// 1. Add item names to ITEM_NAME_POOLS below (organized by slot)
+// 2. Names are randomly combined: [prefix] [slot base name] [suffix]
+//
+// HOW TO ADD NEW ITEM STATS:
+// 1. Add to STAT_CONFIG below with stat type, base value, and per-tier scaling
+// 2. Update engine/types.ts if adding a new modifier type
+//
+// HOW TO ADD NEW ITEM SETS:
+// 1. Scroll to SET_DEFINITIONS section
+// 2. Copy an existing set and modify id, name, items, and bonuses
+//
+// SCHEMA for ITEM_NAME_POOLS:
+// {
+//   prefixes: string[]    - Prefixes added before slot name
+//   suffixes: string[]    - Suffixes added after slot name
+//   CPU: string[]         - Base names for CPU slot
+//   GPU: string[]         - Base names for GPU slot
+//   RAM: string[]         - Base names for RAM slot
+//   SSD: string[]         - Base names for SSD slot
+//   COOLING: string[]     - Base names for COOLING slot
+//   PSU: string[]         - Base names for PSU slot
+//   EXPANSION: string[]   - Base names for EXPANSION slot
+// }
+//
+// SCHEMA for STAT_CONFIG entries:
+// {
+//   stat: ModifierType    - The modifier type (tap_damage, crit_chance, etc.)
+//   slots: ItemSlot[]     - Which slots can roll this stat
+//   baseValue: number     - Base stat value at tier 1
+//   perTier: number       - Added value per tier
+//   isMultiplier: boolean - Whether this is a % multiplier
+// }
+
 export const ITEM_CONFIG = {
-  /** Maximum items in the player's inventory before oldest are trimmed. */
-  inventoryMax: 500,
+  /** Maximum items in the player's inventory before oldest are trimmed. Uses INVENTORY_CONFIG.maxSlots */
+  get inventoryMax() { return INVENTORY_CONFIG.maxSlots; },
   /** Inventory warning threshold (0.9 = 90%). Show warning to scrap items. */
   inventoryWarningThreshold: 0.9,
   
@@ -1339,7 +1421,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'reboot_50',        name: 'ENDLESS LOOP',      description: 'Perform 50 Overclocks',        icon: 'RefreshCw', color: '#ff2200', type: 'overclocks', threshold: 50  },
     { id: 'reboot_100',       name: 'RECURSION GOD',     description: 'Perform 100 Overclocks',       icon: 'RefreshCw', color: '#dd0000', type: 'overclocks', threshold: 100 },
 
-    // ── Gold Achievements ──────────────────────────────────────���─────
+    // ── Gold Achievements ────────────────────────��─────────────���─────
     { id: 'gold_10k',         name: 'SMALL STASH',       description: 'Earn 10,000 total gold',       icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 10000      },
     { id: 'gold_100k',        name: 'VAULT KEEPER',      description: 'Earn 100,000 total gold',      icon: 'Coins', color: '#ffaa00', type: 'gold', threshold: 100000     },
     { id: 'gold_1m',          name: 'MILLIONAIRE',       description: 'Earn 1,000,000 total gold',    icon: 'Coins', color: '#ff8800', type: 'gold', threshold: 1000000    },
@@ -1373,6 +1455,27 @@ export const ACHIEVEMENT_CONFIG = {
 } as const;
 
 // ── ZONES ─────────────────────────────────────────────────────────────────────
+// 
+// HOW TO ADD A NEW ZONE:
+// 1. Add a new entry to the zones array below
+// 2. Add corresponding music in audio.config.ts
+// 3. Add enemy types for the zone in ENEMY_CONFIG
+//
+// SCHEMA:
+// ZoneDef {
+//   id: number              - Sequential zone number (0, 1, 2...)
+//   name: string            - Short name for UI
+//   label: string           - Full display label
+//   bgColor: string         - Background color (hex)
+//   gridColor: string       - Grid overlay color (rgba)
+//   particleColor: string   - Ambient particle color
+//   groundColor: string     - Ground/floor accent color
+//   accentColor: string     - UI accent color for this zone
+//   farLayerContent: string - Background effect type
+//   persistBackground?: boolean - Keep background when transitioning (default false)
+//   musicTrackId?: string   - Override music (uses audio.config.ts zone mapping if not set)
+//   bossName?: string       - Custom name for zone boss
+// }
 
 export interface ZoneDef {
   id: number;
@@ -1384,6 +1487,9 @@ export interface ZoneDef {
   groundColor: string;
   accentColor: string;
   farLayerContent: 'hex' | 'bars' | 'traces' | 'racks' | 'void' | 'glitch' | 'fractal' | 'static' | 'overload' | 'stars';
+  persistBackground?: boolean;
+  musicTrackId?: string;
+  bossName?: string;
 }
 
 export const ZONE_CONFIG = {
@@ -1392,16 +1498,16 @@ export const ZONE_CONFIG = {
   
   /** All zone definitions. */
   zones: [
-    { id: 0, name: 'PERIMETER', label: 'ZONE 0: PERIMETER', bgColor: '#0a0a0f', gridColor: 'rgba(0,245,255,0.04)',   particleColor: '#00f5ff', groundColor: '#00f5ff', accentColor: '#00f5ff', farLayerContent: 'hex'     },
-    { id: 1, name: 'FIREWALL',  label: 'ZONE 1: FIREWALL',  bgColor: '#0f0808', gridColor: 'rgba(255,34,34,0.05)',   particleColor: '#ff2222', groundColor: '#ff0080', accentColor: '#ff2222', farLayerContent: 'bars'    },
-    { id: 2, name: 'KERNEL',    label: 'ZONE 2: KERNEL',    bgColor: '#080f08', gridColor: 'rgba(57,255,20,0.04)',   particleColor: '#39ff14', groundColor: '#39ff14', accentColor: '#39ff14', farLayerContent: 'traces'  },
-    { id: 3, name: 'CORE',      label: 'ZONE 3: CORE',      bgColor: '#0f0c06', gridColor: 'rgba(255,170,0,0.04)',   particleColor: '#ffaa00', groundColor: '#ffaa00', accentColor: '#ffaa00', farLayerContent: 'racks'   },
-    { id: 4, name: 'THE VOID',  label: 'ZONE 4: THE VOID',  bgColor: '#050508', gridColor: 'rgba(200,200,255,0.02)', particleColor: '#ffffff', groundColor: '#ffffff', accentColor: '#ffffff', farLayerContent: 'void'    },
-    { id: 5, name: 'ABYSS',     label: 'ZONE 5: ABYSS',     bgColor: '#0d0208', gridColor: 'rgba(255,0,128,0.04)',   particleColor: '#ff0080', groundColor: '#ff0080', accentColor: '#ff0080', farLayerContent: 'glitch'  },
-    { id: 6, name: 'FRACTURE',  label: 'ZONE 6: FRACTURE',  bgColor: '#0a0206', gridColor: 'rgba(204,68,255,0.04)',  particleColor: '#cc44ff', groundColor: '#cc44ff', accentColor: '#cc44ff', farLayerContent: 'fractal' },
-    { id: 7, name: 'ENTROPY',   label: 'ZONE 7: ENTROPY',   bgColor: '#070505', gridColor: 'rgba(255,68,68,0.03)',   particleColor: '#ff4444', groundColor: '#ff4444', accentColor: '#ff4444', farLayerContent: 'static'  },
-    { id: 8, name: 'OVERLOAD',  label: 'ZONE 8: OVERLOAD',  bgColor: '#0c0c04', gridColor: 'rgba(255,204,0,0.03)',   particleColor: '#ffcc00', groundColor: '#ffcc00', accentColor: '#ffcc00', farLayerContent: 'overload'},
-    { id: 9, name: 'SINGULARITY',label:'ZONE 9: SINGULARITY',bgColor:'#020204', gridColor: 'rgba(100,100,255,0.02)', particleColor: '#8888ff', groundColor: '#8888ff', accentColor: '#8888ff', farLayerContent: 'stars'   },
+    { id: 0, name: 'PERIMETER', label: 'ZONE 0: PERIMETER', bgColor: '#0a0a0f', gridColor: 'rgba(0,245,255,0.04)',   particleColor: '#00f5ff', groundColor: '#00f5ff', accentColor: '#00f5ff', farLayerContent: 'hex',     persistBackground: false, bossName: 'FIREWALL SENTINEL' },
+    { id: 1, name: 'FIREWALL',  label: 'ZONE 1: FIREWALL',  bgColor: '#0f0808', gridColor: 'rgba(255,34,34,0.05)',   particleColor: '#ff2222', groundColor: '#ff0080', accentColor: '#ff2222', farLayerContent: 'bars',    persistBackground: false, bossName: 'FLAME DAEMON' },
+    { id: 2, name: 'KERNEL',    label: 'ZONE 2: KERNEL',    bgColor: '#080f08', gridColor: 'rgba(57,255,20,0.04)',   particleColor: '#39ff14', groundColor: '#39ff14', accentColor: '#39ff14', farLayerContent: 'traces',  persistBackground: false, bossName: 'ROOT PROCESS' },
+    { id: 3, name: 'CORE',      label: 'ZONE 3: CORE',      bgColor: '#0f0c06', gridColor: 'rgba(255,170,0,0.04)',   particleColor: '#ffaa00', groundColor: '#ffaa00', accentColor: '#ffaa00', farLayerContent: 'racks',   persistBackground: false, bossName: 'CORE OVERSEER' },
+    { id: 4, name: 'THE VOID',  label: 'ZONE 4: THE VOID',  bgColor: '#050508', gridColor: 'rgba(200,200,255,0.02)', particleColor: '#ffffff', groundColor: '#ffffff', accentColor: '#ffffff', farLayerContent: 'void',    persistBackground: true,  bossName: 'VOID WALKER' },
+    { id: 5, name: 'ABYSS',     label: 'ZONE 5: ABYSS',     bgColor: '#0d0208', gridColor: 'rgba(255,0,128,0.04)',   particleColor: '#ff0080', groundColor: '#ff0080', accentColor: '#ff0080', farLayerContent: 'glitch',  persistBackground: false, bossName: 'ABYSS CORRUPTOR' },
+    { id: 6, name: 'FRACTURE',  label: 'ZONE 6: FRACTURE',  bgColor: '#0a0206', gridColor: 'rgba(204,68,255,0.04)',  particleColor: '#cc44ff', groundColor: '#cc44ff', accentColor: '#cc44ff', farLayerContent: 'fractal', persistBackground: true,  bossName: 'FRACTAL ENTITY' },
+    { id: 7, name: 'ENTROPY',   label: 'ZONE 7: ENTROPY',   bgColor: '#070505', gridColor: 'rgba(255,68,68,0.03)',   particleColor: '#ff4444', groundColor: '#ff4444', accentColor: '#ff4444', farLayerContent: 'static',  persistBackground: false, bossName: 'ENTROPY VIRUS' },
+    { id: 8, name: 'OVERLOAD',  label: 'ZONE 8: OVERLOAD',  bgColor: '#0c0c04', gridColor: 'rgba(255,204,0,0.03)',   particleColor: '#ffcc00', groundColor: '#ffcc00', accentColor: '#ffcc00', farLayerContent: 'overload',persistBackground: false, bossName: 'OVERLOAD TITAN' },
+    { id: 9, name: 'SINGULARITY',label:'ZONE 9: SINGULARITY',bgColor:'#020204', gridColor: 'rgba(100,100,255,0.02)', particleColor: '#8888ff', groundColor: '#8888ff', accentColor: '#8888ff', farLayerContent: 'stars',   persistBackground: true,  bossName: 'THE SINGULARITY' },
   ] as ZoneDef[],
 } as const;
 

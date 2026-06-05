@@ -511,15 +511,73 @@ export const ZoneScene: React.FC<ZoneSceneProps> = ({
 
       {/* Stage clear flash */}
       {showStageClear && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: 'rgba(255,255,255,0.04)',
-            animation: 'stage-clear-flash 0.4s steps(4) forwards',
-            pointerEvents: 'none',
-          }}
-        />
+        <>
+          {/* Burst ring effect */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 200,
+              height: 200,
+              marginLeft: -100,
+              marginTop: -100,
+              border: `3px solid ${zone.accentColor}`,
+              borderRadius: '50%',
+              animation: 'stage-clear-burst 0.6s ease-out forwards',
+              boxShadow: `0 0 30px ${zone.accentColor}, inset 0 0 30px ${zone.accentColor}44`,
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Inner burst */}
+          <div
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: '50%',
+              width: 100,
+              height: 100,
+              marginLeft: -50,
+              marginTop: -50,
+              border: `2px solid ${zone.accentColor}`,
+              borderRadius: '50%',
+              animation: 'stage-clear-burst 0.5s ease-out 0.1s forwards',
+              opacity: 0.7,
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Flash overlay */}
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: `radial-gradient(circle at 50% 50%, ${zone.accentColor}33 0%, transparent 60%)`,
+              animation: 'stage-clear-flash 0.4s steps(4) forwards',
+              pointerEvents: 'none',
+            }}
+          />
+          {/* Celebration particles */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                width: 8,
+                height: 8,
+                background: zone.accentColor,
+                boxShadow: `0 0 10px ${zone.accentColor}`,
+                borderRadius: i % 2 === 0 ? '50%' : '0',
+                animation: `death-particle 0.7s ease-out forwards`,
+                transform: `rotate(${i * 45}deg)`,
+                '--particle-x': `${Math.cos(i * 45 * Math.PI / 180) * 120}px`,
+                '--particle-y': `${Math.sin(i * 45 * Math.PI / 180) * 120}px`,
+                pointerEvents: 'none',
+              } as React.CSSProperties}
+            />
+          ))}
+        </>
       )}
 
       {/* Stage clear text */}
@@ -532,11 +590,11 @@ export const ZoneScene: React.FC<ZoneSceneProps> = ({
             right: 0,
             textAlign: 'center',
             fontFamily: 'var(--font-pixel)',
-            fontSize: 8,
+            fontSize: 12,
             color: zone.accentColor,
-            letterSpacing: 3,
-            textShadow: `0 0 10px ${zone.accentColor}`,
-            animation: 'stage-clear-text 1.5s steps(4) forwards',
+            letterSpacing: 4,
+            textShadow: `0 0 15px ${zone.accentColor}, 0 0 30px ${zone.accentColor}88`,
+            animation: 'stage-text-pop 1.2s ease-out forwards',
             pointerEvents: 'none',
           }}
         >

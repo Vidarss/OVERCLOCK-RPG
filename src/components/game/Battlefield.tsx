@@ -25,6 +25,15 @@ interface Ripple {
   color: string;
 }
 
+interface DeathParticle {
+  id: string;
+  x: number;
+  y: number;
+  color: string;
+  angle: number;
+  speed: number;
+}
+
 export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const enemy = useGameState(engine, s => s.enemy);
   const stage = useGameState(engine, s => s.stage);
@@ -41,6 +50,8 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
   const [showZoneTransition, setShowZoneTransition] = useState(false);
   const [zoneTransitionLabel, setZoneTransitionLabel] = useState('');
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [deathParticles, setDeathParticles] = useState<DeathParticle[]>([]);
+  const [killFlash, setKillFlash] = useState(false);
   const [screenFlash, setScreenFlash] = useState(false);
   const [tapHeat, setTapHeat] = useState(0);
   const [isOverheated, setIsOverheated] = useState(false);
@@ -88,6 +99,22 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
 
     const unsub5 = engine.on('enemy_death', () => {
       playSFX.enemyDeath();
+      // Spawn death particles
+      const particles: DeathParticle[] = [];
+      for (let i = 0; i < 12; i++) {
+        particles.push({
+          id: `dp_${Date.now()}_${i}`,
+          x: 50 + (Math.random() - 0.5) * 20,
+          y: 50 + (Math.random() - 0.5) * 20,
+          color: zone.accentColor,
+          angle: (i / 12) * 360 + Math.random() * 30,
+          speed: 60 + Math.random() * 40,
+        });
+      }
+      setDeathParticles(particles);
+      setKillFlash(true);
+      setTimeout(() => setDeathParticles([]), 500);
+      setTimeout(() => setKillFlash(false), 150);
     });
 
     const unsub6 = engine.on('boss_spawn', () => {
@@ -172,6 +199,20 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
             background: zone.accentColor,
             pointerEvents: 'none',
             zIndex: 2,
+          }}
+        />
+      )}
+
+      {/* Kill flash overlay */}
+      {killFlash && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `radial-gradient(circle at 50% 50%, ${zone.accentColor}66 0%, transparent 70%)`,
+            pointerEvents: 'none',
+            zIndex: 2,
+            animation: 'kill-flash 0.15s ease-out forwards',
           }}
         />
       )}
@@ -301,6 +342,28 @@ export const Battlefield: React.FC<BattlefieldProps> = ({ engine }) => {
         {/* Damage numbers */}
         {damageNumbers.map(d => (
           <DamageNumber key={d.id} event={d} onDone={removeDamageNumber} />
+        ))}
+
+        {/* Death particles */}
+        {deathParticles.map(p => (
+          <div
+            key={p.id}
+            style={{
+              position: 'absolute',
+              left: `${p.x}%`,
+              top: `${p.y}%`,
+              width: 6,
+              height: 6,
+              background: p.color,
+              boxShadow: `0 0 8px ${p.color}, 0 0 16px ${p.color}`,
+              borderRadius: '50%',
+              pointerEvents: 'none',
+              animation: `death-particle 0.5s ease-out forwards`,
+              transform: `rotate(${p.angle}deg)`,
+              '--particle-x': `${Math.cos(p.angle * Math.PI / 180) * p.speed}px`,
+              '--particle-y': `${Math.sin(p.angle * Math.PI / 180) * p.speed}px`,
+            } as React.CSSProperties}
+          />
         ))}
 
         {/* Overheat warning */}

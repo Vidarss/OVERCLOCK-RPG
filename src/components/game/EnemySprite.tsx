@@ -128,10 +128,18 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
     );
   }, [enemy.tier, enemy.isBoss, enemy.isElite, enemy.name, overclockCount]);
 
-  // Track image loading state
+  // Track image loading state - default to true for faster perceived loading
   const [imageLoaded, setImageLoaded] = useState(() => 
-    customSprite ? isSpriteLoaded(customSprite.src) : false
+    customSprite ? isSpriteLoaded(customSprite.src) : true
   );
+  const [isSpawning, setIsSpawning] = useState(true);
+
+  // Spawn animation on enemy change
+  useEffect(() => {
+    setIsSpawning(true);
+    const timer = setTimeout(() => setIsSpawning(false), 300);
+    return () => clearTimeout(timer);
+  }, [enemy.name]);
 
   // Preload image when sprite changes
   useEffect(() => {
@@ -143,7 +151,7 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
       return;
     }
 
-    setImageLoaded(false);
+    // Show immediately, will fade in when loaded
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => setImageLoaded(true);
@@ -201,17 +209,16 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
         )}
 
         <div
-          className={isDying ? 'animate-enemy-death' : isHit ? 'animate-enemy-hit' : ''}
+          className={isDying ? 'animate-enemy-death' : isHit ? 'animate-enemy-hit' : isSpawning ? 'animate-enemy-spawn' : ''}
           style={{
             filter: enemy.isBoss
               ? `drop-shadow(0 0 20px ${colors.glow}) drop-shadow(0 0 40px ${colors.glow})`
               : enemy.isElite
               ? `drop-shadow(0 0 16px #ffaa0088) drop-shadow(0 0 32px #ffaa0066)`
               : `drop-shadow(0 0 12px ${colors.glow})`,
-            animation: enemy.isBoss && !isHit && !isDying ? 'boss-pulse 2s steps(4) infinite' : undefined,
+            animation: enemy.isBoss && !isHit && !isDying && !isSpawning ? 'boss-pulse 2s steps(4) infinite' : undefined,
             transform: `translateY(${offsetY}px)`,
-            opacity: imageLoaded ? 1 : 0,
-            transition: 'opacity 0.15s ease-out',
+            opacity: 1,
           }}
         >
           <img
@@ -231,6 +238,29 @@ export const EnemySprite: React.FC<EnemySpriteProps> = ({ enemy, isHit, isDying,
             }}
           />
         </div>
+
+        {/* Spawn particles */}
+        {isSpawning && (
+          <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'visible' }}>
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  position: 'absolute',
+                  left: '50%',
+                  top: '50%',
+                  width: 4,
+                  height: 4,
+                  background: colors.body,
+                  boxShadow: `0 0 6px ${colors.glow}`,
+                  borderRadius: '50%',
+                  animation: `spawn-particle-${i % 4} 0.3s ease-out forwards`,
+                  transform: `rotate(${i * 45}deg) translateX(${30 + (i % 3) * 10}px)`,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
         {/* Loading placeholder - shows while image loads */}
         {!imageLoaded && (
