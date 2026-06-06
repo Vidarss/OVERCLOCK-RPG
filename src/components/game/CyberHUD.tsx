@@ -19,7 +19,13 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
   const diamonds = useGameState(engine, s => s.diamonds);
   const overclocks = useGameState(engine, s => s.overclockCount);
   const components = useGameState(engine, s => s.components);
-  const idleDps = getTotalIdleDps(components) * engine.getModifier('idle_dps');
+  // Modifiers (e.g. the OC PULSE spell buff) live outside reactive state, so we
+  // refresh on each engine tick to keep the DPS readout in sync with active buffs.
+  const [, forceTick] = useState(0);
+  useEffect(() => engine.on('tick', () => forceTick(t => (t + 1) % 1_000_000)), [engine]);
+  const idleMod = engine.getModifier('idle_dps');
+  const idleDps = getTotalIdleDps(components) * idleMod;
+  const idleBuffed = idleMod > 1;
   const [confirming, setConfirming] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [musicOn, setMusicOn] = useState(true);
@@ -91,7 +97,17 @@ export const CyberHUD: React.FC<CyberHUDProps> = ({ engine, playerHandle }) => {
 
       <div className="flex items-center gap-1">
         <span style={{ color: '#5a6a7a', fontFamily: 'var(--font-mono)', fontSize: '9px' }}>DPS</span>
-        <span className="font-pixel glow-green" style={{ color: '#39ff14', fontSize: '10px' }}>{formatNumber(idleDps)}</span>
+        <span
+          className="font-pixel glow-green"
+          style={{
+            color: idleBuffed ? '#ff0080' : '#39ff14',
+            fontSize: '10px',
+            textShadow: idleBuffed ? '0 0 6px #ff0080' : undefined,
+            transition: 'color 0.2s',
+          }}
+        >
+          {formatNumber(idleDps)}{idleBuffed ? ' ▲' : ''}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">

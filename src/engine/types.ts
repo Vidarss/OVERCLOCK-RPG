@@ -58,7 +58,12 @@ export type GameEventType =
   | 'battle_pass_tier_up'
   | 'battle_pass_purchased'
   | 'skill_tree_upgrade'
-  | 'skill_tree_timeskip';
+  | 'skill_tree_timeskip'
+  | 'overkill_chain'
+  | 'clan_changed'
+  | 'clan_boss_spawned'
+  | 'clan_boss_attacked'
+  | 'clan_boss_defeated';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
@@ -294,10 +299,12 @@ export interface IPlugin {
 export interface IPluginStorage {
   registerTable(pluginId: string, adapter: { table: string; userScoped: boolean }): void;
   load<T = unknown>(table: string, filters: Record<string, unknown>, select?: string): Promise<{ data: T | null; error: string | null }>;
-  loadMany<T = unknown>(table: string, filters: Record<string, unknown>, select?: string): Promise<{ data: T[]; error: string | null }>;
+  loadMany<T = unknown>(table: string, filters: Record<string, unknown>, select?: string, options?: { orderBy?: string; ascending?: boolean; limit?: number }): Promise<{ data: T[]; error: string | null }>;
   save(table: string, data: Record<string, unknown>, conflictKey?: string): Promise<{ error: string | null }>;
   insert<T = unknown>(table: string, data: Record<string, unknown>, select?: string): Promise<{ data: T | null; error: string | null }>;
+  update(table: string, data: Record<string, unknown>, filters: Record<string, unknown>): Promise<{ error: string | null }>;
   remove(table: string, filters: Record<string, unknown>): Promise<{ error: string | null }>;
+  rpc<T = unknown>(functionName: string, params?: Record<string, unknown>): Promise<{ data: T | null; error: string | null }>;
 }
 
 export interface IEngine {

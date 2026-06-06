@@ -99,6 +99,7 @@ export class ClanPlugin implements IPlugin {
       this.loadAllClans(),
       this.loadPendingInvites(),
     ]);
+    this.engine.emit('clan_changed', { clanId: this.myClan?.id ?? null });
     this.notify();
   }
 
