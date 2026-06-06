@@ -35,10 +35,6 @@ export class GoldPlugin implements IPlugin {
         }
       }
     });
-
-    engine.on('overclock', () => {
-      engine.updateState({ gold: 0 });
-    });
   }
 
   spend(amount: number): boolean {

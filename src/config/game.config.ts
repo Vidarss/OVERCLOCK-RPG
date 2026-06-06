@@ -11,7 +11,7 @@
 // ITEMS:         Scroll to ITEM_CONFIG → ITEM_NAME_POOLS, STAT_CONFIG
 // ENEMIES:       Scroll to ENEMY_CONFIG → ENEMY_NAMES
 // ZONES/STAGES:  Scroll to ZONE_CONFIG (or see audio.config.ts for music)
-// SKILLS:        Scroll to BASE_SKILLS, BRANCH_SKILLS, SKILL_EFFECTS
+// SKILLS:        Scroll to BASE_SKILLS, SKILL_EFFECTS
 // COMPONENTS:    Scroll to COMPONENTS (50 idle DPS upgrades)
 // SETS:          Scroll to SET_DEFINITIONS
 // SHOP:          Scroll to SHOP_CONFIG
@@ -170,61 +170,80 @@ export const SKILL_POINT_CONFIG = {
 
 // ── SKILL TREE ───────────────────────────────────────────────────────────────
 
+// Passive skill-tree effects map onto the engine's real modifier types:
+//   tap_damage  -> tap_damage     (multiplier)
+//   idle_damage -> idle_dps       (multiplier)
+//   gold_bonus  -> gold_rate      (multiplier)
+//   crit_chance -> crit_chance    (additive)
+//   crit_damage -> crit_multiplier(multiplier)
+//   all_damage  -> tap_damage AND idle_dps (multiplier on both)
+// 'timeskip' nodes are not modifiers — they passively auto-fire, banking a few
+// seconds of that damage type's output on a cooldown (see SkillTreePlugin).
 export interface SkillTreeNode {
   id: string;
   name: string;
   description: string;
-  icon: string; // Lucide icon name
+  flavor?: string;          // funny tooltip blurb
+  icon: string;             // Lucide icon name
   maxLevel: number;
-  costPerLevel: number; // SP cost per level
-  effect: {
-    type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'skill_cooldown' | 'boss_damage' | 'elite_damage' | 'all_damage';
+  costPerLevel: number;     // SP cost per level
+  nodeType?: 'passive' | 'timeskip';
+  effect?: {
+    type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'all_damage';
     valuePerLevel: number;
     isMultiplier?: boolean; // true = multiplicative, false = additive
-    isPercent?: boolean; // for display purposes
+    isPercent?: boolean;    // for display purposes
   };
-  requires?: string[]; // Node IDs that must be unlocked first
-  tier: 1 | 2 | 3 | 4 | 5; // Visual tier for positioning
+  timeskip?: {
+    resource: 'tap' | 'idle' | 'gold'; // which damage/economy type is skipped
+    secondsPerLevel: number;           // seconds of output banked per level, per fire
+    intervalSec: number;               // auto-fire cooldown in seconds
+  };
+  requires?: string[];      // Node IDs that must be unlocked first
+  tier: 1 | 2 | 3 | 4 | 5;  // Visual tier for positioning
   branch: 'CORE' | 'OFFENSE' | 'DEFENSE' | 'UTILITY' | 'MASTERY';
   color: string;
 }
 
+// How many "taps" per second a tap-warp simulates when it auto-fires.
+export const SKILL_TREE_AUTOTAP_RATE = 8;
+
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ════════════════════════════════════════════════════════�����══════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
-    { id: 'gold_sense', name: 'GOLD SENSE', description: '+3% Gold per level', icon: 'Coins', maxLevel: 10, costPerLevel: 1, effect: { type: 'gold_bonus', valuePerLevel: 0.03, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#ffd700' },
-    { id: 'idle_protocol', name: 'IDLE PROTOCOL', description: '+5% Idle Damage per level', icon: 'Cpu', maxLevel: 10, costPerLevel: 1, effect: { type: 'idle_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00ff88' },
+    { id: 'tap_mastery',   name: 'BUTTON ABUSE',         description: '+6% Tap Damage per level',  flavor: 'Warranty? Never heard of it.',                 icon: 'Pointer',  maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'tap_damage',  valuePerLevel: 0.06, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
+    { id: 'gold_sense',    name: 'LOOT GOBLIN',          description: '+4% Gold per level',         flavor: 'It is not stealing if it is on the floor.',    icon: 'Coins',    maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.04, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#ffd700' },
+    { id: 'idle_protocol', name: 'PROFESSIONAL SLACKER', description: '+6% Idle Damage per level',  flavor: 'Working hard at hardly working.',              icon: 'Cpu',      maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'idle_damage', valuePerLevel: 0.06, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00ff88' },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 2 - OFFENSE (Requires Tier 1)
+    // TIER 2 - OFFENSE / UTILITY (Requires Tier 1)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'critical_systems', name: 'CRITICAL SYSTEMS', description: '+2% Crit Chance per level', icon: 'Crosshair', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_chance', valuePerLevel: 0.02, isMultiplier: false, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff4444' },
-    { id: 'amplifier', name: 'AMPLIFIER', description: '+10% Crit Damage per level', icon: 'Zap', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff8800' },
-    { id: 'wealth_algorithm', name: 'WEALTH ALGORITHM', description: '+5% Gold per level', icon: 'TrendingUp', maxLevel: 10, costPerLevel: 2, effect: { type: 'gold_bonus', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, requires: ['gold_sense'], tier: 2, branch: 'UTILITY', color: '#ffd700' },
-    { id: 'passive_income', name: 'PASSIVE INCOME', description: '+8% Idle Damage per level', icon: 'Activity', maxLevel: 10, costPerLevel: 2, effect: { type: 'idle_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['idle_protocol'], tier: 2, branch: 'UTILITY', color: '#00ff88' },
+    { id: 'critical_systems', name: '404: HP NOT FOUND', description: '+2% Crit Chance per level',  flavor: 'Their health bar could not be located.',       icon: 'Crosshair',  maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'crit_chance', valuePerLevel: 0.02, isMultiplier: false, isPercent: true }, requires: ['tap_mastery'],   tier: 2, branch: 'OFFENSE', color: '#ff4444' },
+    { id: 'amplifier',        name: 'BIG NUMBER GO BRRR',description: '+12% Crit Damage per level', flavor: 'Dopamine, but make it numeric.',               icon: 'Zap',        maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'crit_damage', valuePerLevel: 0.12, isMultiplier: true,  isPercent: true }, requires: ['tap_mastery'],   tier: 2, branch: 'OFFENSE', color: '#ff8800' },
+    { id: 'wealth_algorithm', name: 'TAX EVASION.DLL',   description: '+6% Gold per level',         flavor: 'This module is not legal advice.',             icon: 'TrendingUp', maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.06, isMultiplier: true,  isPercent: true }, requires: ['gold_sense'],    tier: 2, branch: 'UTILITY', color: '#ffd700' },
+    { id: 'passive_income',   name: 'TOUCH GRASS MODE',  description: '+9% Idle Damage per level',  flavor: 'The CPU grinds so you do not have to.',        icon: 'Activity',   maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'idle_damage', valuePerLevel: 0.09, isMultiplier: true,  isPercent: true }, requires: ['idle_protocol'], tier: 2, branch: 'UTILITY', color: '#00ff88' },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 3 - SPECIALIZATION
+    // TIER 3 - TIME SKIPS (one per damage type) — passive auto-fire
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'boss_hunter', name: 'BOSS HUNTER', description: '+8% Boss Damage per level', icon: 'Skull', maxLevel: 10, costPerLevel: 3, effect: { type: 'boss_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['critical_systems', 'amplifier'], tier: 3, branch: 'OFFENSE', color: '#ff0080' },
-    { id: 'elite_slayer', name: 'ELITE SLAYER', description: '+10% Elite Damage per level', icon: 'Sword', maxLevel: 10, costPerLevel: 3, effect: { type: 'elite_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['critical_systems'], tier: 3, branch: 'OFFENSE', color: '#aa44ff' },
-    { id: 'skill_efficiency', name: 'SKILL EFFICIENCY', description: '-3% Skill Cooldowns per level', icon: 'Clock', maxLevel: 10, costPerLevel: 3, effect: { type: 'skill_cooldown', valuePerLevel: -0.03, isMultiplier: true, isPercent: true }, requires: ['wealth_algorithm', 'passive_income'], tier: 3, branch: 'UTILITY', color: '#00aaff' },
+    { id: 'macro_mayhem',    name: 'MACRO MAYHEM',    description: 'Auto-fires a tap burst, banking 4s of taps per level',  flavor: 'Technically the keyboard is doing the gaming.',  icon: 'MousePointerClick', maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'tap',  secondsPerLevel: 4, intervalSec: 45 }, requires: ['critical_systems'],   tier: 3, branch: 'OFFENSE', color: '#ff5599' },
+    { id: 'overtime_exe',    name: 'OVERTIME.EXE',    description: 'Skips 8s of idle damage per level, automatically',      flavor: 'The fans scream so you can sleep.',              icon: 'Hourglass',         maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'idle', secondsPerLevel: 8, intervalSec: 60 }, requires: ['passive_income'],     tier: 3, branch: 'UTILITY', color: '#33ddaa' },
+    { id: 'stonks_protocol', name: 'STONKS PROTOCOL', description: 'Injects 6s of gold income per level, automatically',     flavor: 'Number go up. We do not ask why.',               icon: 'Banknote',          maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'gold', secondsPerLevel: 6, intervalSec: 60 }, requires: ['wealth_algorithm'],   tier: 3, branch: 'UTILITY', color: '#ffcc33' },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 4 - ADVANCED
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'lethal_precision', name: 'LETHAL PRECISION', description: '+3% Crit Chance, +15% Crit Damage per level', icon: 'Target', maxLevel: 5, costPerLevel: 5, effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['boss_hunter'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
-    { id: 'power_surge', name: 'POWER SURGE', description: '+10% All Damage per level', icon: 'Flame', maxLevel: 5, costPerLevel: 5, effect: { type: 'all_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['elite_slayer'], tier: 4, branch: 'OFFENSE', color: '#ff6600' },
-    { id: 'golden_touch', name: 'GOLDEN TOUCH', description: '+10% Gold per level', icon: 'Gem', maxLevel: 5, costPerLevel: 5, effect: { type: 'gold_bonus', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['skill_efficiency'], tier: 4, branch: 'UTILITY', color: '#ffdd00' },
+    { id: 'lethal_precision', name: 'HEADSHOT.PNG',          description: '+15% Crit Damage per level', flavor: 'Mounted above the gamer chair.',          icon: 'Target', maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['amplifier', 'macro_mayhem'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
+    { id: 'power_surge',      name: 'RGB MAKES IT FASTER',   description: '+8% All Damage per level',   flavor: 'Peer-reviewed by gamers everywhere.',     icon: 'Flame',  maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'all_damage',  valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['overtime_exe'],              tier: 4, branch: 'OFFENSE', color: '#ff6600' },
+    { id: 'golden_touch',     name: 'CACHE ME OUTSIDE',      description: '+9% Gold per level',         flavor: 'How much gold? That much gold.',          icon: 'Gem',    maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.09, isMultiplier: true, isPercent: true }, requires: ['stonks_protocol'],           tier: 4, branch: 'UTILITY', color: '#ffdd00' },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 5 - MASTERY (Capstone nodes)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'overclock_mastery', name: 'OVERCLOCK MASTERY', description: '+15% All Damage per level', icon: 'Rocket', maxLevel: 3, costPerLevel: 10, effect: { type: 'all_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['lethal_precision', 'power_surge'], tier: 5, branch: 'MASTERY', color: '#ff0080' },
-    { id: 'infinite_wealth', name: 'INFINITE WEALTH', description: '+15% Gold, +10% Idle Damage per level', icon: 'Crown', maxLevel: 3, costPerLevel: 10, effect: { type: 'gold_bonus', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['golden_touch'], tier: 5, branch: 'MASTERY', color: '#ffd700' },
+    { id: 'overclock_mastery', name: 'TEMPORAL SEGFAULT', description: '+12% All Damage per level', flavor: 'You broke time. Time is fine with it.',  icon: 'Rocket', maxLevel: 3, costPerLevel: 10, nodeType: 'passive', effect: { type: 'all_damage', valuePerLevel: 0.12, isMultiplier: true, isPercent: true }, requires: ['lethal_precision', 'power_surge'], tier: 5, branch: 'MASTERY', color: '#ff0080' },
+    { id: 'infinite_wealth',   name: 'MONEY PRINTER',     description: '+14% Gold per level',       flavor: 'brrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',  icon: 'Crown',  maxLevel: 3, costPerLevel: 10, nodeType: 'passive', effect: { type: 'gold_bonus', valuePerLevel: 0.14, isMultiplier: true, isPercent: true }, requires: ['golden_touch'],                    tier: 5, branch: 'MASTERY', color: '#ffd700' },
   ] as SkillTreeNode[],
 } as const;
 
@@ -461,16 +480,6 @@ export const SKILL_UPGRADE_CONFIG = {
       color: '#ffaa00',
     },
     {
-      skillId: 'chain_hack' as SkillId,
-      name: 'CHAIN HACK',
-      description: 'Boost auto-tap duration & frequency',
-      baseCost: 200,
-      costMultiplier: 1.25,        // ~9.3x cost every 10 levels
-      maxLevel: 50,
-      effectPerLevel: 0.05,
-      color: '#39ff14',
-    },
-    {
       skillId: 'firewall' as SkillId,
       name: 'FIREWALL',
       description: 'Boost boss timer freeze duration',
@@ -582,14 +591,14 @@ export const ENEMY_CONFIG = {
   /** Fraction of max HP regenerated per second in regen phase. */
   bossRegenRatePerSecond: 0.02,
   
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════��═════════════════════════════════
   // GOD FORMULA - HP SCALING TO 999,999
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════════════════���═════════════════════
   // BALANCED FOR 12 TAPS/SECOND (720 taps/minute)
   // At stage 1: Player does ~12 DPS, enemy has ~50 HP = ~4 seconds to kill
   // At stage 50: Player does ~50-100 DPS, enemy has ~2000 HP = ~20-40 seconds
   // At stage 100: Player does ~150 DPS, enemy has ~8000 HP = ~50+ seconds (need upgrades)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════��════════════════════════════════
   
   normalHpBase: 50,
   bossHpBase: 300,
@@ -839,15 +848,6 @@ export const OVERCLOCK_CONFIG = {
     ENTROPY: '#ff4444',
     QUANTUM: '#cc44ff',
   } as Record<PerkBranch, string>,
-
-  /** Which branch skill unlocks at branchRank >= requiresRank. */
-  branchSkillUnlocks: {
-    VOLTAGE: { skillId: 'static_discharge' as SkillId, requiresRank: 2, name: 'STATIC_DISCHARGE', description: 'Instant 500× tap burst' },
-    SIGNAL:  { skillId: 'signal_jam'        as SkillId, requiresRank: 2, name: 'SIGNAL_JAM',       description: '×2 gold rate for 15s' },
-    THERMAL: { skillId: 'meltdown'          as SkillId, requiresRank: 2, name: 'MELTDOWN',         description: '×20 idle DPS for 10s' },
-    ENTROPY: { skillId: 'entropy_burst'     as SkillId, requiresRank: 2, name: 'ENTROPY_BURST',    description: '×3 tap + ×3 gold for 8s' },
-    QUANTUM: { skillId: 'quantum_echo'      as SkillId, requiresRank: 2, name: 'QUANTUM_ECHO',     description: 'Instantly resets + fires all skills' },
-  } as Record<PerkBranch, { skillId: SkillId; requiresRank: number; name: string; description: string }>,
 } as const;
 
 // ── OVERCLOCK PERKS ─────────────────────────────────────────────────────────
@@ -865,49 +865,48 @@ export const OVERCLOCK_CONFIG = {
 
 export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
   // ── VOLTAGE — Active tap builds, crit stacking ────────────────────────────
-  { id: 'voltage_spike',    name: 'VOLTAGE_SPIKE',    branch: 'VOLTAGE', branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'tap_damage',      valuePerLevel: 0.20, isMultiplier: true,  color: '#00f5ff',            flavor: 'Raw current through every keystroke.',    description: '+20% tap damage' },
-  { id: 'zero_day',         name: 'ZERO_DAY',         branch: 'VOLTAGE', branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'crit_chance',     valuePerLevel: 0.04, isMultiplier: false, color: '#00d4e8',            flavor: 'Exploit before the patch drops.',         description: '+4% crit chance' },
-  { id: 'exploit_chain',    name: 'EXPLOIT_CHAIN',    branch: 'VOLTAGE', branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.30, isMultiplier: false, color: '#00b8cc', requiresTier: 2,  flavor: 'Cascade vulnerabilities.',                description: '+30% crit damage' },
-  { id: 'voltage_overdrive',name: 'VOLTAGE_OVERDRIVE',branch: 'VOLTAGE', branchRank: 4, maxLevel: 4,  costPerLevel: 5,  modifierType: 'tap_damage',      valuePerLevel: 0.40, isMultiplier: true,  color: '#00a0bc', requiresTier: 6,  flavor: 'Fuse the limiter.',                       description: '+40% tap damage' },
-  { id: 'arc_singularity',  name: 'ARC_SINGULARITY',  branch: 'VOLTAGE', branchRank: 5, maxLevel: 3,  costPerLevel: 8,  modifierType: 'crit_chance',     valuePerLevel: 0.08, isMultiplier: false, color: '#0088aa', requiresTier: 10, flavor: 'Current becomes consciousness.',           description: '+8% crit chance' },
+  { id: 'voltage_spike',    name: 'VOLTAGE_SPIKE',    branch: 'VOLTAGE', branchRank: 1, maxLevel: 5, costPerLevel: 5,   modifierType: 'tap_damage',      valuePerLevel: 0.08, isMultiplier: true,  color: '#00f5ff',            flavor: 'Raw current through every keystroke.',    description: '+8% tap damage' },
+  { id: 'zero_day',         name: 'ZERO_DAY',         branch: 'VOLTAGE', branchRank: 2, maxLevel: 4, costPerLevel: 12,  modifierType: 'crit_chance',     valuePerLevel: 0.02, isMultiplier: false, color: '#00d4e8', requiresTier: 1,  flavor: 'Exploit before the patch drops.',         description: '+2% crit chance' },
+  { id: 'exploit_chain',    name: 'EXPLOIT_CHAIN',    branch: 'VOLTAGE', branchRank: 3, maxLevel: 3, costPerLevel: 25,  modifierType: 'crit_multiplier', valuePerLevel: 0.15, isMultiplier: false, color: '#00b8cc', requiresTier: 3,  flavor: 'Cascade vulnerabilities.',                description: '+15% crit damage' },
+  { id: 'voltage_overdrive',name: 'VOLTAGE_OVERDRIVE',branch: 'VOLTAGE', branchRank: 4, maxLevel: 3, costPerLevel: 50,  modifierType: 'tap_damage',      valuePerLevel: 0.15, isMultiplier: true,  color: '#00a0bc', requiresTier: 6,  flavor: 'Fuse the limiter.',                       description: '+15% tap damage' },
+  { id: 'arc_singularity',  name: 'ARC_SINGULARITY',  branch: 'VOLTAGE', branchRank: 5, maxLevel: 2, costPerLevel: 100, modifierType: 'crit_chance',     valuePerLevel: 0.03, isMultiplier: false, color: '#0088aa', requiresTier: 10, flavor: 'Current becomes consciousness.',          description: '+3% crit chance' },
 
   // ── SIGNAL — Economy builds, gold farming ─────────────────────────────────
-  { id: 'ghost_protocol',   name: 'GHOST_PROTOCOL',   branch: 'SIGNAL',  branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'gold_rate',       valuePerLevel: 0.15, isMultiplier: true,  color: '#ffaa00',            flavor: 'Route gold through hidden channels.',     description: '+15% gold rate' },
-  { id: 'dead_drop',        name: 'DEAD_DROP',        branch: 'SIGNAL',  branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'gold_rate',       valuePerLevel: 0.25, isMultiplier: true,  color: '#e89500', requiresTier: 1,  flavor: 'Stashed cache for every run.',            description: '+25% gold rate' },
-  { id: 'data_launder',     name: 'DATA_LAUNDER',     branch: 'SIGNAL',  branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'gold_rate',       valuePerLevel: 0.35, isMultiplier: true,  color: '#cc8400', requiresTier: 3,  flavor: 'Clean dirty signals into throughput.',    description: '+35% gold rate' },
-  { id: 'signal_fracture',  name: 'SIGNAL_FRACTURE',  branch: 'SIGNAL',  branchRank: 4, maxLevel: 3,  costPerLevel: 6,  modifierType: 'gold_rate',       valuePerLevel: 0.50, isMultiplier: true,  color: '#aa7000', requiresTier: 7,  flavor: 'Shatter the carrier wave.',               description: '+50% gold rate' },
-  { id: 'dark_signal',      name: 'DARK_SIGNAL',      branch: 'SIGNAL',  branchRank: 5, maxLevel: 2,  costPerLevel: 10, modifierType: 'gold_rate',       valuePerLevel: 0.75, isMultiplier: true,  color: '#885c00', requiresTier: 11, flavor: 'Transmissions from the black market.',    description: '+75% gold rate' },
+  { id: 'ghost_protocol',   name: 'GHOST_PROTOCOL',   branch: 'SIGNAL',  branchRank: 1, maxLevel: 5, costPerLevel: 5,   modifierType: 'gold_rate',       valuePerLevel: 0.08, isMultiplier: true,  color: '#ffaa00',            flavor: 'Route gold through hidden channels.',     description: '+8% gold rate' },
+  { id: 'dead_drop',        name: 'DEAD_DROP',        branch: 'SIGNAL',  branchRank: 2, maxLevel: 4, costPerLevel: 12,  modifierType: 'gold_rate',       valuePerLevel: 0.12, isMultiplier: true,  color: '#e89500', requiresTier: 1,  flavor: 'Stashed cache for every run.',            description: '+12% gold rate' },
+  { id: 'data_launder',     name: 'DATA_LAUNDER',     branch: 'SIGNAL',  branchRank: 3, maxLevel: 3, costPerLevel: 25,  modifierType: 'gold_rate',       valuePerLevel: 0.18, isMultiplier: true,  color: '#cc8400', requiresTier: 3,  flavor: 'Clean dirty signals into throughput.',    description: '+18% gold rate' },
+  { id: 'signal_fracture',  name: 'SIGNAL_FRACTURE',  branch: 'SIGNAL',  branchRank: 4, maxLevel: 3, costPerLevel: 50,  modifierType: 'gold_rate',       valuePerLevel: 0.25, isMultiplier: true,  color: '#aa7000', requiresTier: 6,  flavor: 'Shatter the carrier wave.',               description: '+25% gold rate' },
+  { id: 'dark_signal',      name: 'DARK_SIGNAL',      branch: 'SIGNAL',  branchRank: 5, maxLevel: 2, costPerLevel: 100, modifierType: 'gold_rate',       valuePerLevel: 0.35, isMultiplier: true,  color: '#885c00', requiresTier: 10, flavor: 'Transmissions from the black market.',    description: '+35% gold rate' },
 
   // ── THERMAL — Idle builds, passive damage ─────────────────────────────────
-  { id: 'phantom_thread',    name: 'PHANTOM_THREAD',    branch: 'THERMAL', branchRank: 1, maxLevel: 8,  costPerLevel: 1,  modifierType: 'idle_dps', valuePerLevel: 0.20, isMultiplier: true, color: '#39ff14',            flavor: 'Silent processes in the dark.',           description: '+20% idle DPS' },
-  { id: 'thermal_runaway',   name: 'THERMAL_RUNAWAY',   branch: 'THERMAL', branchRank: 2, maxLevel: 5,  costPerLevel: 2,  modifierType: 'idle_dps', valuePerLevel: 0.30, isMultiplier: true, color: '#29dd09', requiresTier: 1,  flavor: 'Controlled meltdown.',                    description: '+30% idle DPS' },
-  { id: 'neural_overclock',  name: 'NEURAL_OVERCLOCK',  branch: 'THERMAL', branchRank: 3, maxLevel: 4,  costPerLevel: 3,  modifierType: 'idle_dps', valuePerLevel: 0.40, isMultiplier: true, color: '#19bb00', requiresTier: 3,  flavor: 'CPU and flesh become one.',               description: '+40% idle DPS' },
-  { id: 'absolute_zero',     name: 'ABSOLUTE_ZERO',     branch: 'THERMAL', branchRank: 4, maxLevel: 3,  costPerLevel: 6,  modifierType: 'idle_dps', valuePerLevel: 0.60, isMultiplier: true, color: '#0d9900', requiresTier: 6,  flavor: 'Cool silicon to the void.',               description: '+60% idle DPS' },
-  { id: 'thermal_apotheosis',name: 'THERMAL_APOTHEOSIS',branch: 'THERMAL', branchRank: 5, maxLevel: 2,  costPerLevel: 10, modifierType: 'idle_dps', valuePerLevel: 0.80, isMultiplier: true, color: '#0a7700', requiresTier: 10, flavor: 'The machine transcends heat.',            description: '+80% idle DPS' },
+  { id: 'phantom_thread',    name: 'PHANTOM_THREAD',    branch: 'THERMAL', branchRank: 1, maxLevel: 5, costPerLevel: 5,   modifierType: 'idle_dps', valuePerLevel: 0.08, isMultiplier: true, color: '#39ff14',            flavor: 'Silent processes in the dark.',           description: '+8% idle DPS' },
+  { id: 'thermal_runaway',   name: 'THERMAL_RUNAWAY',   branch: 'THERMAL', branchRank: 2, maxLevel: 4, costPerLevel: 12,  modifierType: 'idle_dps', valuePerLevel: 0.12, isMultiplier: true, color: '#29dd09', requiresTier: 1,  flavor: 'Controlled meltdown.',                    description: '+12% idle DPS' },
+  { id: 'neural_overclock',  name: 'NEURAL_OVERCLOCK',  branch: 'THERMAL', branchRank: 3, maxLevel: 3, costPerLevel: 25,  modifierType: 'idle_dps', valuePerLevel: 0.18, isMultiplier: true, color: '#19bb00', requiresTier: 3,  flavor: 'CPU and flesh become one.',               description: '+18% idle DPS' },
+  { id: 'absolute_zero',     name: 'ABSOLUTE_ZERO',     branch: 'THERMAL', branchRank: 4, maxLevel: 3, costPerLevel: 50,  modifierType: 'idle_dps', valuePerLevel: 0.25, isMultiplier: true, color: '#0d9900', requiresTier: 6,  flavor: 'Cool silicon to the void.',               description: '+25% idle DPS' },
+  { id: 'thermal_apotheosis',name: 'THERMAL_APOTHEOSIS',branch: 'THERMAL', branchRank: 5, maxLevel: 2, costPerLevel: 100, modifierType: 'idle_dps', valuePerLevel: 0.35, isMultiplier: true, color: '#0a7700', requiresTier: 10, flavor: 'The machine transcends heat.',            description: '+35% idle DPS' },
 
   // ── ENTROPY — Hybrid builds, late-game chaos ──────────────────────────────
-  { id: 'exploit_entropy',  name: 'EXPLOIT_ENTROPY',  branch: 'ENTROPY', branchRank: 1, maxLevel: 6,  costPerLevel: 2,  modifierType: 'tap_damage',      valuePerLevel: 0.25, isMultiplier: true,  color: '#ff4444', requiresTier: 2,  flavor: 'Chaos is your weapon.',                   description: '+25% tap damage' },
-  { id: 'void_shell',       name: 'VOID_SHELL',       branch: 'ENTROPY', branchRank: 2, maxLevel: 4,  costPerLevel: 3,  modifierType: 'gold_rate',       valuePerLevel: 0.30, isMultiplier: true,  color: '#dd2222', requiresTier: 4,  flavor: 'Rip gold from the void.',                 description: '+30% gold rate' },
-  { id: 'apex_protocol',    name: 'APEX_PROTOCOL',    branch: 'ENTROPY', branchRank: 3, maxLevel: 3,  costPerLevel: 5,  modifierType: 'idle_dps',        valuePerLevel: 0.40, isMultiplier: true,  color: '#bb0000', requiresTier: 6,  flavor: 'All limits dissolved.',                   description: '+40% idle DPS' },
-  { id: 'entropy_cascade',  name: 'ENTROPY_CASCADE',  branch: 'ENTROPY', branchRank: 4, maxLevel: 3,  costPerLevel: 8,  modifierType: 'crit_multiplier', valuePerLevel: 0.50, isMultiplier: false, color: '#990000', requiresTier: 9,  flavor: 'Every ending is a strike.',               description: '+50% crit damage' },
-  { id: 'null_storm',       name: 'NULL_STORM',       branch: 'ENTROPY', branchRank: 5, maxLevel: 2,  costPerLevel: 12, modifierType: 'tap_damage',      valuePerLevel: 0.60, isMultiplier: true,  color: '#770000', requiresTier: 12, flavor: 'The system deletes itself.',              description: '+60% tap damage' },
+  { id: 'exploit_entropy',  name: 'EXPLOIT_ENTROPY',  branch: 'ENTROPY', branchRank: 1, maxLevel: 4, costPerLevel: 8,   modifierType: 'tap_damage',      valuePerLevel: 0.10, isMultiplier: true,  color: '#ff4444', requiresTier: 2,  flavor: 'Chaos is your weapon.',                   description: '+10% tap damage' },
+  { id: 'void_shell',       name: 'VOID_SHELL',       branch: 'ENTROPY', branchRank: 2, maxLevel: 3, costPerLevel: 18,  modifierType: 'gold_rate',       valuePerLevel: 0.15, isMultiplier: true,  color: '#dd2222', requiresTier: 4,  flavor: 'Rip gold from the void.',                 description: '+15% gold rate' },
+  { id: 'apex_protocol',    name: 'APEX_PROTOCOL',    branch: 'ENTROPY', branchRank: 3, maxLevel: 3, costPerLevel: 35,  modifierType: 'idle_dps',        valuePerLevel: 0.20, isMultiplier: true,  color: '#bb0000', requiresTier: 6,  flavor: 'All limits dissolved.',                   description: '+20% idle DPS' },
+  { id: 'entropy_cascade',  name: 'ENTROPY_CASCADE',  branch: 'ENTROPY', branchRank: 4, maxLevel: 2, costPerLevel: 65,  modifierType: 'crit_multiplier', valuePerLevel: 0.20, isMultiplier: false, color: '#990000', requiresTier: 9,  flavor: 'Every ending is a strike.',               description: '+20% crit damage' },
+  { id: 'null_storm',       name: 'NULL_STORM',       branch: 'ENTROPY', branchRank: 5, maxLevel: 2, costPerLevel: 120, modifierType: 'tap_damage',      valuePerLevel: 0.25, isMultiplier: true,  color: '#770000', requiresTier: 12, flavor: 'The system deletes itself.',              description: '+25% tap damage' },
 
   // ── QUANTUM — Synergy builds, multiplies other branches ───────────────────
-  { id: 'superposition',    name: 'SUPERPOSITION',    branch: 'QUANTUM', branchRank: 1, maxLevel: 5,  costPerLevel: 3,  modifierType: 'crit_multiplier', valuePerLevel: 0.25, isMultiplier: false, color: '#cc44ff', requiresTier: 3,  flavor: 'Strike from two states at once.',         description: '+25% crit damage' },
-  { id: 'entanglement',     name: 'ENTANGLEMENT',     branch: 'QUANTUM', branchRank: 2, maxLevel: 4,  costPerLevel: 4,  modifierType: 'idle_dps',        valuePerLevel: 0.35, isMultiplier: true,  color: '#aa22dd', requiresTier: 5,  flavor: 'Linked states share damage.',             description: '+35% idle DPS' },
-  { id: 'wave_collapse',    name: 'WAVE_COLLAPSE',    branch: 'QUANTUM', branchRank: 3, maxLevel: 3,  costPerLevel: 6,  modifierType: 'gold_rate',       valuePerLevel: 0.45, isMultiplier: true,  color: '#8800bb', requiresTier: 7,  flavor: 'Probability always favours you.',         description: '+45% gold rate' },
-  { id: 'quantum_tunneling',name: 'QUANTUM_TUNNELING',branch: 'QUANTUM', branchRank: 4, maxLevel: 3,  costPerLevel: 9,  modifierType: 'tap_damage',      valuePerLevel: 0.55, isMultiplier: true,  color: '#660099', requiresTier: 9,  flavor: 'Pass through every defence.',             description: '+55% tap damage' },
-  { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 2,  costPerLevel: 14, modifierType: 'crit_chance',     valuePerLevel: 0.10, isMultiplier: false, color: '#440077', requiresTier: 12, flavor: 'Reality yields to your attacks.',         description: '+10% crit chance' },
+  { id: 'superposition',    name: 'SUPERPOSITION',    branch: 'QUANTUM', branchRank: 1, maxLevel: 3, costPerLevel: 15,  modifierType: 'crit_multiplier', valuePerLevel: 0.15, isMultiplier: false, color: '#cc44ff', requiresTier: 3,  flavor: 'Strike from two states at once.',         description: '+15% crit damage' },
+  { id: 'entanglement',     name: 'ENTANGLEMENT',     branch: 'QUANTUM', branchRank: 2, maxLevel: 3, costPerLevel: 30,  modifierType: 'idle_dps',        valuePerLevel: 0.18, isMultiplier: true,  color: '#aa22dd', requiresTier: 5,  flavor: 'Linked states share damage.',             description: '+18% idle DPS' },
+  { id: 'wave_collapse',    name: 'WAVE_COLLAPSE',    branch: 'QUANTUM', branchRank: 3, maxLevel: 3, costPerLevel: 50,  modifierType: 'gold_rate',       valuePerLevel: 0.22, isMultiplier: true,  color: '#8800bb', requiresTier: 7,  flavor: 'Probability always favours you.',         description: '+22% gold rate' },
+  { id: 'quantum_tunneling',name: 'QUANTUM_TUNNELING',branch: 'QUANTUM', branchRank: 4, maxLevel: 2, costPerLevel: 80,  modifierType: 'tap_damage',      valuePerLevel: 0.28, isMultiplier: true,  color: '#660099', requiresTier: 9,  flavor: 'Pass through every defence.',             description: '+28% tap damage' },
+  { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 2, costPerLevel: 140, modifierType: 'crit_chance',     valuePerLevel: 0.03, isMultiplier: false, color: '#440077', requiresTier: 12, flavor: 'Reality yields to your attacks.',         description: '+3% crit chance' },
 ];
 
-// ── SKILLS ────────────────────────────────────────────────────────────────────
+// ── SKILLS ──────────────────────────�����─────────────────────────────────────────
 //
-// BALANCE NOTES - Skills are strategic with meaningful tradeoffs:
-// - SURGE: Moderate tap boost (x3), short duration, use for burst DPS
-// - OC PULSE: Idle boost (x3), longer duration, set-and-forget
-// - GOLD RUSH: Gold multiplier (x2), use before big kills
+// BALANCE NOTES - 4 strategic skills with meaningful tradeoffs:
+// - SURGE: Moderate tap boost, short duration, use for burst DPS
+// - OC PULSE: Idle boost, longer duration, set-and-forget
+// - GOLD RUSH: Gold multiplier, use before big kills
 // - FIREWALL: Boss timer freeze, critical for hard bosses
-// - CHAIN HACK: Auto-taps (~15/s), useful AFK or for rapid hits
 //
 // Late-game strategy: Combine skills with OV perks for synergies
 // Each skill has distinct purpose - no "always use" skill
@@ -917,18 +916,9 @@ export const BASE_SKILLS: SkillDef[] = [
   { id: 'overclock_pulse', name: 'OC PULSE',  description: 'Idle DPS x1.5 for 6s',       cooldown: 60,  duration: 6, color: '#ff0080', icon: 'Cpu',    unlockStage: 5  },
   { id: 'gold_rush',       name: 'GOLD RUSH', description: 'Gold gain x1.25 for 8s',     cooldown: 70,  duration: 8, color: '#ffaa00', icon: 'Coins',  unlockStage: 10 },
   { id: 'firewall',        name: 'FIREWALL',  description: 'Boss timer freeze 5s',       cooldown: 100, duration: 5, color: '#39ff14', icon: 'Shield', unlockStage: 15 },
-  { id: 'chain_hack',      name: 'CHAIN HACK',description: 'Auto-tap 6x/s for 3s',       cooldown: 70,  duration: 3,  color: '#ff4444', icon: 'Link',   unlockStage: 20 },
-  ];
+];
 
-export const BRANCH_SKILLS: SkillDef[] = [
-  { id: 'static_discharge',name: 'STATIC DISCHARGE', description: 'Instant 20x tap burst',         cooldown: 150, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.VOLTAGE, icon: 'Zap',      unlockStage: 9999 },
-  { id: 'signal_jam',      name: 'SIGNAL JAM',       description: 'x1.15 gold for 10s',            cooldown: 110, duration: 10, color: OVERCLOCK_CONFIG.branchColors.SIGNAL,  icon: 'Wifi',     unlockStage: 9999 },
-  { id: 'meltdown',        name: 'MELTDOWN',         description: 'x2 idle DPS for 5s',            cooldown: 120, duration: 5,  color: OVERCLOCK_CONFIG.branchColors.THERMAL, icon: 'Flame',    unlockStage: 9999 },
-  { id: 'entropy_burst',   name: 'ENTROPY BURST',    description: 'x1.25 tap + x1.25 gold for 4s', cooldown: 130, duration: 4,  color: OVERCLOCK_CONFIG.branchColors.ENTROPY, icon: 'Shuffle',  unlockStage: 9999 },
-  { id: 'quantum_echo',    name: 'QUANTUM ECHO',     description: 'Reset all base skill CDs',      cooldown: 200, duration: 0,  color: OVERCLOCK_CONFIG.branchColors.QUANTUM, icon: 'Infinity', unlockStage: 9999 },
-  ];
-
-export const ALL_SKILLS: SkillDef[] = [...BASE_SKILLS, ...BRANCH_SKILLS];
+export const ALL_SKILLS: SkillDef[] = [...BASE_SKILLS];
 
 /** Modifiers applied when each skill is active (used by SkillPlugin). */
 export const SKILL_EFFECTS: Record<SkillId, { modifierType: ModifierDef['type']; value: number; isMultiplier: boolean }[]> = {
@@ -936,22 +926,7 @@ export const SKILL_EFFECTS: Record<SkillId, { modifierType: ModifierDef['type'];
   overclock_pulse:  [{ modifierType: 'idle_dps',   value: 1.5,  isMultiplier: true  }],
   gold_rush:        [{ modifierType: 'gold_rate',  value: 1.25, isMultiplier: true  }],
   firewall:         [],
-  chain_hack:       [],
-  static_discharge: [],
-  signal_jam:       [{ modifierType: 'gold_rate',  value: 1.15, isMultiplier: true  }],
-  meltdown:         [{ modifierType: 'idle_dps',   value: 2,    isMultiplier: true  }],
-  entropy_burst:    [
-  { modifierType: 'tap_damage', value: 1.25, isMultiplier: true },
-  { modifierType: 'gold_rate',  value: 1.25, isMultiplier: true },
-  ],
-  quantum_echo: [],
-  };
-
-/** chain_hack fires one auto-tap every chainHackIntervalMs (~6 per second). */
-  export const CHAIN_HACK_INTERVAL_MS = 166;
-
-/** static_discharge burst multiplier (applied to current tap_damage modifier). */
-export const STATIC_DISCHARGE_BURST = 20;
+};
 
 // ── COMPONENTS ────────────────────────────────────────────────────────────────
 
@@ -1146,78 +1121,99 @@ export const ITEM_CONFIG = {
   bossRarityShift: 20,
   tierRarityShiftPerTier: 5,
   
-  /** Primary stat per slot. */
-  primaryStat: { 
-    RAM: 'idle_dps', 
-    GPU: 'tap_damage', 
-    CPU: 'crit_chance', 
-    EXPANSION: 'gold_rate' 
-  } as Record<ItemSlot, ModifierDef['type']>,
-  
-  /** Secondary stat per slot (only Rare+ items get a secondary). */
-  secondaryStat: { 
-    RAM: 'tap_damage', 
-    GPU: 'idle_dps', 
-    CPU: 'crit_multiplier', 
-    EXPANSION: 'tap_damage' 
-  } as Record<ItemSlot, ModifierDef['type']>,
-  
   // ═══════════════════════════════════════════════════════════════════════════
   // STAT VALUE FORMULAS (GOD FORMULA v2.0)
+  // ═══════════════════════════════════���═══════════════════════════════════════
+  // Multiplier stats (tap/idle/gold): 1 + (base * tierMult * rarityMult)
+  // crit_chance (flat, capped):       (critChanceBase * tierMult * rarityMult)
+  // crit_multiplier (flat):           (critMultBase * tierMult * rarityMult)
+  // "Primary" uses the larger base; "secondary" uses the smaller base.
   // ═══════════════════════════════════════════════════════════════════════════
-  // Primary (non-crit):   1 + (base * tierMult * rarityMult)
-  // Primary (crit_chance): (critBase * tierMult * rarityMult), capped at 0.15
-  // Secondary (crit_mult): (critMultBase * rarityMult)
-  // Secondary (other):    1 + (secondaryBase * tierMult * rarityMult)
+  primaryStatBase: 0.10,            // +10% per tier*rarity for multiplier stats
+  secondaryStatBase: 0.05,          // +5% per tier*rarity for secondary multiplier stats
+  primaryCritChanceBase: 0.01,      // +1% crit chance per tier*rarity (primary)
+  secondaryCritChanceBase: 0.005,   // +0.5% crit chance per tier*rarity (secondary)
+  primaryCritChanceCap: 0.15,       // Max 15% crit chance from a primary item
+  secondaryCritChanceCap: 0.08,     // Max 8% crit chance from a secondary roll
+  primaryCritMultBase: 0.20,        // +20% crit damage per tier*rarity (primary)
+  secondaryCritMultBase: 0.15,      // +15% crit damage per rarity (secondary)
+  /** crit_multiplier secondary ignores tier scaling (set false to scale with tier). */
+  secondaryCritMultScalesWithTier: false,
+
   // ═══════════════════════════════════════════════════════════════════════════
-  primaryStatBase: 0.10,          // +10% per tier*rarity for multipliers
-  primaryCritChanceBase: 0.01,    // +1% crit chance per tier*rarity
-  primaryCritChanceCap: 0.15,     // Max 15% crit from single item
-  secondaryCritMultBase: 0.15,    // +15% crit damage per rarity
-  secondaryStatBase: 0.05,        // +5% per tier*rarity for secondary stats
+  // ITEM ARCHETYPES (BUILD SYSTEM)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Every slot can now roll EVERY stat type, each as a themed item "line" so
+  // players can craft focused builds (e.g. a crit-damage CPU, a gold RAM).
+  //
+  // HOW TO ADD NEW ITEMS:
+  //   - Add a name to the relevant archetype's `names` array below.
+  //   - Optionally add a flavor for it in `itemFlavors` (otherwise the shared
+  //     `archetypeFlavors[stat]` line is used).
+  //
+  // HOW TO ADD A NEW ARCHETYPE STAT:
+  //   - Add an entry under each slot keyed by the ModifierType, with a
+  //     `secondary` stat (rolled on Rare+) and a `names` pool.
+  //
+  // Schema: archetypes[slot][primaryStat] = { secondary, names }
+  // ═══════════════════════════════════════════════════════════════════════════
+  archetypes: {
+    RAM: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_DIMM', 'HAMMER_CACHE', 'SPIKE_BANK', 'PERCUSSION_RAM', 'IMPACT_MODULE', 'BURST_DDR', 'CONCUSSION_STICK', 'SLEDGE_MEMORY'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_DIMM', 'AUTO_CACHE', 'DRONE_BANK', 'PERSISTENT_RAM', 'IDLE_REAPER', 'LOOP_MODULE', 'PHANTOM_THREAD_RAM', 'REVENANT_DDR'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_DIMM', 'GREED_CACHE', 'VAULT_BANK', 'MIDAS_RAM', 'PROFIT_MODULE', 'BOUNTY_DDR', 'TREASURE_STICK', 'HOARD_MEMORY'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_DIMM', 'SCOPE_CACHE', 'MARKSMAN_BANK', 'EAGLE_RAM', 'PINPOINT_MODULE', 'SNIPER_DDR', 'HAWKEYE_STICK', 'FOCUS_MEMORY'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_DIMM', 'OVERKILL_CACHE', 'RUPTURE_BANK', 'LETHAL_RAM', 'MASSACRE_MODULE', 'DEVASTATOR_DDR', 'ANNIHILATE_STICK', 'CRESCENDO_MEMORY'] },
+    },
+    GPU: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_SHADER', 'HAMMER_RENDER', 'SPIKE_PIXEL', 'IMPACT_GPU', 'BURST_FRAME', 'PERCUSSION_CORE', 'CONCUSSION_CARD', 'SLEDGE_RASTER'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_SHADER', 'AUTO_RENDER', 'DRONE_PIXEL', 'PERSISTENT_GPU', 'IDLE_RASTERIZER', 'LOOP_FRAME', 'PHANTOM_RENDER', 'REVENANT_CARD'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_SHADER', 'GREED_RENDER', 'VAULT_PIXEL', 'MIDAS_GPU', 'PROFIT_FRAME', 'BOUNTY_CORE', 'TREASURE_CARD', 'HOARD_RASTER'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_SHADER', 'SCOPE_RENDER', 'MARKSMAN_PIXEL', 'EAGLE_GPU', 'PINPOINT_FRAME', 'SNIPER_CORE', 'HAWKEYE_CARD', 'FOCUS_RASTER'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_SHADER', 'OVERKILL_RENDER', 'RUPTURE_PIXEL', 'LETHAL_GPU', 'MASSACRE_FRAME', 'DEVASTATOR_CORE', 'ANNIHILATE_CARD', 'CRESCENDO_RASTER'] },
+    },
+    CPU: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_CORE', 'HAMMER_PROC', 'SPIKE_THREAD', 'IMPACT_CPU', 'BURST_SILICON', 'PERCUSSION_CHIP', 'CONCUSSION_DIE', 'SLEDGE_LOGIC'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_CORE', 'AUTO_PROC', 'DRONE_THREAD', 'PERSISTENT_CPU', 'IDLE_REAPER_CHIP', 'LOOP_SILICON', 'PHANTOM_PROC', 'REVENANT_DIE'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_CORE', 'GREED_PROC', 'VAULT_THREAD', 'MIDAS_CPU', 'PROFIT_SILICON', 'BOUNTY_CHIP', 'TREASURE_DIE', 'HOARD_LOGIC'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_CORE', 'SCOPE_PROC', 'MARKSMAN_THREAD', 'EAGLE_CPU', 'PINPOINT_SILICON', 'SNIPER_CHIP', 'HAWKEYE_DIE', 'FOCUS_LOGIC'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_CORE', 'OVERKILL_PROC', 'RUPTURE_THREAD', 'LETHAL_CPU', 'MASSACRE_SILICON', 'DEVASTATOR_CHIP', 'ANNIHILATE_DIE', 'CRESCENDO_LOGIC'] },
+    },
+    EXPANSION: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_BUS', 'HAMMER_CARD', 'SPIKE_LANE', 'IMPACT_PCIE', 'BURST_BRIDGE', 'PERCUSSION_NIC', 'CONCUSSION_RAID', 'SLEDGE_PORT'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_BUS', 'AUTO_CARD', 'DRONE_LANE', 'PERSISTENT_PCIE', 'IDLE_BRIDGE', 'LOOP_NIC', 'PHANTOM_RAID', 'REVENANT_PORT'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_BUS', 'GREED_CARD', 'VAULT_LANE', 'MIDAS_PCIE', 'PROFIT_BRIDGE', 'BOUNTY_NIC', 'TREASURE_RAID', 'HOARD_PORT'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_BUS', 'SCOPE_CARD', 'MARKSMAN_LANE', 'EAGLE_PCIE', 'PINPOINT_BRIDGE', 'SNIPER_NIC', 'HAWKEYE_RAID', 'FOCUS_PORT'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_BUS', 'OVERKILL_CARD', 'RUPTURE_LANE', 'LETHAL_PCIE', 'MASSACRE_BRIDGE', 'DEVASTATOR_NIC', 'ANNIHILATE_RAID', 'CRESCENDO_PORT'] },
+    },
+  } as Record<ItemSlot, Record<ModifierDef['type'], { secondary: ModifierDef['type']; names: string[] }>>,
 
-  /** Item name pools per slot. */
-  slotItems: {
-    RAM: ['DDR5_GHOST', 'PHANTOM_RAM', 'VENOM_DIMM', 'SHADOW_CACHE', 'HYPERTHREAD_STICK', 'OVERCLOCKED_DDR', 'VOLATILE_BANK', 'NULL_PTR_MODULE'],
-    GPU: ['VOID_SHADER', 'FRACTURE_GPU', 'DARK_RENDERER', 'QUANTUM_CORE_GPU', 'ROGUE_PIXEL', 'SHADER_DAEMON', 'ENTROPY_CARD', 'PARALLEL_GHOST'],
-    CPU: ['EXPLOIT_PROC', 'SILICON_WRAITH', 'ZERO_DAY_CHIP', 'OVERCLOCK_CORE', 'PHANTOM_CPU', 'DAEMON_PROC', 'ROOTKIT_SILICON', 'NULL_CORE'],
-    EXPANSION: ['CHAOS_NIC', 'GHOST_RAID', 'OVERFLOW_PCI', 'BACKDOOR_CARD', 'INJECTION_BUS', 'EXPLOIT_BRIDGE', 'DARK_PCIE', 'SHADOW_EXPANSION'],
-  } as Record<ItemSlot, string[]>,
+  /** Relative weight of each archetype dropping per slot. Tune build rarity here. */
+  archetypeWeights: {
+    tap_damage: 25,
+    idle_dps: 25,
+    gold_rate: 20,
+    crit_chance: 18,
+    crit_multiplier: 12,
+  } as Record<ModifierDef['type'], number>,
 
-  /** Flavor text per item name. */
+  /** Shared flavor per archetype stat (used when a name has no specific flavor). */
+  archetypeFlavors: {
+    tap_damage:      'Every tap lands like a kinetic exploit.',
+    idle_dps:        'Runs your kill loop while you sleep.',
+    gold_rate:       'Skims credits off every corpse on the wire.',
+    crit_chance:     'Finds the weak byte. Every. Single. Time.',
+    crit_multiplier: 'When it crits, the target ceases to exist.',
+  } as Record<ModifierDef['type'], string>,
+
+  /** Optional per-name flavor overrides (falls back to archetypeFlavors). */
   itemFlavors: {
-    DDR5_GHOST:        'Addresses that should not exist hold your arsenal.',
-    PHANTOM_RAM:       'It shows up in no process table. Runs in everything.',
-    VENOM_DIMM:        'Leaked from a black site. Runs hot. Runs mean.',
-    SHADOW_CACHE:      "Prefetches tomorrow's attacks.",
-    HYPERTHREAD_STICK: 'Twice the threads, twice the carnage.',
-    OVERCLOCKED_DDR:   'Voided warranty. Doubled damage.',
-    VOLATILE_BANK:     "Contents survive power loss. Revenants don't reset.",
-    NULL_PTR_MODULE:   'References nothing. Destroys everything.',
-    VOID_SHADER:       "Renders pain in resolutions enemies can't perceive.",
-    FRACTURE_GPU:      'Stress-tested past the point of sanity.',
-    DARK_RENDERER:     'Draws frames of destruction before they happen.',
-    QUANTUM_CORE_GPU:  'Superposition: hit and miss, simultaneously.',
-    ROGUE_PIXEL:       "One bad actor in 4K. That's enough.",
-    SHADER_DAEMON:     'Compiles malice into every draw call.',
-    ENTROPY_CARD:      'Randomness as a weapon. Chaos is the strategy.',
-    PARALLEL_GHOST:    'Multiple threads, zero traces.',
-    EXPLOIT_PROC:      'Runs your code before you write it.',
-    SILICON_WRAITH:    'No heat signature. No mercy.',
-    ZERO_DAY_CHIP:     'Patched by no one. Feared by all.',
-    OVERCLOCK_CORE:    'Cooling not included. Sanity not included.',
-    PHANTOM_CPU:       'Listed as idle in all monitors. Never idle.',
-    DAEMON_PROC:       'init spawned it. Nothing can kill it.',
-    ROOTKIT_SILICON:   'Embedded in firmware. Deeper than the OS.',
-    NULL_CORE:         'Undefined behavior is a feature.',
-    CHAOS_NIC:         'Packets arrive before they are sent.',
-    GHOST_RAID:        'Storage array that only you can see.',
-    OVERFLOW_PCI:      'Buffer overflow weaponized as hardware.',
-    BACKDOOR_CARD:     'Manufacturer left a key. You found it.',
-    INJECTION_BUS:     'Everything on the bus is yours now.',
-    EXPLOIT_BRIDGE:    'Bridges two networks neither should touch.',
-    DARK_PCIE:         "PCIe lane to somewhere the spec forgot.",
-    SHADOW_EXPANSION:  'Expands into address space that does not exist.',
+    NULL_PTR_MODULE:  'References nothing. Destroys everything.',
+    ZERO_DAY_CHIP:    'Patched by no one. Feared by all.',
+    PHANTOM_PROC:     'Listed as idle in all monitors. Never idle.',
+    OVERKILL_CACHE:   'Computes more death than the target can hold.',
+    MIDAS_PCIE:       'Every byte that crosses the lane turns to gold.',
+    HAWKEYE_DIE:      'Sees the one weak transistor in a billion.',
   } as Record<string, string>,
 
   /** Scrap values by rarity - scrapping items yields this amount of scrap. */
@@ -1233,7 +1229,7 @@ export const ITEM_CONFIG = {
   tierScrapBonus: 3,
 } as const;
 
-// ── SHOP ──────────────────────────────────────────────────────────��───────────
+// ── SHOP ──────────────────────────────────────────────────────────��─────────��─
 
 export interface ShopItemDef {
   id: string;
@@ -1396,7 +1392,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'kill_5000',    name: 'EXTINCTION EVENT', description: 'Defeat 5,000 enemies',      icon: 'Target',    color: '#ff4444', type: 'kills',      threshold: 5000   },
     { id: 'kill_10000',   name: 'THE PURGE',        description: 'Defeat 10,000 enemies',     icon: 'Target',    color: '#ff0080', type: 'kills',      threshold: 10000  },
 
-    // ── Boss Kills ───────────────────────────────────────────────────
+    // ── Boss Kills ─────────────────────────────��─────────────────────
     { id: 'boss_slayer',     name: 'BOSS SLAYER',     description: 'Defeat 10 bosses',   icon: 'Skull', color: '#ff4444', type: 'boss_kills', threshold: 10  },
     { id: 'boss_slayer_50',  name: 'APEX PREDATOR',   description: 'Defeat 50 bosses',   icon: 'Skull', color: '#ff4444', type: 'boss_kills', threshold: 50  },
     { id: 'boss_slayer_100', name: 'BOSS HUNTER',     description: 'Defeat 100 bosses',  icon: 'Skull', color: '#ff2200', type: 'boss_kills', threshold: 100 },
@@ -1585,7 +1581,7 @@ export const LEADERBOARD_CONFIG = {
   loadLimit: 100,
 } as const;
 
-// ── UI TIMING ─────────────────────────────────────────────────────────────────
+// ── UI TIMING ──────────────────���──────────────────────────────────────────────
 
 export const UI_CONFIG = {
   /** Duration of enemy hit animation in ms */
@@ -1616,7 +1612,7 @@ export const UI_CONFIG = {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // GOD FORMULA SET ITEM SYSTEM v2.0 - BOSS DROP RARE SETS
-// ═══════════════════════════════════════════════════════════════════════════════
+// ═════════════════════════════════════════════════════════════════════════���═════
 //
 // SET DROP MECHANICS:
 // - Set pieces ONLY drop from bosses (stage 10, 20, 30, etc.)
@@ -1723,7 +1719,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ── ENTROPY ENGINE (Crit Damage Focus) ─────────────────────────────────────
+  // ── ENTROPY ENGINE (Crit Damage Focus) ───────────────────────────────��─────
   {
     id: 'entropy_engine',
     name: 'ENTROPY ENGINE',
@@ -1810,7 +1806,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ── INFINITE LOOP (Ultimate Crit) ──────────────────────────────────────────
+  // ── INFINITE LOOP (Ultimate Crit) ─────────���────────────────────────────────
   {
     id: 'infinite_loop',
     name: 'INFINITE LOOP',

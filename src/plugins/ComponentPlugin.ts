@@ -83,17 +83,6 @@ export class ComponentPlugin implements IPlugin {
         engine.updateState({ components: merged });
       }
     });
-
-    engine.on('overclock', () => {
-      const current = this.engine.state.components;
-      const reset: Record<string, ComponentDef> = {};
-      for (const c of INITIAL_COMPONENTS) {
-        // Preserve unlocked state for components beyond the 5th (endgame unlocks persist)
-        const wasUnlocked = current[c.id]?.unlocked ?? c.unlocked;
-        reset[c.id] = { ...c, unlocked: wasUnlocked };
-      }
-      engine.updateState({ components: reset });
-    });
   }
 
   getMaxAffordable(componentId: string): number {

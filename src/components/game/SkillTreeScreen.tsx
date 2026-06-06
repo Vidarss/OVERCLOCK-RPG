@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { X, Lock, Check, ChevronDown, ChevronUp, Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown } from 'lucide-react';
+import { X, Lock, Check, ChevronDown, ChevronUp, Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote, Infinity as InfinityIcon } from 'lucide-react';
 import type { IEngine } from '../../engine/types';
 import { SKILL_TREE_CONFIG, type SkillTreeNode } from '../../config/game.config';
 import { useGameState } from '../../hooks/useGameState';
 
 // Icon map for dynamic rendering
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown,
+  Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote,
 };
 
 interface SkillTreeScreenProps {
@@ -55,30 +55,20 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
     return skillPoints >= node.costPerLevel;
   };
 
-  // Upgrade a node
+  // Upgrade a node — the SkillTreePlugin re-applies all modifiers on this event
   const upgradeNode = (node: SkillTreeNode) => {
     if (!canUpgrade(node)) return;
-    
+
     const currentLevel = getNodeLevel(node.id);
     const newLevel = currentLevel + 1;
-    
+
     engine.updateState({
       skillPoints: skillPoints - node.costPerLevel,
       skillTreeNodes: { ...skillTreeNodes, [node.id]: newLevel },
     });
 
-    // Apply the modifier
-    const modKey = `skill_tree_${node.id}`;
-    const totalValue = node.effect.valuePerLevel * newLevel;
-    
-    // Remove old modifier and add new one
-    engine.removeModifiers(modKey);
-    engine.addModifier(modKey, {
-      type: node.effect.type as any,
-      value: totalValue,
-      isMultiplier: node.effect.isMultiplier ?? false,
-    });
-
+    // The plugin listens for this and recomputes the full modifier stack,
+    // so we never apply (or mis-apply) modifiers from the UI directly.
     engine.emit('skill_tree_upgrade', { nodeId: node.id, level: newLevel });
   };
 
@@ -91,10 +81,11 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
     return tiers;
   }, []);
 
-  // Calculate total bonuses from skill tree
+  // Calculate total bonuses from skill tree (passive nodes only)
   const totalBonuses = useMemo(() => {
     const bonuses: Record<string, number> = {};
     SKILL_TREE_CONFIG.nodes.forEach(node => {
+      if (!node.effect) return;
       const level = getNodeLevel(node.id);
       if (level > 0) {
         const key = node.effect.type;
@@ -112,9 +103,6 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
       crit_damage: `+${percent}% Crit Damage`,
       gold_bonus: `+${percent}% Gold`,
       idle_damage: `+${percent}% Idle Damage`,
-      skill_cooldown: `${percent}% Skill Cooldowns`,
-      boss_damage: `+${percent}% Boss Damage`,
-      elite_damage: `+${percent}% Elite Damage`,
       all_damage: `+${percent}% All Damage`,
     };
     return labels[type] ?? `+${percent}% ${type}`;
@@ -259,6 +247,23 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
                         <IconComponent size={18} style={{ color: level > 0 ? node.color : '#444' }} />
                       </div>
 
+                      {/* Time-skip badge */}
+                      {node.nodeType === 'timeskip' && (
+                        <div
+                          className="font-pixel"
+                          style={{
+                            fontSize: 6,
+                            color: level > 0 ? node.color : '#555',
+                            border: `1px solid ${level > 0 ? node.color : '#333'}`,
+                            borderRadius: 2,
+                            padding: '1px 3px',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          AUTO-SKIP
+                        </div>
+                      )}
+
                       {/* Name */}
                       <div
                         className="font-pixel"
@@ -367,12 +372,38 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
                     </div>
 
                     {/* Description */}
-                    <div style={{ fontSize: 12, color: '#aaa', marginBottom: 16, lineHeight: 1.5 }}>
+                    <div style={{ fontSize: 12, color: '#aaa', marginBottom: selectedNode.flavor ? 8 : 16, lineHeight: 1.5 }}>
                       {selectedNode.description}
                     </div>
 
-                    {/* Current effect */}
-                    {level > 0 && (
+                    {/* Flavor text */}
+                    {selectedNode.flavor && (
+                      <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic', marginBottom: 16, lineHeight: 1.4 }}>
+                        {`"${selectedNode.flavor}"`}
+                      </div>
+                    )}
+
+                    {/* Time-skip node info */}
+                    {selectedNode.timeskip && (
+                      <div style={{ background: '#120a14', border: `1px solid ${selectedNode.color}44`, padding: 12, marginBottom: 12 }}>
+                        <div style={{ fontSize: 9, color: selectedNode.color, marginBottom: 6, fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <InfinityIcon size={12} /> AUTO TIME-SKIP
+                        </div>
+                        <div style={{ fontSize: 12, color: '#fff', lineHeight: 1.5 }}>
+                          {level > 0
+                            ? `Auto-fires every ${selectedNode.timeskip.intervalSec}s, banking ${selectedNode.timeskip.secondsPerLevel * level}s of ${selectedNode.timeskip.resource.toUpperCase()} output.`
+                            : `Once unlocked, auto-fires every ${selectedNode.timeskip.intervalSec}s, banking ${selectedNode.timeskip.secondsPerLevel}s of ${selectedNode.timeskip.resource.toUpperCase()} output per level.`}
+                        </div>
+                        {!maxed && (
+                          <div style={{ fontSize: 11, color: '#00ff88', marginTop: 6 }}>
+                            {`Next level: ${selectedNode.timeskip.secondsPerLevel * (level + 1)}s banked per fire`}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Current effect (passive nodes) */}
+                    {selectedNode.effect && level > 0 && (
                       <div style={{ background: '#0a0a12', border: '1px solid #1a1a2e', padding: 12, marginBottom: 12 }}>
                         <div style={{ fontSize: 9, color: '#666', marginBottom: 4, fontFamily: 'var(--font-mono)' }}>
                           CURRENT EFFECT
@@ -383,8 +414,8 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
                       </div>
                     )}
 
-                    {/* Next level preview */}
-                    {!maxed && (
+                    {/* Next level preview (passive nodes) */}
+                    {selectedNode.effect && !maxed && (
                       <div style={{ background: '#0a1008', border: '1px solid #00ff8833', padding: 12, marginBottom: 16 }}>
                         <div style={{ fontSize: 9, color: '#00ff88', marginBottom: 4, fontFamily: 'var(--font-mono)' }}>
                           NEXT LEVEL

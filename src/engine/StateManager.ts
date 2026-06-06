@@ -7,7 +7,6 @@ const DEFAULT_SKILL_COOLDOWNS: Record<SkillId, SkillCooldownState> = {
   overclock_pulse: DEFAULT_SKILL_COOLDOWN,
   gold_rush: DEFAULT_SKILL_COOLDOWN,
   firewall: DEFAULT_SKILL_COOLDOWN,
-  chain_hack: DEFAULT_SKILL_COOLDOWN,
 };
 
 export const DEFAULT_STATE: GameState = {

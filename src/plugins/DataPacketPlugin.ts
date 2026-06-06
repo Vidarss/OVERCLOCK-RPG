@@ -113,17 +113,15 @@ export class DataPacketPlugin implements IPlugin {
   }
 
   /**
-   * Get gold multiplier from active skills (gold_rush, signal_jam, etc.)
+   * Get gold multiplier from active skills (gold_rush)
    */
   private getSkillGoldMultiplier(): number {
     const skillPlugin = this.engine.getPlugin<SkillPlugin>('skill');
     if (!skillPlugin) return 1;
 
     let multiplier = 1;
-    // Gold multiplier skills: gold_rush (×3), signal_jam (×2), entropy_burst (×3 gold)
+    // Gold multiplier skill: gold_rush (×3)
     if (skillPlugin.isSkillActive('gold_rush')) multiplier *= 3;
-    if (skillPlugin.isSkillActive('signal_jam')) multiplier *= 2;
-    if (skillPlugin.isSkillActive('entropy_burst')) multiplier *= 3;
     return multiplier;
   }
 
@@ -163,7 +161,7 @@ export class DataPacketPlugin implements IPlugin {
 
   /**
    * Start watching an ad for encrypted packet or 3x boost
-   * Ad rewards include skill multiplier bonus (gold_rush, signal_jam, entropy_burst)
+   * Ad rewards include skill multiplier bonus (gold_rush)
    * Skill is not activated, just the gold amount gets the bonus
    */
   async collectEncryptedPacket(): Promise<boolean> {

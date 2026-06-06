@@ -276,11 +276,16 @@ export class EnemyPlugin implements IPlugin {
     engine.on('phase_clear', (event: GameEvent<{ stage: number; phase: number }>) => {
       const { stage, phase } = event.payload;
       const nextPhase = phase + 1;
-      
-      if (nextPhase > ENEMY_CONFIG.phasesPerStage) {
+      const bossPhase = ENEMY_CONFIG.phasesPerStage;
+
+      if (nextPhase > bossPhase) {
         // Boss defeated! Advance to next stage, phase 1
         this.engine.emit('stage_clear', { stage, goldReward: 0 });
         this.spawnForStagePhase(stage + 1, 1);
+      } else if (nextPhase >= bossPhase && this.engine.state.pendingBossReturn) {
+        // Boss timed out earlier — do NOT auto-spawn the boss. Keep the player
+        // farming normal enemies until they click "RETURN TO BOSS".
+        this.spawnForStagePhase(stage, bossPhase - 1);
       } else {
         // Next phase in current stage
         this.spawnForStagePhase(stage, nextPhase);
