@@ -1,5 +1,6 @@
 import type { IPlugin, IEngine, GameState, Enemy, GameEvent } from '../engine/types';
 import type { SkillPlugin } from './SkillPlugin';
+import type { SkillTreePlugin } from './SkillTreePlugin';
 import { ENEMY_CONFIG } from '../config/game.config';
 
 /**
@@ -263,6 +264,9 @@ export class EnemyPlugin implements IPlugin {
 
   private engine!: IEngine;
   private bossTimer = 0;
+  // Guards overkill chain reactions so a single hit can't loop forever.
+  private overkillChainDepth = 0;
+  private static readonly MAX_OVERKILL_CHAIN = 25;
 
   async init(engine: IEngine): Promise<void> {
     this.engine = engine;
@@ -344,7 +348,8 @@ export class EnemyPlugin implements IPlugin {
       effectiveDamage = Math.ceil(amount * ENEMY_CONFIG.bossShieldDamageMultiplier);
     }
 
-    const newHp = Math.max(0, state.enemy.hp - effectiveDamage);
+    const remainingHp = state.enemy.hp;
+    const newHp = Math.max(0, remainingHp - effectiveDamage);
     const updatedEnemy = { ...state.enemy, hp: newHp };
 
     if (updatedEnemy.isBoss && updatedEnemy.bossPhase === 'none' && newHp <= updatedEnemy.maxHp * updatedEnemy.phaseThreshold) {
@@ -360,7 +365,25 @@ export class EnemyPlugin implements IPlugin {
     this.engine.emit('enemy_hit', { damage: effectiveDamage, hp: newHp, maxHp: state.enemy.maxHp, isCrit: isCrit ?? false });
 
     if (newHp <= 0) {
+      // OVERKILL: any damage beyond the enemy's remaining HP can spill into the
+      // next enemy, chain-killing through weaker mobs. Bosses don't overkill
+      // (they end the chain), and we cap the chain depth as a safety net.
+      const excess = effectiveDamage - remainingHp;
+      const wasBoss = state.enemy.isBoss;
       this.handleEnemyDeath();
+
+      if (excess > 0 && !wasBoss && this.overkillChainDepth < EnemyPlugin.MAX_OVERKILL_CHAIN) {
+        const carry = this.engine.getPlugin<SkillTreePlugin>('skill_tree')?.getOverkillCarry() ?? 0;
+        const carriedDamage = Math.floor(excess * carry);
+        const nextEnemy = this.engine.state.enemy;
+        // Only chain into a fresh, living, non-boss enemy.
+        if (carriedDamage > 0 && nextEnemy && nextEnemy.hp > 0 && !nextEnemy.isBoss) {
+          this.overkillChainDepth++;
+          this.engine.emit('overkill_chain', { damage: carriedDamage, depth: this.overkillChainDepth });
+          this.applyDamage(carriedDamage, isCrit);
+          this.overkillChainDepth--;
+        }
+      }
     }
   }
 

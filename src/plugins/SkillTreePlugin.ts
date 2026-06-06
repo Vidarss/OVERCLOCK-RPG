@@ -85,6 +85,21 @@ export class SkillTreePlugin implements IPlugin {
     }
   }
 
+  /**
+   * Fraction of excess (overkill) damage that should spill into the next enemy.
+   * 0 when the OVERKILL node is not owned. Read by EnemyPlugin on each kill.
+   */
+  getOverkillCarry(): number {
+    const nodes = this.engine.state.skillTreeNodes ?? {};
+    let carry = 0;
+    for (const node of SKILL_TREE_CONFIG.nodes) {
+      if (node.nodeType !== 'overkill' || !node.overkill) continue;
+      const level = nodes[node.id] ?? 0;
+      if (level > 0) carry += node.overkill.carryPerLevel * level;
+    }
+    return carry;
+  }
+
   /** Returns owned time-skip nodes with their config + current level. */
   getTimeskipNodes(): { node: SkillTreeNode; level: number; nextInSec: number }[] {
     const nodes = this.engine.state.skillTreeNodes ?? {};

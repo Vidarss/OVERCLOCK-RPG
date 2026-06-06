@@ -1,14 +1,14 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { X, Lock, Check, ChevronDown, ChevronUp, Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote, Infinity as InfinityIcon } from 'lucide-react';
+import { X, Lock, Check, ChevronDown, ChevronUp, Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Swords, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote, Infinity as InfinityIcon } from 'lucide-react';
 import type { IEngine } from '../../engine/types';
 import { SKILL_TREE_CONFIG, type SkillTreeNode } from '../../config/game.config';
 import { useGameState } from '../../hooks/useGameState';
 
 // Icon map for dynamic rendering
 const ICON_MAP: Record<string, React.ComponentType<{ size?: number; className?: string }>> = {
-  Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote,
+  Pointer, Coins, Cpu, Crosshair, Zap, TrendingUp, Activity, Skull, Sword, Swords, Clock, Target, Flame, Gem, Rocket, Crown, MousePointerClick, Hourglass, Banknote,
 };
 
 interface SkillTreeScreenProps {
@@ -264,6 +264,23 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
                         </div>
                       )}
 
+                      {/* Overkill badge */}
+                      {node.nodeType === 'overkill' && (
+                        <div
+                          className="font-pixel"
+                          style={{
+                            fontSize: 6,
+                            color: level > 0 ? node.color : '#555',
+                            border: `1px solid ${level > 0 ? node.color : '#333'}`,
+                            borderRadius: 2,
+                            padding: '1px 3px',
+                            letterSpacing: '0.5px',
+                          }}
+                        >
+                          CHAIN-KILL
+                        </div>
+                      )}
+
                       {/* Name */}
                       <div
                         className="font-pixel"
@@ -397,6 +414,25 @@ export function SkillTreeScreen({ engine, onClose }: SkillTreeScreenProps) {
                         {!maxed && (
                           <div style={{ fontSize: 11, color: '#00ff88', marginTop: 6 }}>
                             {`Next level: ${selectedNode.timeskip.secondsPerLevel * (level + 1)}s banked per fire`}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Overkill node info */}
+                    {selectedNode.overkill && (
+                      <div style={{ background: '#140a0c', border: `1px solid ${selectedNode.color}44`, padding: 12, marginBottom: 12 }}>
+                        <div style={{ fontSize: 9, color: selectedNode.color, marginBottom: 6, fontFamily: 'var(--font-mono)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Swords size={12} /> OVERKILL CHAIN
+                        </div>
+                        <div style={{ fontSize: 12, color: '#fff', lineHeight: 1.5 }}>
+                          {level > 0
+                            ? `${Math.round(selectedNode.overkill.carryPerLevel * level * 100)}% of excess damage spills into the next enemy, chain-killing through weaker mobs.`
+                            : `Once unlocked, ${Math.round(selectedNode.overkill.carryPerLevel * 100)}% of any excess (overkill) damage per level carries over to the next enemy.`}
+                        </div>
+                        {!maxed && (
+                          <div style={{ fontSize: 11, color: '#00ff88', marginTop: 6 }}>
+                            {`Next level: ${Math.round(selectedNode.overkill.carryPerLevel * (level + 1) * 100)}% carry`}
                           </div>
                         )}
                       </div>

@@ -187,7 +187,7 @@ export interface SkillTreeNode {
   icon: string;             // Lucide icon name
   maxLevel: number;
   costPerLevel: number;     // SP cost per level
-  nodeType?: 'passive' | 'timeskip';
+  nodeType?: 'passive' | 'timeskip' | 'overkill';
   effect?: {
     type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'all_damage';
     valuePerLevel: number;
@@ -198,6 +198,9 @@ export interface SkillTreeNode {
     resource: 'tap' | 'idle' | 'gold'; // which damage/economy type is skipped
     secondsPerLevel: number;           // seconds of output banked per level, per fire
     intervalSec: number;               // auto-fire cooldown in seconds
+  };
+  overkill?: {
+    carryPerLevel: number; // fraction of excess damage that spills into the next enemy, per level
   };
   requires?: string[];      // Node IDs that must be unlocked first
   tier: 1 | 2 | 3 | 4 | 5;  // Visual tier for positioning
@@ -231,6 +234,7 @@ export const SKILL_TREE_CONFIG = {
     { id: 'macro_mayhem',    name: 'MACRO MAYHEM',    description: 'Auto-fires a tap burst, banking 4s of taps per level',  flavor: 'Technically the keyboard is doing the gaming.',  icon: 'MousePointerClick', maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'tap',  secondsPerLevel: 4, intervalSec: 45 }, requires: ['critical_systems'],   tier: 3, branch: 'OFFENSE', color: '#ff5599' },
     { id: 'overtime_exe',    name: 'OVERTIME.EXE',    description: 'Skips 8s of idle damage per level, automatically',      flavor: 'The fans scream so you can sleep.',              icon: 'Hourglass',         maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'idle', secondsPerLevel: 8, intervalSec: 60 }, requires: ['passive_income'],     tier: 3, branch: 'UTILITY', color: '#33ddaa' },
     { id: 'stonks_protocol', name: 'STONKS PROTOCOL', description: 'Injects 6s of gold income per level, automatically',     flavor: 'Number go up. We do not ask why.',               icon: 'Banknote',          maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'gold', secondsPerLevel: 6, intervalSec: 60 }, requires: ['wealth_algorithm'],   tier: 3, branch: 'UTILITY', color: '#ffcc33' },
+    { id: 'overkill',        name: 'OVERKILL.SH',     description: 'Excess damage spills into the next enemy: +20% carry per level',  flavor: 'Why kill one when the corpse can kill the rest?', icon: 'Swords',           maxLevel: 5, costPerLevel: 5, nodeType: 'overkill', overkill: { carryPerLevel: 0.2 }, requires: ['critical_systems'], tier: 3, branch: 'OFFENSE', color: '#ff3355' },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 4 - ADVANCED
@@ -546,7 +550,7 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 // Era 7 (200001-999999): Infinite - Prestige hunting, leaderboards
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── ENEMY CONFIG ──────────────────────────────────────────────────────────────
+// ── ENEMY CONFIG ─────────────────���────────────────────────────────────────────
 //
 // HOW TO ADD NEW ENEMIES:
 // 1. Add new name to ENEMY_NAMES arrays below (normalNames, bossNames, eliteNames)

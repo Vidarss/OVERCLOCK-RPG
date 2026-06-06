@@ -58,7 +58,8 @@ export type GameEventType =
   | 'battle_pass_tier_up'
   | 'battle_pass_purchased'
   | 'skill_tree_upgrade'
-  | 'skill_tree_timeskip';
+  | 'skill_tree_timeskip'
+  | 'overkill_chain';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;
