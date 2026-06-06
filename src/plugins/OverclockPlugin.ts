@@ -126,10 +126,10 @@ export class OverclockPlugin implements IPlugin {
       overclockCount: newCount,
       overclockTier: newTier,
       totalOverclocks: newTotalOverclocks,
+      // Only the run progress resets — all bought upgrades, gold and items are kept.
       stage: 1,
       phase: 1,
       highestStage: 1,
-      gold: 0,
     });
 
     this.applyAllModifiers();
