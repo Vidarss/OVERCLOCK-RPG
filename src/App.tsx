@@ -76,6 +76,8 @@ function createEngine(): GameEngine {
 
 // Single stable instance — survives StrictMode unmount/remount cycles.
 const stableEngine: GameEngine = createEngine();
+// [v0] temporary debug exposure
+if (typeof window !== 'undefined') (window as unknown as { __engine: GameEngine }).__engine = stableEngine;
 
 export default function App() {
   const engineRef = useRef<GameEngine>(stableEngine);
