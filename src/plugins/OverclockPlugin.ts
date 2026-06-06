@@ -10,7 +10,6 @@ export type { PerkBranch, OverclockPerkDef };
 export { OVERCLOCK_PERKS };
 
 export const BRANCH_COLORS = OVERCLOCK_CONFIG.branchColors;
-export const BRANCH_SKILL_UNLOCKS = OVERCLOCK_CONFIG.branchSkillUnlocks;
 export const TIER_NAMES = OVERCLOCK_CONFIG.tierNames;
 
 export function calculateOverclockGain(highestStage: number, tier: number): number {
@@ -55,10 +54,6 @@ export function getBranchMaxRank(upgrades: Record<string, OverclockUpgrade>, bra
     if (getOverclockPerkLevel(upgrades, p.id) >= 1) max = Math.max(max, p.branchRank);
   }
   return max;
-}
-
-export function isBranchSkillUnlocked(upgrades: Record<string, OverclockUpgrade>, branch: PerkBranch): boolean {
-  return getBranchMaxRank(upgrades, branch) >= BRANCH_SKILL_UNLOCKS[branch].requiresRank;
 }
 
 export class OverclockPlugin implements IPlugin {

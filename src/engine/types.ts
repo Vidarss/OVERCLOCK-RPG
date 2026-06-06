@@ -164,13 +164,7 @@ export type SkillId =
   | 'surge'
   | 'overclock_pulse'
   | 'gold_rush'
-  | 'firewall'
-  | 'chain_hack'
-  | 'static_discharge'
-  | 'signal_jam'
-  | 'meltdown'
-  | 'entropy_burst'
-  | 'quantum_echo';
+  | 'firewall';
 
 export interface SkillDef {
   id: SkillId;

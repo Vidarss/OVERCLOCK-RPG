@@ -7,11 +7,10 @@ import {
   calculateTier,
   OVERCLOCK_PERKS,
   BRANCH_COLORS,
-  BRANCH_SKILL_UNLOCKS,
   TIER_NAMES,
   getOverclockPerkLevel,
   isPerkUnlocked,
-  isBranchSkillUnlocked,
+  getBranchMaxRank,
 } from '../../plugins/OverclockPlugin';
 import type { OverclockPlugin, PerkBranch, OverclockPerkDef } from '../../plugins/OverclockPlugin';
 import { UI_CONFIG, OVERCLOCK_CONFIG } from '../../config/game.config';
@@ -185,19 +184,16 @@ function BranchColumn({
   const branchPerks = OVERCLOCK_PERKS
     .filter(p => p.branch === branch)
     .sort((a, b) => a.branchRank - b.branchRank);
-  const skillUnlock = BRANCH_SKILL_UNLOCKS[branch];
-  const skillEarned = isBranchSkillUnlocked(upgrades, branch);
+  const maxRank = getBranchMaxRank(upgrades, branch);
+  const totalRanks = branchPerks.length;
+  const branchActive = maxRank > 0;
 
   const branchTooltip = (
     <>
       <TooltipLabel label={branch} color={branchColor} />
       <TooltipText>{BRANCH_DESCRIPTIONS[branch]}</TooltipText>
       <div style={{ marginTop: 8 }}>
-        <TooltipStat label="Branch Skill" value={skillUnlock.name} color={skillEarned ? branchColor : '#4a4a5a'} />
-        <TooltipText>{skillUnlock.description}</TooltipText>
-        {!skillEarned && (
-          <TooltipStat label="Unlock at" value={`Rank ${skillUnlock.requiresRank}`} color="#ffaa00" />
-        )}
+        <TooltipStat label="Progress" value={`Rank ${maxRank}/${totalRanks}`} color={branchActive ? branchColor : '#4a4a5a'} />
       </div>
     </>
   );
@@ -225,7 +221,7 @@ function BranchColumn({
         }}>
           <div style={{ 
             color: branchColor, 
-            filter: skillEarned ? 'drop-shadow(0 0 4px currentColor)' : 'none' 
+            filter: branchActive ? 'drop-shadow(0 0 4px currentColor)' : 'none' 
           }}>
             {BRANCH_ICONS[branch]}
           </div>
@@ -237,13 +233,13 @@ function BranchColumn({
           }}>
             {branch.slice(0, 3)}
           </div>
-          {/* Skill unlock indicator */}
+          {/* Branch investment indicator */}
           <div style={{
             width: 6,
             height: 6,
             borderRadius: '50%',
-            background: skillEarned ? branchColor : '#1a1a2a',
-            boxShadow: skillEarned ? `0 0 6px ${branchColor}` : 'none',
+            background: branchActive ? branchColor : '#1a1a2a',
+            boxShadow: branchActive ? `0 0 6px ${branchColor}` : 'none',
             marginTop: 2,
           }} />
         </div>
