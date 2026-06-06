@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { CircuitBoard, ChevronDown, Trophy, Clock, Award, Swords, Users, Trash2, ArrowUp, Cpu, MessageCircle, Sparkles, TrendingUp, Zap, Skull } from 'lucide-react';
 import type { GameEngine } from '../../engine/Engine';
 import type { Player } from '../../engine/types';
 import { formatNumber } from '../../utils/format';
@@ -16,6 +16,7 @@ import { AchievementToast } from './AchievementToast';
 import { ShopScreen } from './ShopScreen';
 import { TournamentScreen } from './TournamentScreen';
 import { ClanScreen } from './ClanScreen';
+import { ClanBossScreen } from './ClanBossScreen';
 import { ScrapScreen } from './ScrapScreen';
 import { UpgradeScreen } from './UpgradeScreen';
 import { RelicsScreen } from './RelicsScreen';
@@ -144,6 +145,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
   const [showShop, setShowShop] = useState(false);
   const [showTournament, setShowTournament] = useState(false);
   const [showClan, setShowClan] = useState(false);
+  const [showClanBoss, setShowClanBoss] = useState(false);
   const [showScrap, setShowScrap] = useState(false);
   const [showUpgrades, setShowUpgrades] = useState(false);
   const [showRelics, setShowRelics] = useState(false);
@@ -196,6 +198,7 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
       {showShop && <ShopScreen engine={engine} onClose={() => setShowShop(false)} />}
       {showTournament && <TournamentScreen engine={engine} onClose={() => setShowTournament(false)} />}
       {showClan && <ClanScreen engine={engine} onClose={() => setShowClan(false)} />}
+      {showClanBoss && <ClanBossScreen engine={engine} onClose={() => setShowClanBoss(false)} />}
       {showScrap && <ScrapScreen engine={engine} onClose={() => setShowScrap(false)} />}
       {showUpgrades && <UpgradeScreen engine={engine} onClose={() => setShowUpgrades(false)} />}
       {showRelics && <RelicsScreen engine={engine} onClose={() => setShowRelics(false)} />}
@@ -318,6 +321,14 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               label={MODULES_CONFIG.clans.label ?? 'CLAN'}
               activeColor="#00f5ff"
               onClick={() => setShowClan(true)}
+            />
+          )}
+          {MODULES_CONFIG.clans.enabled && (
+            <MobileTab
+              icon={<Skull size={15} color="#3a4a5a" />}
+              label="RAID"
+              activeColor="#ff0033"
+              onClick={() => setShowClanBoss(true)}
             />
           )}
           <MobileTab
@@ -626,6 +637,27 @@ export const GameScreen: React.FC<GameScreenProps> = ({ engine, player }) => {
               >
                 <Users size={20} />
                 <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>CLAN</div>
+              </button>
+            </Tooltip>
+          )}
+
+          {/* Clan Raid Boss */}
+          {MODULES_CONFIG.clans.enabled && (
+            <Tooltip content={<><TooltipLabel label="RAID BOSS" color="#ff0033" /><TooltipText>Team up with your clan to take down a shared, massive-HP boss.</TooltipText></>} position="left">
+              <button
+                onClick={() => setShowClanBoss(true)}
+                style={{
+                  width: '100%', background: '#0a0306',
+                  border: '1px solid #2a0a12',
+                  color: '#5a2a3a', padding: '12px 10px',
+                  cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = '#ff0033'; e.currentTarget.style.color = '#ff3355'; e.currentTarget.style.boxShadow = '0 0 14px rgba(255,0,51,0.2)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = '#2a0a12'; e.currentTarget.style.color = '#5a2a3a'; e.currentTarget.style.boxShadow = 'none'; }}
+              >
+                <Skull size={20} />
+                <div className="font-pixel" style={{ fontSize: '7px', letterSpacing: '2px' }}>RAID</div>
               </button>
             </Tooltip>
           )}

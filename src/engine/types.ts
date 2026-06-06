@@ -299,10 +299,12 @@ export interface IPlugin {
 export interface IPluginStorage {
   registerTable(pluginId: string, adapter: { table: string; userScoped: boolean }): void;
   load<T = unknown>(table: string, filters: Record<string, unknown>, select?: string): Promise<{ data: T | null; error: string | null }>;
-  loadMany<T = unknown>(table: string, filters: Record<string, unknown>, select?: string): Promise<{ data: T[]; error: string | null }>;
+  loadMany<T = unknown>(table: string, filters: Record<string, unknown>, select?: string, options?: { orderBy?: string; ascending?: boolean; limit?: number }): Promise<{ data: T[]; error: string | null }>;
   save(table: string, data: Record<string, unknown>, conflictKey?: string): Promise<{ error: string | null }>;
   insert<T = unknown>(table: string, data: Record<string, unknown>, select?: string): Promise<{ data: T | null; error: string | null }>;
+  update(table: string, data: Record<string, unknown>, filters: Record<string, unknown>): Promise<{ error: string | null }>;
   remove(table: string, filters: Record<string, unknown>): Promise<{ error: string | null }>;
+  rpc<T = unknown>(functionName: string, params?: Record<string, unknown>): Promise<{ data: T | null; error: string | null }>;
 }
 
 export interface IEngine {
