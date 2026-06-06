@@ -238,7 +238,7 @@ export const SKILL_TREE_CONFIG = {
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 4 - ADVANCED
-    // ═══════════════════════════════════════════════════════════════════════════
+    // ══════════════════════════════════════════════════════���════════════════════
     { id: 'lethal_precision', name: 'HEADSHOT.PNG',          description: '+15% Crit Damage per level', flavor: 'Mounted above the gamer chair.',          icon: 'Target', maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['amplifier', 'macro_mayhem'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
     { id: 'power_surge',      name: 'RGB MAKES IT FASTER',   description: '+8% All Damage per level',   flavor: 'Peer-reviewed by gamers everywhere.',     icon: 'Flame',  maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'all_damage',  valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['overtime_exe'],              tier: 4, branch: 'OFFENSE', color: '#ff6600' },
     { id: 'golden_touch',     name: 'CACHE ME OUTSIDE',      description: '+9% Gold per level',         flavor: 'How much gold? That much gold.',          icon: 'Gem',    maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.09, isMultiplier: true, isPercent: true }, requires: ['stonks_protocol'],           tier: 4, branch: 'UTILITY', color: '#ffdd00' },
@@ -550,7 +550,7 @@ export function getSkillEffectivenessMultiplier(upgrade: SkillUpgradeDef, level:
 // Era 7 (200001-999999): Infinite - Prestige hunting, leaderboards
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── ENEMY CONFIG ─────────────────���────────────────────────────────────────────
+// ── ENEMY CONFIG ──────────��──────���────────────────────────────────────────────
 //
 // HOW TO ADD NEW ENEMIES:
 // 1. Add new name to ENEMY_NAMES arrays below (normalNames, bossNames, eliteNames)
@@ -1343,7 +1343,7 @@ export const CHALLENGE_TEMPLATES: ChallengeTemplateDef[] = [
   { type: 'clear_stages',    label: 'Clear {n} stages',                targetFn: () => 3,                      rewardFn: s => 60  + s * 20  },
   { type: 'boss_streak',     label: 'Defeat {n} bosses in a row',      targetFn: () => 3,                      rewardFn: s => 120 + s * 50  },
   { type: 'collect_crits',   label: 'Land {n} critical hits',          targetFn: s => 20 + s * 4,             rewardFn: s => 80  + s * 25  },
-  // ── Hard ──────────────────────────────────────────────────────────────────
+  // ── Hard ───────────────────────────────────────���──────────────────────────
   { type: 'skill_combos',    label: 'Chain {n} skills without missing', targetFn: () => 4,                    rewardFn: s => 130 + s * 45  },
   { type: 'tap_frenzy',      label: 'Deal {n} total damage tapping',   targetFn: s => 500 + s * 200,          rewardFn: s => 90  + s * 30  },
   { type: 'reach_overclock', label: 'Reach overclock {n}',             targetFn: s => Math.max(1, Math.floor(s / 5)), rewardFn: s => 150 + s * 60 },
@@ -1574,6 +1574,40 @@ export const CLAN_CONFIG = {
   descriptionMaxLength: 200,
   /** Regex pattern for valid clan tags */
   tagPattern: /^[A-Z0-9]+$/,
+} as const;
+
+// ── CLAN BOSS RAID ──────────────────────────────────────────────────────────
+// A shared, massive-HP boss that the whole clan teams up to kill. HP lives on
+// the server; every member's damage chips away at the same pool.
+
+export const CLAN_BOSS_CONFIG = {
+  /** Names cycle by tier so higher tiers feel distinct. */
+  bossNames: [
+    'KERNEL_REAPER',
+    'SEGFAULT TITAN',
+    'THE NULL LEVIATHAN',
+    'OVERLORD.SYS',
+    'CORRUPTED MAINFRAME',
+  ] as const,
+  /** Base HP for a tier-1 boss. Intentionally enormous — a single player can't solo it. */
+  baseHp: 50_000_000,
+  /** HP multiplier applied per tier above 1 (compounding). */
+  hpGrowthPerTier: 4,
+  /** Hours a spawned boss stays alive before expiring. */
+  durationHours: 24,
+  /**
+   * Each "attack" deals damage scaled from the member's current combat power
+   * (idle DPS + tap). This converts that to a single big hit.
+   */
+  attackPowerWindowSeconds: 10,
+  /** Minimum damage per attack so low-level members still contribute. */
+  minAttackDamage: 1000,
+  /** Cooldown between attacks in ms (prevents spamming the server). */
+  attackCooldownMs: 1500,
+  /** Diamonds awarded to every member when the boss is defeated. */
+  defeatRewardDiamonds: 50,
+  /** How often (ms) to poll the boss as a realtime fallback. */
+  pollIntervalMs: 5000,
 } as const;
 
 // ── LEADERBOARD ───────────────────────────────────────────────────────────────

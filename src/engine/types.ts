@@ -59,7 +59,11 @@ export type GameEventType =
   | 'battle_pass_purchased'
   | 'skill_tree_upgrade'
   | 'skill_tree_timeskip'
-  | 'overkill_chain';
+  | 'overkill_chain'
+  | 'clan_changed'
+  | 'clan_boss_spawned'
+  | 'clan_boss_attacked'
+  | 'clan_boss_defeated';
 
 export interface GameEvent<T = unknown> {
   type: GameEventType;

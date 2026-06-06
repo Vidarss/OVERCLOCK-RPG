@@ -24,6 +24,7 @@ import { BattlePassPlugin } from './plugins/BattlePassPlugin';
 import { TournamentPlugin } from './plugins/TournamentPlugin';
 import { SetPlugin } from './plugins/SetPlugin';
 import { ClanPlugin } from './plugins/ClanPlugin';
+import { ClanBossPlugin } from './plugins/ClanBossPlugin';
 import { SkillPointPlugin } from './plugins/SkillPointPlugin';
 import { SkillTreePlugin } from './plugins/SkillTreePlugin';
 import { HeroPlugin } from './plugins/HeroPlugin';
@@ -65,6 +66,7 @@ function createEngine(): GameEngine {
   engine.register(new TournamentPlugin());
   engine.register(new SetPlugin());
   engine.register(new ClanPlugin());
+  engine.register(new ClanBossPlugin());
   engine.register(new SkillPointPlugin());
   engine.register(new SkillTreePlugin());
   engine.register(new HeroPlugin());
