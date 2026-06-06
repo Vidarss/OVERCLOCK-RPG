@@ -29,17 +29,21 @@ export const ENCHANTMENT_CONFIG = {
   // ─────────────────────────────────────────────────
   // Enchantment Tiers (1-10)
   // ─────────────────────────────────────────────────
+  // NOTE: bonusMultiplier scales the item's STAT BONUS (the value-1 portion),
+  // and it stacks multiplicatively with the tier-up statMultiplier below.
+  // Keep this curve gentle so max enchant + max tier doesn't explode the bonus.
+  // Combined cap target: enchant(+10) x tierup(T10) ~= 1.75 x 2.05 ~= 3.6x.
   tiers: [
-    { level: 1,  scrapCost: 25,   bonusMultiplier: 1.10, successChance: 1.00, failurePenalty: 0, suffix: '+1',  glowColor: '#4a5a6a' },
-    { level: 2,  scrapCost: 50,   bonusMultiplier: 1.22, successChance: 1.00, failurePenalty: 0, suffix: '+2',  glowColor: '#5a6a7a' },
-    { level: 3,  scrapCost: 100,  bonusMultiplier: 1.36, successChance: 0.95, failurePenalty: 0, suffix: '+3',  glowColor: '#6a7a8a' },
-    { level: 4,  scrapCost: 200,  bonusMultiplier: 1.52, successChance: 0.90, failurePenalty: 0, suffix: '+4',  glowColor: '#00a5af' },
-    { level: 5,  scrapCost: 400,  bonusMultiplier: 1.70, successChance: 0.80, failurePenalty: 1, suffix: '+5',  glowColor: '#00c5df' },
-    { level: 6,  scrapCost: 750,  bonusMultiplier: 1.90, successChance: 0.65, failurePenalty: 1, suffix: '+6',  glowColor: '#00f5ff' },
-    { level: 7,  scrapCost: 1500, bonusMultiplier: 2.15, successChance: 0.50, failurePenalty: 2, suffix: '+7',  glowColor: '#39ff14' },
-    { level: 8,  scrapCost: 3000, bonusMultiplier: 2.45, successChance: 0.35, failurePenalty: 2, suffix: '+8',  glowColor: '#ffaa00' },
-    { level: 9,  scrapCost: 6000, bonusMultiplier: 2.80, successChance: 0.20, failurePenalty: 3, suffix: '+9',  glowColor: '#ff6600' },
-    { level: 10, scrapCost: 12000,bonusMultiplier: 3.25, successChance: 0.10, failurePenalty: 3, suffix: '+10', glowColor: '#ff0080' },
+    { level: 1,  scrapCost: 25,   bonusMultiplier: 1.05, successChance: 1.00, failurePenalty: 0, suffix: '+1',  glowColor: '#4a5a6a' },
+    { level: 2,  scrapCost: 50,   bonusMultiplier: 1.11, successChance: 1.00, failurePenalty: 0, suffix: '+2',  glowColor: '#5a6a7a' },
+    { level: 3,  scrapCost: 100,  bonusMultiplier: 1.17, successChance: 0.95, failurePenalty: 0, suffix: '+3',  glowColor: '#6a7a8a' },
+    { level: 4,  scrapCost: 200,  bonusMultiplier: 1.24, successChance: 0.90, failurePenalty: 0, suffix: '+4',  glowColor: '#00a5af' },
+    { level: 5,  scrapCost: 400,  bonusMultiplier: 1.31, successChance: 0.80, failurePenalty: 1, suffix: '+5',  glowColor: '#00c5df' },
+    { level: 6,  scrapCost: 750,  bonusMultiplier: 1.39, successChance: 0.65, failurePenalty: 1, suffix: '+6',  glowColor: '#00f5ff' },
+    { level: 7,  scrapCost: 1500, bonusMultiplier: 1.47, successChance: 0.50, failurePenalty: 2, suffix: '+7',  glowColor: '#39ff14' },
+    { level: 8,  scrapCost: 3000, bonusMultiplier: 1.56, successChance: 0.35, failurePenalty: 2, suffix: '+8',  glowColor: '#ffaa00' },
+    { level: 9,  scrapCost: 6000, bonusMultiplier: 1.65, successChance: 0.20, failurePenalty: 3, suffix: '+9',  glowColor: '#ff6600' },
+    { level: 10, scrapCost: 12000,bonusMultiplier: 1.75, successChance: 0.10, failurePenalty: 3, suffix: '+10', glowColor: '#ff0080' },
   ] as EnchantmentTierDef[],
 
   /** Max enchantment level */
@@ -84,17 +88,19 @@ export const TIER_UP_CONFIG = {
   // Tier upgrade definitions
   // Each tier grants stronger base stats
   // ─────────────────────────────────────────────────
+  // NOTE: statMultiplier scales the item's STAT BONUS (the value-1 portion) and
+  // stacks multiplicatively with the enchant bonusMultiplier above. Keep gentle.
   upgrades: [
-    { targetTier: 1,  diamondCost: 1,  statMultiplier: 1.15, successChance: 1.00, minRarity: 'Common' },
-    { targetTier: 2,  diamondCost: 2,  statMultiplier: 1.32, successChance: 1.00, minRarity: 'Common' },
-    { targetTier: 3,  diamondCost: 3,  statMultiplier: 1.52, successChance: 0.95, minRarity: 'Common' },
-    { targetTier: 4,  diamondCost: 5,  statMultiplier: 1.75, successChance: 0.90, minRarity: 'Rare' },
-    { targetTier: 5,  diamondCost: 8,  statMultiplier: 2.00, successChance: 0.85, minRarity: 'Rare' },
-    { targetTier: 6,  diamondCost: 12, statMultiplier: 2.30, successChance: 0.75, minRarity: 'Epic' },
-    { targetTier: 7,  diamondCost: 18, statMultiplier: 2.65, successChance: 0.65, minRarity: 'Epic' },
-    { targetTier: 8,  diamondCost: 25, statMultiplier: 3.05, successChance: 0.50, minRarity: 'Legendary' },
-    { targetTier: 9,  diamondCost: 35, statMultiplier: 3.50, successChance: 0.35, minRarity: 'Legendary' },
-    { targetTier: 10, diamondCost: 50, statMultiplier: 4.00, successChance: 0.20, minRarity: 'Legendary' },
+    { targetTier: 1,  diamondCost: 1,  statMultiplier: 1.08, successChance: 1.00, minRarity: 'Common' },
+    { targetTier: 2,  diamondCost: 2,  statMultiplier: 1.17, successChance: 1.00, minRarity: 'Common' },
+    { targetTier: 3,  diamondCost: 3,  statMultiplier: 1.27, successChance: 0.95, minRarity: 'Common' },
+    { targetTier: 4,  diamondCost: 5,  statMultiplier: 1.38, successChance: 0.90, minRarity: 'Rare' },
+    { targetTier: 5,  diamondCost: 8,  statMultiplier: 1.50, successChance: 0.85, minRarity: 'Rare' },
+    { targetTier: 6,  diamondCost: 12, statMultiplier: 1.62, successChance: 0.75, minRarity: 'Epic' },
+    { targetTier: 7,  diamondCost: 18, statMultiplier: 1.74, successChance: 0.65, minRarity: 'Epic' },
+    { targetTier: 8,  diamondCost: 25, statMultiplier: 1.86, successChance: 0.50, minRarity: 'Legendary' },
+    { targetTier: 9,  diamondCost: 35, statMultiplier: 1.96, successChance: 0.35, minRarity: 'Legendary' },
+    { targetTier: 10, diamondCost: 50, statMultiplier: 2.05, successChance: 0.20, minRarity: 'Legendary' },
   ] as ItemTierUpDef[],
 
   /** Max item tier */
