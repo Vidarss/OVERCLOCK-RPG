@@ -900,7 +900,7 @@ export const OVERCLOCK_PERKS: OverclockPerkDef[] = [
   { id: 'decoherence',      name: 'DECOHERENCE',      branch: 'QUANTUM', branchRank: 5, maxLevel: 2,  costPerLevel: 14, modifierType: 'crit_chance',     valuePerLevel: 0.10, isMultiplier: false, color: '#440077', requiresTier: 12, flavor: 'Reality yields to your attacks.',         description: '+10% crit chance' },
 ];
 
-// ── SKILLS ────────────────────────────────────────────────────────────────────
+// ── SKILLS ──────────────────────────���─────────────────────────────────────────
 //
 // BALANCE NOTES - Skills are strategic with meaningful tradeoffs:
 // - SURGE: Moderate tap boost (x3), short duration, use for burst DPS
@@ -1146,78 +1146,99 @@ export const ITEM_CONFIG = {
   bossRarityShift: 20,
   tierRarityShiftPerTier: 5,
   
-  /** Primary stat per slot. */
-  primaryStat: { 
-    RAM: 'idle_dps', 
-    GPU: 'tap_damage', 
-    CPU: 'crit_chance', 
-    EXPANSION: 'gold_rate' 
-  } as Record<ItemSlot, ModifierDef['type']>,
-  
-  /** Secondary stat per slot (only Rare+ items get a secondary). */
-  secondaryStat: { 
-    RAM: 'tap_damage', 
-    GPU: 'idle_dps', 
-    CPU: 'crit_multiplier', 
-    EXPANSION: 'tap_damage' 
-  } as Record<ItemSlot, ModifierDef['type']>,
-  
   // ═══════════════════════════════════════════════════════════════════════════
   // STAT VALUE FORMULAS (GOD FORMULA v2.0)
   // ═══════════════════════════════════════════════════════════════════════════
-  // Primary (non-crit):   1 + (base * tierMult * rarityMult)
-  // Primary (crit_chance): (critBase * tierMult * rarityMult), capped at 0.15
-  // Secondary (crit_mult): (critMultBase * rarityMult)
-  // Secondary (other):    1 + (secondaryBase * tierMult * rarityMult)
+  // Multiplier stats (tap/idle/gold): 1 + (base * tierMult * rarityMult)
+  // crit_chance (flat, capped):       (critChanceBase * tierMult * rarityMult)
+  // crit_multiplier (flat):           (critMultBase * tierMult * rarityMult)
+  // "Primary" uses the larger base; "secondary" uses the smaller base.
   // ═══════════════════════════════════════════════════════════════════════════
-  primaryStatBase: 0.10,          // +10% per tier*rarity for multipliers
-  primaryCritChanceBase: 0.01,    // +1% crit chance per tier*rarity
-  primaryCritChanceCap: 0.15,     // Max 15% crit from single item
-  secondaryCritMultBase: 0.15,    // +15% crit damage per rarity
-  secondaryStatBase: 0.05,        // +5% per tier*rarity for secondary stats
+  primaryStatBase: 0.10,            // +10% per tier*rarity for multiplier stats
+  secondaryStatBase: 0.05,          // +5% per tier*rarity for secondary multiplier stats
+  primaryCritChanceBase: 0.01,      // +1% crit chance per tier*rarity (primary)
+  secondaryCritChanceBase: 0.005,   // +0.5% crit chance per tier*rarity (secondary)
+  primaryCritChanceCap: 0.15,       // Max 15% crit chance from a primary item
+  secondaryCritChanceCap: 0.08,     // Max 8% crit chance from a secondary roll
+  primaryCritMultBase: 0.20,        // +20% crit damage per tier*rarity (primary)
+  secondaryCritMultBase: 0.15,      // +15% crit damage per rarity (secondary)
+  /** crit_multiplier secondary ignores tier scaling (set false to scale with tier). */
+  secondaryCritMultScalesWithTier: false,
 
-  /** Item name pools per slot. */
-  slotItems: {
-    RAM: ['DDR5_GHOST', 'PHANTOM_RAM', 'VENOM_DIMM', 'SHADOW_CACHE', 'HYPERTHREAD_STICK', 'OVERCLOCKED_DDR', 'VOLATILE_BANK', 'NULL_PTR_MODULE'],
-    GPU: ['VOID_SHADER', 'FRACTURE_GPU', 'DARK_RENDERER', 'QUANTUM_CORE_GPU', 'ROGUE_PIXEL', 'SHADER_DAEMON', 'ENTROPY_CARD', 'PARALLEL_GHOST'],
-    CPU: ['EXPLOIT_PROC', 'SILICON_WRAITH', 'ZERO_DAY_CHIP', 'OVERCLOCK_CORE', 'PHANTOM_CPU', 'DAEMON_PROC', 'ROOTKIT_SILICON', 'NULL_CORE'],
-    EXPANSION: ['CHAOS_NIC', 'GHOST_RAID', 'OVERFLOW_PCI', 'BACKDOOR_CARD', 'INJECTION_BUS', 'EXPLOIT_BRIDGE', 'DARK_PCIE', 'SHADOW_EXPANSION'],
-  } as Record<ItemSlot, string[]>,
+  // ═══════════════════════════════════════════════════════════════════════════
+  // ITEM ARCHETYPES (BUILD SYSTEM)
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Every slot can now roll EVERY stat type, each as a themed item "line" so
+  // players can craft focused builds (e.g. a crit-damage CPU, a gold RAM).
+  //
+  // HOW TO ADD NEW ITEMS:
+  //   - Add a name to the relevant archetype's `names` array below.
+  //   - Optionally add a flavor for it in `itemFlavors` (otherwise the shared
+  //     `archetypeFlavors[stat]` line is used).
+  //
+  // HOW TO ADD A NEW ARCHETYPE STAT:
+  //   - Add an entry under each slot keyed by the ModifierType, with a
+  //     `secondary` stat (rolled on Rare+) and a `names` pool.
+  //
+  // Schema: archetypes[slot][primaryStat] = { secondary, names }
+  // ═══════════════════════════════════════════════════════════════════════════
+  archetypes: {
+    RAM: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_DIMM', 'HAMMER_CACHE', 'SPIKE_BANK', 'PERCUSSION_RAM', 'IMPACT_MODULE', 'BURST_DDR', 'CONCUSSION_STICK', 'SLEDGE_MEMORY'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_DIMM', 'AUTO_CACHE', 'DRONE_BANK', 'PERSISTENT_RAM', 'IDLE_REAPER', 'LOOP_MODULE', 'PHANTOM_THREAD_RAM', 'REVENANT_DDR'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_DIMM', 'GREED_CACHE', 'VAULT_BANK', 'MIDAS_RAM', 'PROFIT_MODULE', 'BOUNTY_DDR', 'TREASURE_STICK', 'HOARD_MEMORY'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_DIMM', 'SCOPE_CACHE', 'MARKSMAN_BANK', 'EAGLE_RAM', 'PINPOINT_MODULE', 'SNIPER_DDR', 'HAWKEYE_STICK', 'FOCUS_MEMORY'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_DIMM', 'OVERKILL_CACHE', 'RUPTURE_BANK', 'LETHAL_RAM', 'MASSACRE_MODULE', 'DEVASTATOR_DDR', 'ANNIHILATE_STICK', 'CRESCENDO_MEMORY'] },
+    },
+    GPU: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_SHADER', 'HAMMER_RENDER', 'SPIKE_PIXEL', 'IMPACT_GPU', 'BURST_FRAME', 'PERCUSSION_CORE', 'CONCUSSION_CARD', 'SLEDGE_RASTER'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_SHADER', 'AUTO_RENDER', 'DRONE_PIXEL', 'PERSISTENT_GPU', 'IDLE_RASTERIZER', 'LOOP_FRAME', 'PHANTOM_RENDER', 'REVENANT_CARD'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_SHADER', 'GREED_RENDER', 'VAULT_PIXEL', 'MIDAS_GPU', 'PROFIT_FRAME', 'BOUNTY_CORE', 'TREASURE_CARD', 'HOARD_RASTER'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_SHADER', 'SCOPE_RENDER', 'MARKSMAN_PIXEL', 'EAGLE_GPU', 'PINPOINT_FRAME', 'SNIPER_CORE', 'HAWKEYE_CARD', 'FOCUS_RASTER'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_SHADER', 'OVERKILL_RENDER', 'RUPTURE_PIXEL', 'LETHAL_GPU', 'MASSACRE_FRAME', 'DEVASTATOR_CORE', 'ANNIHILATE_CARD', 'CRESCENDO_RASTER'] },
+    },
+    CPU: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_CORE', 'HAMMER_PROC', 'SPIKE_THREAD', 'IMPACT_CPU', 'BURST_SILICON', 'PERCUSSION_CHIP', 'CONCUSSION_DIE', 'SLEDGE_LOGIC'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_CORE', 'AUTO_PROC', 'DRONE_THREAD', 'PERSISTENT_CPU', 'IDLE_REAPER_CHIP', 'LOOP_SILICON', 'PHANTOM_PROC', 'REVENANT_DIE'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_CORE', 'GREED_PROC', 'VAULT_THREAD', 'MIDAS_CPU', 'PROFIT_SILICON', 'BOUNTY_CHIP', 'TREASURE_DIE', 'HOARD_LOGIC'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_CORE', 'SCOPE_PROC', 'MARKSMAN_THREAD', 'EAGLE_CPU', 'PINPOINT_SILICON', 'SNIPER_CHIP', 'HAWKEYE_DIE', 'FOCUS_LOGIC'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_CORE', 'OVERKILL_PROC', 'RUPTURE_THREAD', 'LETHAL_CPU', 'MASSACRE_SILICON', 'DEVASTATOR_CHIP', 'ANNIHILATE_DIE', 'CRESCENDO_LOGIC'] },
+    },
+    EXPANSION: {
+      tap_damage:      { secondary: 'crit_chance',     names: ['STRIKE_BUS', 'HAMMER_CARD', 'SPIKE_LANE', 'IMPACT_PCIE', 'BURST_BRIDGE', 'PERCUSSION_NIC', 'CONCUSSION_RAID', 'SLEDGE_PORT'] },
+      idle_dps:        { secondary: 'tap_damage',      names: ['DAEMON_BUS', 'AUTO_CARD', 'DRONE_LANE', 'PERSISTENT_PCIE', 'IDLE_BRIDGE', 'LOOP_NIC', 'PHANTOM_RAID', 'REVENANT_PORT'] },
+      gold_rate:       { secondary: 'idle_dps',        names: ['MINER_BUS', 'GREED_CARD', 'VAULT_LANE', 'MIDAS_PCIE', 'PROFIT_BRIDGE', 'BOUNTY_NIC', 'TREASURE_RAID', 'HOARD_PORT'] },
+      crit_chance:     { secondary: 'crit_multiplier', names: ['PRECISION_BUS', 'SCOPE_CARD', 'MARKSMAN_LANE', 'EAGLE_PCIE', 'PINPOINT_BRIDGE', 'SNIPER_NIC', 'HAWKEYE_RAID', 'FOCUS_PORT'] },
+      crit_multiplier: { secondary: 'crit_chance',     names: ['EXECUTION_BUS', 'OVERKILL_CARD', 'RUPTURE_LANE', 'LETHAL_PCIE', 'MASSACRE_BRIDGE', 'DEVASTATOR_NIC', 'ANNIHILATE_RAID', 'CRESCENDO_PORT'] },
+    },
+  } as Record<ItemSlot, Record<ModifierDef['type'], { secondary: ModifierDef['type']; names: string[] }>>,
 
-  /** Flavor text per item name. */
+  /** Relative weight of each archetype dropping per slot. Tune build rarity here. */
+  archetypeWeights: {
+    tap_damage: 25,
+    idle_dps: 25,
+    gold_rate: 20,
+    crit_chance: 18,
+    crit_multiplier: 12,
+  } as Record<ModifierDef['type'], number>,
+
+  /** Shared flavor per archetype stat (used when a name has no specific flavor). */
+  archetypeFlavors: {
+    tap_damage:      'Every tap lands like a kinetic exploit.',
+    idle_dps:        'Runs your kill loop while you sleep.',
+    gold_rate:       'Skims credits off every corpse on the wire.',
+    crit_chance:     'Finds the weak byte. Every. Single. Time.',
+    crit_multiplier: 'When it crits, the target ceases to exist.',
+  } as Record<ModifierDef['type'], string>,
+
+  /** Optional per-name flavor overrides (falls back to archetypeFlavors). */
   itemFlavors: {
-    DDR5_GHOST:        'Addresses that should not exist hold your arsenal.',
-    PHANTOM_RAM:       'It shows up in no process table. Runs in everything.',
-    VENOM_DIMM:        'Leaked from a black site. Runs hot. Runs mean.',
-    SHADOW_CACHE:      "Prefetches tomorrow's attacks.",
-    HYPERTHREAD_STICK: 'Twice the threads, twice the carnage.',
-    OVERCLOCKED_DDR:   'Voided warranty. Doubled damage.',
-    VOLATILE_BANK:     "Contents survive power loss. Revenants don't reset.",
-    NULL_PTR_MODULE:   'References nothing. Destroys everything.',
-    VOID_SHADER:       "Renders pain in resolutions enemies can't perceive.",
-    FRACTURE_GPU:      'Stress-tested past the point of sanity.',
-    DARK_RENDERER:     'Draws frames of destruction before they happen.',
-    QUANTUM_CORE_GPU:  'Superposition: hit and miss, simultaneously.',
-    ROGUE_PIXEL:       "One bad actor in 4K. That's enough.",
-    SHADER_DAEMON:     'Compiles malice into every draw call.',
-    ENTROPY_CARD:      'Randomness as a weapon. Chaos is the strategy.',
-    PARALLEL_GHOST:    'Multiple threads, zero traces.',
-    EXPLOIT_PROC:      'Runs your code before you write it.',
-    SILICON_WRAITH:    'No heat signature. No mercy.',
-    ZERO_DAY_CHIP:     'Patched by no one. Feared by all.',
-    OVERCLOCK_CORE:    'Cooling not included. Sanity not included.',
-    PHANTOM_CPU:       'Listed as idle in all monitors. Never idle.',
-    DAEMON_PROC:       'init spawned it. Nothing can kill it.',
-    ROOTKIT_SILICON:   'Embedded in firmware. Deeper than the OS.',
-    NULL_CORE:         'Undefined behavior is a feature.',
-    CHAOS_NIC:         'Packets arrive before they are sent.',
-    GHOST_RAID:        'Storage array that only you can see.',
-    OVERFLOW_PCI:      'Buffer overflow weaponized as hardware.',
-    BACKDOOR_CARD:     'Manufacturer left a key. You found it.',
-    INJECTION_BUS:     'Everything on the bus is yours now.',
-    EXPLOIT_BRIDGE:    'Bridges two networks neither should touch.',
-    DARK_PCIE:         "PCIe lane to somewhere the spec forgot.",
-    SHADOW_EXPANSION:  'Expands into address space that does not exist.',
+    NULL_PTR_MODULE:  'References nothing. Destroys everything.',
+    ZERO_DAY_CHIP:    'Patched by no one. Feared by all.',
+    PHANTOM_PROC:     'Listed as idle in all monitors. Never idle.',
+    OVERKILL_CACHE:   'Computes more death than the target can hold.',
+    MIDAS_PCIE:       'Every byte that crosses the lane turns to gold.',
+    HAWKEYE_DIE:      'Sees the one weak transistor in a billion.',
   } as Record<string, string>,
 
   /** Scrap values by rarity - scrapping items yields this amount of scrap. */
@@ -1233,7 +1254,7 @@ export const ITEM_CONFIG = {
   tierScrapBonus: 3,
 } as const;
 
-// ── SHOP ──────────────────────────────────────────────────────────��───────────
+// ── SHOP ──────────────────────────────────────────────────────────��─────────��─
 
 export interface ShopItemDef {
   id: string;
@@ -1396,7 +1417,7 @@ export const ACHIEVEMENT_CONFIG = {
     { id: 'kill_5000',    name: 'EXTINCTION EVENT', description: 'Defeat 5,000 enemies',      icon: 'Target',    color: '#ff4444', type: 'kills',      threshold: 5000   },
     { id: 'kill_10000',   name: 'THE PURGE',        description: 'Defeat 10,000 enemies',     icon: 'Target',    color: '#ff0080', type: 'kills',      threshold: 10000  },
 
-    // ── Boss Kills ───────────────────────────────────────────────────
+    // ── Boss Kills ─────────────────────────────��─────────────────────
     { id: 'boss_slayer',     name: 'BOSS SLAYER',     description: 'Defeat 10 bosses',   icon: 'Skull', color: '#ff4444', type: 'boss_kills', threshold: 10  },
     { id: 'boss_slayer_50',  name: 'APEX PREDATOR',   description: 'Defeat 50 bosses',   icon: 'Skull', color: '#ff4444', type: 'boss_kills', threshold: 50  },
     { id: 'boss_slayer_100', name: 'BOSS HUNTER',     description: 'Defeat 100 bosses',  icon: 'Skull', color: '#ff2200', type: 'boss_kills', threshold: 100 },
@@ -1585,7 +1606,7 @@ export const LEADERBOARD_CONFIG = {
   loadLimit: 100,
 } as const;
 
-// ── UI TIMING ─────────────────────────────────────────────────────────────────
+// ── UI TIMING ──────────────────���──────────────────────────────────────────────
 
 export const UI_CONFIG = {
   /** Duration of enemy hit animation in ms */
@@ -1723,7 +1744,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ── ENTROPY ENGINE (Crit Damage Focus) ─────────────────────────────────────
+  // ── ENTROPY ENGINE (Crit Damage Focus) ───────────────────────────────��─────
   {
     id: 'entropy_engine',
     name: 'ENTROPY ENGINE',

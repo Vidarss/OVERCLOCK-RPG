@@ -11,6 +11,7 @@ import {
 } from '../config/enchantment.config';
 
 const SLOTS: ItemSlot[] = ['RAM', 'GPU', 'CPU', 'EXPANSION'];
+type StatType = ModifierDef['type'];
 
 function rollRarity(tier: number, isBoss: boolean): ItemRarity {
   const weights = ITEM_CONFIG.rarityWeights;
@@ -30,38 +31,71 @@ function rollDropChance(tier: number, isBoss: boolean): boolean {
     : Math.min(ITEM_CONFIG.normalDropCap, base));
 }
 
+/** Weighted roll of which stat archetype an item rolls for a given slot. */
+function rollArchetype(slot: ItemSlot): StatType {
+  const slotArchetypes = ITEM_CONFIG.archetypes[slot];
+  const entries = Object.keys(slotArchetypes) as StatType[];
+  const total = entries.reduce((s, stat) => s + (ITEM_CONFIG.archetypeWeights[stat] ?? 0), 0);
+  let roll = Math.random() * total;
+  for (const stat of entries) {
+    roll -= ITEM_CONFIG.archetypeWeights[stat] ?? 0;
+    if (roll <= 0) return stat;
+  }
+  return entries[0];
+}
+
+/** Compute a single stat roll's value + isMultiplier flag from the config formulas. */
+function computeStat(stat: StatType, tier: number, rarityMult: number, isPrimary: boolean): ModifierDef {
+  const {
+    primaryStatBase, secondaryStatBase,
+    primaryCritChanceBase, secondaryCritChanceBase, primaryCritChanceCap, secondaryCritChanceCap,
+    primaryCritMultBase, secondaryCritMultBase, secondaryCritMultScalesWithTier,
+  } = ITEM_CONFIG;
+  const t = tier + 1;
+
+  if (stat === 'crit_chance') {
+    const base = isPrimary ? primaryCritChanceBase : secondaryCritChanceBase;
+    const cap = isPrimary ? primaryCritChanceCap : secondaryCritChanceCap;
+    const value = Math.min(cap, base * t * rarityMult);
+    return { type: stat, value: parseFloat(value.toFixed(3)), isMultiplier: false };
+  }
+
+  if (stat === 'crit_multiplier') {
+    const base = isPrimary ? primaryCritMultBase : secondaryCritMultBase;
+    const scale = isPrimary || secondaryCritMultScalesWithTier ? t : 1;
+    const value = base * scale * rarityMult;
+    // crit_multiplier aggregates as a multiplier: 1 + bonus
+    return { type: stat, value: parseFloat((1 + value).toFixed(3)), isMultiplier: true };
+  }
+
+  // tap_damage / idle_dps / gold_rate -> % multiplier
+  const base = isPrimary ? primaryStatBase : secondaryStatBase;
+  return { type: stat, value: parseFloat((1 + base * t * rarityMult).toFixed(3)), isMultiplier: true };
+}
+
 function generateItem(tier: number, isBoss: boolean): HardwareItem {
   const slot = SLOTS[Math.floor(Math.random() * SLOTS.length)];
   const rarity = rollRarity(tier, isBoss);
-  const names = ITEM_CONFIG.slotItems[slot];
-  const name = names[Math.floor(Math.random() * names.length)];
   const mult = ITEM_CONFIG.rarityStatMultiplier[rarity];
-  const pType = ITEM_CONFIG.primaryStat[slot];
-  const sType = ITEM_CONFIG.secondaryStat[slot];
-  const { primaryStatBase, primaryCritChanceBase, secondaryCritMultBase, secondaryStatBase } = ITEM_CONFIG;
 
-  const stats = [{
-    type: pType,
-    value: pType === 'crit_chance'
-      ? parseFloat((primaryCritChanceBase * (tier + 1) * mult).toFixed(3))
-      : parseFloat((1 + primaryStatBase * (tier + 1) * mult).toFixed(3)),
-    isMultiplier: pType !== 'crit_chance',
-  }];
+  const primaryStat = rollArchetype(slot);
+  const archetype = ITEM_CONFIG.archetypes[slot][primaryStat];
+  const names = archetype.names;
+  const name = names[Math.floor(Math.random() * names.length)];
 
+  const stats: ModifierDef[] = [computeStat(primaryStat, tier, mult, true)];
   if (rarity !== 'Common') {
-    stats.push({
-      type: sType,
-      value: sType === 'crit_multiplier'
-        ? parseFloat((secondaryCritMultBase * mult).toFixed(3))
-        : parseFloat((1 + secondaryStatBase * (tier + 1) * mult).toFixed(3)),
-      isMultiplier: sType !== 'crit_multiplier',
-    });
+    stats.push(computeStat(archetype.secondary, tier, mult, false));
   }
+
+  const flavorText = ITEM_CONFIG.itemFlavors[name]
+    ?? ITEM_CONFIG.archetypeFlavors[primaryStat]
+    ?? 'Unknown provenance.';
 
   return {
     id: `item_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     name, slot, rarity, tier, stats,
-    flavorText: ITEM_CONFIG.itemFlavors[name] ?? 'Unknown provenance.',
+    flavorText,
     droppedAt: Date.now(),
   };
 }
