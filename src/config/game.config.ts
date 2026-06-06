@@ -170,61 +170,80 @@ export const SKILL_POINT_CONFIG = {
 
 // ── SKILL TREE ───────────────────────────────────────────────────────────────
 
+// Passive skill-tree effects map onto the engine's real modifier types:
+//   tap_damage  -> tap_damage     (multiplier)
+//   idle_damage -> idle_dps       (multiplier)
+//   gold_bonus  -> gold_rate      (multiplier)
+//   crit_chance -> crit_chance    (additive)
+//   crit_damage -> crit_multiplier(multiplier)
+//   all_damage  -> tap_damage AND idle_dps (multiplier on both)
+// 'timeskip' nodes are not modifiers — they passively auto-fire, banking a few
+// seconds of that damage type's output on a cooldown (see SkillTreePlugin).
 export interface SkillTreeNode {
   id: string;
   name: string;
   description: string;
-  icon: string; // Lucide icon name
+  flavor?: string;          // funny tooltip blurb
+  icon: string;             // Lucide icon name
   maxLevel: number;
-  costPerLevel: number; // SP cost per level
-  effect: {
-    type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'skill_cooldown' | 'boss_damage' | 'elite_damage' | 'all_damage';
+  costPerLevel: number;     // SP cost per level
+  nodeType?: 'passive' | 'timeskip';
+  effect?: {
+    type: 'tap_damage' | 'crit_chance' | 'crit_damage' | 'gold_bonus' | 'idle_damage' | 'all_damage';
     valuePerLevel: number;
     isMultiplier?: boolean; // true = multiplicative, false = additive
-    isPercent?: boolean; // for display purposes
+    isPercent?: boolean;    // for display purposes
   };
-  requires?: string[]; // Node IDs that must be unlocked first
-  tier: 1 | 2 | 3 | 4 | 5; // Visual tier for positioning
+  timeskip?: {
+    resource: 'tap' | 'idle' | 'gold'; // which damage/economy type is skipped
+    secondsPerLevel: number;           // seconds of output banked per level, per fire
+    intervalSec: number;               // auto-fire cooldown in seconds
+  };
+  requires?: string[];      // Node IDs that must be unlocked first
+  tier: 1 | 2 | 3 | 4 | 5;  // Visual tier for positioning
   branch: 'CORE' | 'OFFENSE' | 'DEFENSE' | 'UTILITY' | 'MASTERY';
   color: string;
 }
 
+// How many "taps" per second a tap-warp simulates when it auto-fires.
+export const SKILL_TREE_AUTOTAP_RATE = 8;
+
 export const SKILL_TREE_CONFIG = {
   nodes: [
-    // ════════════════════════════════════════════════════════�����══════════════════
+    // ═══════════════════════════════════════════════════════════════════════════
     // TIER 1 - CORE (No requirements, starting nodes)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'tap_mastery', name: 'TAP MASTERY', description: '+5% Tap Damage per level', icon: 'Pointer', maxLevel: 10, costPerLevel: 1, effect: { type: 'tap_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
-    { id: 'gold_sense', name: 'GOLD SENSE', description: '+3% Gold per level', icon: 'Coins', maxLevel: 10, costPerLevel: 1, effect: { type: 'gold_bonus', valuePerLevel: 0.03, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#ffd700' },
-    { id: 'idle_protocol', name: 'IDLE PROTOCOL', description: '+5% Idle Damage per level', icon: 'Cpu', maxLevel: 10, costPerLevel: 1, effect: { type: 'idle_damage', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00ff88' },
+    { id: 'tap_mastery',   name: 'BUTTON ABUSE',         description: '+6% Tap Damage per level',  flavor: 'Warranty? Never heard of it.',                 icon: 'Pointer',  maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'tap_damage',  valuePerLevel: 0.06, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00f5ff' },
+    { id: 'gold_sense',    name: 'LOOT GOBLIN',          description: '+4% Gold per level',         flavor: 'It is not stealing if it is on the floor.',    icon: 'Coins',    maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.04, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#ffd700' },
+    { id: 'idle_protocol', name: 'PROFESSIONAL SLACKER', description: '+6% Idle Damage per level',  flavor: 'Working hard at hardly working.',              icon: 'Cpu',      maxLevel: 10, costPerLevel: 1, nodeType: 'passive', effect: { type: 'idle_damage', valuePerLevel: 0.06, isMultiplier: true, isPercent: true }, tier: 1, branch: 'CORE', color: '#00ff88' },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 2 - OFFENSE (Requires Tier 1)
+    // TIER 2 - OFFENSE / UTILITY (Requires Tier 1)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'critical_systems', name: 'CRITICAL SYSTEMS', description: '+2% Crit Chance per level', icon: 'Crosshair', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_chance', valuePerLevel: 0.02, isMultiplier: false, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff4444' },
-    { id: 'amplifier', name: 'AMPLIFIER', description: '+10% Crit Damage per level', icon: 'Zap', maxLevel: 10, costPerLevel: 2, effect: { type: 'crit_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['tap_mastery'], tier: 2, branch: 'OFFENSE', color: '#ff8800' },
-    { id: 'wealth_algorithm', name: 'WEALTH ALGORITHM', description: '+5% Gold per level', icon: 'TrendingUp', maxLevel: 10, costPerLevel: 2, effect: { type: 'gold_bonus', valuePerLevel: 0.05, isMultiplier: true, isPercent: true }, requires: ['gold_sense'], tier: 2, branch: 'UTILITY', color: '#ffd700' },
-    { id: 'passive_income', name: 'PASSIVE INCOME', description: '+8% Idle Damage per level', icon: 'Activity', maxLevel: 10, costPerLevel: 2, effect: { type: 'idle_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['idle_protocol'], tier: 2, branch: 'UTILITY', color: '#00ff88' },
+    { id: 'critical_systems', name: '404: HP NOT FOUND', description: '+2% Crit Chance per level',  flavor: 'Their health bar could not be located.',       icon: 'Crosshair',  maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'crit_chance', valuePerLevel: 0.02, isMultiplier: false, isPercent: true }, requires: ['tap_mastery'],   tier: 2, branch: 'OFFENSE', color: '#ff4444' },
+    { id: 'amplifier',        name: 'BIG NUMBER GO BRRR',description: '+12% Crit Damage per level', flavor: 'Dopamine, but make it numeric.',               icon: 'Zap',        maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'crit_damage', valuePerLevel: 0.12, isMultiplier: true,  isPercent: true }, requires: ['tap_mastery'],   tier: 2, branch: 'OFFENSE', color: '#ff8800' },
+    { id: 'wealth_algorithm', name: 'TAX EVASION.DLL',   description: '+6% Gold per level',         flavor: 'This module is not legal advice.',             icon: 'TrendingUp', maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.06, isMultiplier: true,  isPercent: true }, requires: ['gold_sense'],    tier: 2, branch: 'UTILITY', color: '#ffd700' },
+    { id: 'passive_income',   name: 'TOUCH GRASS MODE',  description: '+9% Idle Damage per level',  flavor: 'The CPU grinds so you do not have to.',        icon: 'Activity',   maxLevel: 8, costPerLevel: 2, nodeType: 'passive', effect: { type: 'idle_damage', valuePerLevel: 0.09, isMultiplier: true,  isPercent: true }, requires: ['idle_protocol'], tier: 2, branch: 'UTILITY', color: '#00ff88' },
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // TIER 3 - SPECIALIZATION
+    // TIER 3 - TIME SKIPS (one per damage type) — passive auto-fire
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'boss_hunter', name: 'BOSS HUNTER', description: '+8% Boss Damage per level', icon: 'Skull', maxLevel: 10, costPerLevel: 3, effect: { type: 'boss_damage', valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['critical_systems', 'amplifier'], tier: 3, branch: 'OFFENSE', color: '#ff0080' },
-    { id: 'elite_slayer', name: 'ELITE SLAYER', description: '+10% Elite Damage per level', icon: 'Sword', maxLevel: 10, costPerLevel: 3, effect: { type: 'elite_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['critical_systems'], tier: 3, branch: 'OFFENSE', color: '#aa44ff' },
-    { id: 'skill_efficiency', name: 'SKILL EFFICIENCY', description: '-3% Skill Cooldowns per level', icon: 'Clock', maxLevel: 10, costPerLevel: 3, effect: { type: 'skill_cooldown', valuePerLevel: -0.03, isMultiplier: true, isPercent: true }, requires: ['wealth_algorithm', 'passive_income'], tier: 3, branch: 'UTILITY', color: '#00aaff' },
+    { id: 'macro_mayhem',    name: 'MACRO MAYHEM',    description: 'Auto-fires a tap burst, banking 4s of taps per level',  flavor: 'Technically the keyboard is doing the gaming.',  icon: 'MousePointerClick', maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'tap',  secondsPerLevel: 4, intervalSec: 45 }, requires: ['critical_systems'],   tier: 3, branch: 'OFFENSE', color: '#ff5599' },
+    { id: 'overtime_exe',    name: 'OVERTIME.EXE',    description: 'Skips 8s of idle damage per level, automatically',      flavor: 'The fans scream so you can sleep.',              icon: 'Hourglass',         maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'idle', secondsPerLevel: 8, intervalSec: 60 }, requires: ['passive_income'],     tier: 3, branch: 'UTILITY', color: '#33ddaa' },
+    { id: 'stonks_protocol', name: 'STONKS PROTOCOL', description: 'Injects 6s of gold income per level, automatically',     flavor: 'Number go up. We do not ask why.',               icon: 'Banknote',          maxLevel: 5, costPerLevel: 4, nodeType: 'timeskip', timeskip: { resource: 'gold', secondsPerLevel: 6, intervalSec: 60 }, requires: ['wealth_algorithm'],   tier: 3, branch: 'UTILITY', color: '#ffcc33' },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 4 - ADVANCED
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'lethal_precision', name: 'LETHAL PRECISION', description: '+3% Crit Chance, +15% Crit Damage per level', icon: 'Target', maxLevel: 5, costPerLevel: 5, effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['boss_hunter'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
-    { id: 'power_surge', name: 'POWER SURGE', description: '+10% All Damage per level', icon: 'Flame', maxLevel: 5, costPerLevel: 5, effect: { type: 'all_damage', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['elite_slayer'], tier: 4, branch: 'OFFENSE', color: '#ff6600' },
-    { id: 'golden_touch', name: 'GOLDEN TOUCH', description: '+10% Gold per level', icon: 'Gem', maxLevel: 5, costPerLevel: 5, effect: { type: 'gold_bonus', valuePerLevel: 0.10, isMultiplier: true, isPercent: true }, requires: ['skill_efficiency'], tier: 4, branch: 'UTILITY', color: '#ffdd00' },
+    { id: 'lethal_precision', name: 'HEADSHOT.PNG',          description: '+15% Crit Damage per level', flavor: 'Mounted above the gamer chair.',          icon: 'Target', maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'crit_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['amplifier', 'macro_mayhem'], tier: 4, branch: 'OFFENSE', color: '#ff2222' },
+    { id: 'power_surge',      name: 'RGB MAKES IT FASTER',   description: '+8% All Damage per level',   flavor: 'Peer-reviewed by gamers everywhere.',     icon: 'Flame',  maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'all_damage',  valuePerLevel: 0.08, isMultiplier: true, isPercent: true }, requires: ['overtime_exe'],              tier: 4, branch: 'OFFENSE', color: '#ff6600' },
+    { id: 'golden_touch',     name: 'CACHE ME OUTSIDE',      description: '+9% Gold per level',         flavor: 'How much gold? That much gold.',          icon: 'Gem',    maxLevel: 5, costPerLevel: 5, nodeType: 'passive', effect: { type: 'gold_bonus',  valuePerLevel: 0.09, isMultiplier: true, isPercent: true }, requires: ['stonks_protocol'],           tier: 4, branch: 'UTILITY', color: '#ffdd00' },
 
     // ═══════════════════════════════════════════════════════════════════════════
     // TIER 5 - MASTERY (Capstone nodes)
     // ═══════════════════════════════════════════════════════════════════════════
-    { id: 'overclock_mastery', name: 'OVERCLOCK MASTERY', description: '+15% All Damage per level', icon: 'Rocket', maxLevel: 3, costPerLevel: 10, effect: { type: 'all_damage', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['lethal_precision', 'power_surge'], tier: 5, branch: 'MASTERY', color: '#ff0080' },
-    { id: 'infinite_wealth', name: 'INFINITE WEALTH', description: '+15% Gold, +10% Idle Damage per level', icon: 'Crown', maxLevel: 3, costPerLevel: 10, effect: { type: 'gold_bonus', valuePerLevel: 0.15, isMultiplier: true, isPercent: true }, requires: ['golden_touch'], tier: 5, branch: 'MASTERY', color: '#ffd700' },
+    { id: 'overclock_mastery', name: 'TEMPORAL SEGFAULT', description: '+12% All Damage per level', flavor: 'You broke time. Time is fine with it.',  icon: 'Rocket', maxLevel: 3, costPerLevel: 10, nodeType: 'passive', effect: { type: 'all_damage', valuePerLevel: 0.12, isMultiplier: true, isPercent: true }, requires: ['lethal_precision', 'power_surge'], tier: 5, branch: 'MASTERY', color: '#ff0080' },
+    { id: 'infinite_wealth',   name: 'MONEY PRINTER',     description: '+14% Gold per level',       flavor: 'brrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr',  icon: 'Crown',  maxLevel: 3, costPerLevel: 10, nodeType: 'passive', effect: { type: 'gold_bonus', valuePerLevel: 0.14, isMultiplier: true, isPercent: true }, requires: ['golden_touch'],                    tier: 5, branch: 'MASTERY', color: '#ffd700' },
   ] as SkillTreeNode[],
 } as const;
 
@@ -574,12 +593,12 @@ export const ENEMY_CONFIG = {
   
   // ═════════════════════════════════════════��═════════════════════════════════
   // GOD FORMULA - HP SCALING TO 999,999
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ═════════════════════════════════════════════════════���═════════════════════
   // BALANCED FOR 12 TAPS/SECOND (720 taps/minute)
   // At stage 1: Player does ~12 DPS, enemy has ~50 HP = ~4 seconds to kill
   // At stage 50: Player does ~50-100 DPS, enemy has ~2000 HP = ~20-40 seconds
   // At stage 100: Player does ~150 DPS, enemy has ~8000 HP = ~50+ seconds (need upgrades)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════��════════════════════════════════
   
   normalHpBase: 50,
   bossHpBase: 300,
@@ -1104,7 +1123,7 @@ export const ITEM_CONFIG = {
   
   // ═══════════════════════════════════════════════════════════════════════════
   // STAT VALUE FORMULAS (GOD FORMULA v2.0)
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════���═══════════════════════════════════════
   // Multiplier stats (tap/idle/gold): 1 + (base * tierMult * rarityMult)
   // crit_chance (flat, capped):       (critChanceBase * tierMult * rarityMult)
   // crit_multiplier (flat):           (critMultBase * tierMult * rarityMult)
@@ -1787,7 +1806,7 @@ export const SET_CATALOG: SetDef[] = [
     ],
   },
   
-  // ── INFINITE LOOP (Ultimate Crit) ──────────────────────────────────────────
+  // ── INFINITE LOOP (Ultimate Crit) ─────────���────────────────────────────────
   {
     id: 'infinite_loop',
     name: 'INFINITE LOOP',

@@ -50,6 +50,7 @@ export const PROGRESSION_PLUGINS: PluginConfigDef[] = [
   { id: 'component',  name: 'DPS Components',    enabled: true, priority: 110 },
   { id: 'skill',      name: 'Active Skills',     enabled: true, priority: 120 },
   { id: 'overclock',  name: 'Prestige System',   enabled: true, priority: 130, dependencies: ['stage'] },
+  { id: 'skill_tree', name: 'Skill Tree',        enabled: true, priority: 135, dependencies: ['enemy', 'gold', 'component'] },
   { id: 'relic',      name: 'Relics',            enabled: true, priority: 140, dependencies: ['overclock'] },
 ];
 
