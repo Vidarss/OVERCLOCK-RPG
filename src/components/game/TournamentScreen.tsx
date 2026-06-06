@@ -195,7 +195,12 @@ function TournamentDetail({
   const isFull = participantCount >= tournament.player_cap;
   const isJoined = !!myEntry;
   const myPosition = myEntry ? leaderboard.findIndex(e => e.user_id === myUserId) + 1 : null;
-  const statusColor = STATUS_COLORS[tournament.status];
+  // Real-time status from timestamps (DB status may be stale)
+  const now = Date.now();
+  const startsAt = new Date(tournament.starts_at).getTime();
+  const endsAt = new Date(tournament.ends_at).getTime();
+  const realStatus: Tournament['status'] = now < startsAt ? 'upcoming' : now < endsAt ? 'active' : 'ended';
+  const statusColor = STATUS_COLORS[realStatus];
 
   const prizeDistribution = [
     { rank: 1, diamonds: Math.floor(tournament.prize_diamonds * 0.5) },
@@ -234,9 +239,9 @@ function TournamentDetail({
           </div>
           <div style={{ display: 'flex', gap: 8, marginTop: 2 }}>
             <span style={{ color: statusColor, fontFamily: 'var(--font-mono)', fontSize: '8px' }}>
-              {STATUS_LABELS[tournament.status]}
-              {tournament.status === 'active' && ` — ends in ${formatTimeRemaining(tournament.ends_at)}`}
-              {tournament.status === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
+              {STATUS_LABELS[realStatus]}
+              {realStatus === 'active' && ` — ends in ${formatTimeRemaining(tournament.ends_at)}`}
+              {realStatus === 'upcoming' && ` — starts in ${formatTimeUntil(tournament.starts_at)}`}
             </span>
           </div>
         </div>
@@ -294,7 +299,7 @@ function TournamentDetail({
               </div>
             </div>
           </div>
-        ) : tournament.status === 'active' && (
+        ) : realStatus === 'active' && (
           <div style={{ margin: '10px 0' }}>
             {!joinWindowOpen ? (
               <div className="font-pixel" style={{ color: '#ff4444', fontSize: '8px', textAlign: 'center', padding: '10px', border: '1px solid #ff444422' }}>
@@ -337,7 +342,7 @@ function TournamentDetail({
           </div>
         )}
 
-        {tournament.status === 'upcoming' && !isJoined && (
+        {realStatus === 'upcoming' && !isJoined && (
           <div style={{ margin: '10px 0' }}>
             {isFull ? (
               <div className="font-pixel" style={{ color: '#ff4444', fontSize: '8px', textAlign: 'center', padding: '10px', border: '1px solid #ff444422' }}>
@@ -423,8 +428,16 @@ export const TournamentScreen: React.FC<TournamentScreenProps> = ({ engine, onCl
   const myUserId = authPlugin?.getPlayer()?.id ?? null;
 
   const allTournaments = plugin?.getAll() ?? [];
-  const active = allTournaments.filter(t => t.status === 'active');
-  const upcoming = allTournaments.filter(t => t.status === 'upcoming');
+  // Derive status from timestamps so the LIVE/UPCOMING sections reshuffle in
+  // real time as tournaments start/end, without waiting for a DB status refresh.
+  const realStatusOf = (t: Tournament): Tournament['status'] => {
+    const now = Date.now();
+    const startsAt = new Date(t.starts_at).getTime();
+    const endsAt = new Date(t.ends_at).getTime();
+    return now < startsAt ? 'upcoming' : now < endsAt ? 'active' : 'ended';
+  };
+  const active = allTournaments.filter(t => realStatusOf(t) === 'active');
+  const upcoming = allTournaments.filter(t => realStatusOf(t) === 'upcoming');
 
   const selectedTournament = selectedId ? allTournaments.find(t => t.id === selectedId) ?? null : null;
 
